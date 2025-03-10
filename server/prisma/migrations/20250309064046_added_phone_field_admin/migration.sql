@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "Admin" ADD COLUMN     "phone" VARCHAR(10) NOT NULL DEFAULT '0123456789';
+
+-- AlterTable
+ALTER TABLE "Teacher" ADD COLUMN     "class" TEXT[],
+ADD COLUMN     "experience" TEXT NOT NULL DEFAULT '5+',
+ADD COLUMN     "joining_year" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "subjects" TEXT[];

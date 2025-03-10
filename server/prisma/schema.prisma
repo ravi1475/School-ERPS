@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SCHOOL
+  TEACHER
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  fullName  String
+  email     String   @unique
+  password  String
+  username  String   @default("unknown")
+  role      Role     @default(ADMIN)
+  phone     String   @default("0123456789") @db.VarChar(10) // Enforce 10-character length
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model School {
+  id          Int          @id @default(autoincrement())
+  fullName    String       @default("Unknown")
+  email       String       @unique
+  password    String
+  code        String       @unique @default("SC000")
+  address     String       @default("Not Provided")
+  contact     BigInt       @default(0)
+  principal   String       @default("Unknown")
+  established Int          @default(2000)
+  role        Role         @default(SCHOOL)
+  teachers    Teacher[]
+  // departments Department[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  Department  Department[]
+}
+
+model Teacher {
+  id           Int      @id @default(autoincrement())
+  fullName     String
+  email        String   @unique
+  password     String
+  class        String[]
+  subjects     String[]
+  joining_year DateTime @default(now())
+  experience   String   @default("5+")
+  role         Role     @default(TEACHER)
+  schoolId     Int
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Department {
+  id             Int      @id @default(autoincrement())
+  departmentName String
+  hOD            String
+  faculty_count  Int
+  description    String
+  schoolId       Int
+  school         School   @relation(fields: [schoolId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
