@@ -8,6 +8,7 @@ import adminHandleRoute from "./routes/adminHandleRoute.js";
 import schoolRoute from "./routes/schoolAuthRoute.js";
 import teacherRoute from "./routes/teacherAuthRoute.js";
 import schoolHandleRoute from "./routes/schoolHandleRoute.js";
+import studentRoute from "./routes/studentRoute.js"; 
 
 dotenv.config();
 
@@ -17,8 +18,10 @@ const PORT = process.env.PORT || 5000;
 const prisma = new PrismaClient();
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5173", // Your front-end URL
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 app.use(cookieParser());
@@ -29,15 +32,28 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+// Test route directly in index.js
+app.get("/api/test", (req, res) => {
+  res.status(200).json({ message: "Test route works!" });
+});
+
+// Add this middleware before your routes
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
+
 app.use("/api", adminRoute);
 app.use("/api", schoolRoute);
 app.use("/api", teacherRoute);
 app.use("/api", schoolHandleRoute);
 app.use("/api", adminHandleRoute);
+app.use("/api", studentRoute); 
 
-// Check Prisma Database Connection
+
 async function checkDatabaseConnection() {
   try {
+    console.log(process.env.DATABASE_URL)
     await prisma.$connect();
     console.log("Connected to the database successfully!");
   } catch (error) {

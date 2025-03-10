@@ -119,57 +119,63 @@ const StudentRegistrationForm = () => {
 
     try {
       // Format dates properly
-      const formattedDateOfBirth = new Date(formData.dateOfBirth).toISOString().split('T')[0];
-      const formattedAdmissionDate = new Date(formData.admissionDate).toISOString().split('T')[0];
+      const formattedDateOfBirth = formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null;
+      const formattedAdmissionDate = formData.admissionDate ? new Date(formData.admissionDate).toISOString() : new Date().toISOString();
+
+      // Get the schoolId from context/storage (this depends on your auth setup)
+      const schoolId = 1; // Replace with actual schoolId from your auth context
 
       const payload = {
-        first_name: formData.firstName,
-        middle_name: formData.middleName || '',
-        last_name: formData.lastName,
-        date_of_birth: formattedDateOfBirth,
+        firstName: formData.firstName,
+        middleName: formData.middleName || '',
+        lastName: formData.lastName,
+        dateOfBirth: formattedDateOfBirth,
         gender: formData.gender,
-        blood_group: formData.bloodGroup || '',
+        bloodGroup: formData.bloodGroup || '',
         nationality: formData.nationality || '',
         religion: formData.religion || '',
         category: formData.category || '',
-        aadhaar_number: formData.aadhaarNumber || '',
-        mobile_number: formData.mobileNumber,
+        aadhaarNumber: formData.aadhaarNumber || '',
+        mobileNumber: formData.mobileNumber,
         email: formData.email || '',
-        emergency_contact: formData.emergencyContact || '',
-        admission_no: formData.admissionNo,
-        roll_number: formData.rollNumber || '',
-        class_name: formData.className,
+        emergencyContact: formData.emergencyContact || '',
+        admissionNo: formData.admissionNo,
+        rollNumber: formData.rollNumber || '',
+        className: formData.className,
         section: formData.section || '',
-        admission_date: formattedAdmissionDate,
-        previous_school: formData.previousSchool || '',
-        address: {
-          house_no: formData.address.houseNo || '',
-          street: formData.address.street || '',
-          city: formData.address.city || '',
-          state: formData.address.state || '',
-          pin_code: formData.address.pinCode || ''
-        },
-        father: {
-          name: formData.father.name || '',
-          occupation: formData.father.occupation || '',
-          contact_number: formData.father.contactNumber || '',
-          email: formData.father.email || ''
-        },
-        mother: {
-          name: formData.mother.name || '',
-          occupation: formData.mother.occupation || '',
-          contact_number: formData.mother.contactNumber || '',
-          email: formData.mother.email || ''
-        }
+        admissionDate: formattedAdmissionDate,
+        previousSchool: formData.previousSchool || '',
+        
+        // Address fields
+        houseNo: formData.address.houseNo || '',
+        street: formData.address.street || '',
+        city: formData.address.city,
+        state: formData.address.state,
+        pinCode: formData.address.pinCode || '',
+        
+        // Parent fields
+        fatherName: formData.father.name,
+        fatherOccupation: formData.father.occupation || '',
+        fatherContact: formData.father.contactNumber || '',
+        fatherEmail: formData.father.email || '',
+        
+        motherName: formData.mother.name,
+        motherOccupation: formData.mother.occupation || '',
+        motherContact: formData.mother.contactNumber || '',
+        motherEmail: formData.mother.email || '',
+        
+        // School relationship
+        schoolId: schoolId
       };
 
       console.log("Submitting payload:", payload);
 
-      const response = await fetch("http://localhost:5000/students", {
+      const response = await fetch("http://localhost:5000/api/students", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Add this to include cookies
         body: JSON.stringify(payload),
       });
 

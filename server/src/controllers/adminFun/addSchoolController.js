@@ -41,14 +41,23 @@ export const addSchool = async (req, res) => {
       },
     });
 
+    // Convert BigInt to string before sending response
+    const responseData = {
+      ...newSchool,
+      contact: newSchool.contact ? newSchool.contact.toString() : null
+    };
+
     res.status(201).json({
       success: true,
-      message: "School added successfully!",
-      school: newSchool,
+      message: "School added successfully",
+      school: responseData
     });
   } catch (error) {
     console.error("Error adding school:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to add school"
+    });
   }
 };
 

@@ -11,7 +11,6 @@ import {
   Users, 
   Database, 
   BarChart2,
-  HelpCircle
 } from "lucide-react";
 
 interface TeacherNavbarProps {
@@ -139,7 +138,7 @@ const TeacherNavbar = {
               onClick={() => setIsMobileSidebarOpen(false)}
             />
              <NavLink 
-              to="/students/attendance" 
+              to="/classes/AttendanceManagement" 
               label="Attendance" 
               onClick={() => setIsMobileSidebarOpen(false)}
             />
