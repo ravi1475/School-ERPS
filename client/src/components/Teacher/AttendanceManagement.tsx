@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   attendanceRecordsState,
   attendanceFilterState,
@@ -26,7 +26,7 @@ interface Student {
 }
 
 const AttendanceManagement: React.FC = () => {
-  // Local UI states
+ 
   const [classes, setClasses] = useState<Class[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,25 +37,24 @@ const AttendanceManagement: React.FC = () => {
   const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const [classStudents, setClassStudents] = useState<Student[]>([]);
 
-  // Recoil states
+ 
   const [attendanceRecords, setAttendanceRecords] = useRecoilState(attendanceRecordsState);
   const [filter, setFilter] = useRecoilState(attendanceFilterState);
   const [selectedClass, setSelectedClass] = useRecoilState(selectedClassState);
   const [submissionState, setSubmissionState] = useRecoilState(attendanceSubmissionState);
   const [error, setError] = useRecoilState(attendanceErrorState);
   
-  // Computed values from selectors
+ 
   const filteredRecords = useRecoilValue(filteredAttendanceRecordsSelector);
   const stats = useRecoilValue(attendanceStatsSelector);
 
-  // Fetch initial data
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Simulate API calls with mock data for development
-        // TODO: Replace with actual API calls
+     
         setTimeout(() => {
           const mockClasses: Class[] = [
             { id: 'c1', name: 'Class 10-A', subject: 'Mathematics' },
@@ -107,14 +106,13 @@ const AttendanceManagement: React.FC = () => {
     fetchData();
   }, [setAttendanceRecords, setError]);
 
-  // Update class students when selected class changes
+
   useEffect(() => {
     if (selectedClass) {
-      // In a real app, you'd fetch students for this specific class
-      // For now, we'll just use all students as class students
+      
       setClassStudents(students);
       
-      // Initialize studentAttendance state with existing records for today
+      
       const todayRecords = attendanceRecords.filter(
         record => record.classId === selectedClass && record.date === selectedDate
       );
@@ -168,17 +166,16 @@ const AttendanceManagement: React.FC = () => {
           date: selectedDate,
           status,
           notes: bulkNotes || undefined,
-          recordedBy: 'current-teacher-id', // In a real app, get from auth context
+          recordedBy: 'current-teacher-id', 
           timestamp: new Date().toISOString()
         })
       );
 
-      // TODO: Replace with actual API call
-      // Simulate API call
+     
       setTimeout(() => {
-        // Add new records to state
+        
         setAttendanceRecords(prev => {
-          // Remove any existing records for these students on this date
+          
           const filteredRecords = prev.filter(record => 
             !(record.classId === selectedClass && 
               record.date === selectedDate &&
@@ -203,14 +200,17 @@ const AttendanceManagement: React.FC = () => {
     }
   };
 
-  // Calculate attendance percentage for individual student
+  
   const getStudentAttendanceStats = (studentId: string) => {
     const studentRecords = attendanceRecords.filter(r => r.studentId === studentId);
     const total = studentRecords.length;
     const present = studentRecords.filter(r => r.status === 'present').length;
+    const absent = studentRecords.filter(r => r.status === 'absent').length;
+    const late = studentRecords.filter(r => r.status === 'late').length;
+    const excused = studentRecords.filter(r => r.status === 'excused').length;
     const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
     
-    return { total, present, percentage };
+    return { total, present, absent, late, excused, percentage };
   };
 
   if (loading) return (
@@ -635,10 +635,30 @@ const AttendanceManagement: React.FC = () => {
                       return (
                         <tr key={student.id}>
                           <td className="py-3 px-4 border-b border-gray-100">{student.name}</td>
-                          <td className="py-3 px-4 border-b border-gray-100">{stats.present}</td>
-                          <td className="py-3 px-4 border-b border-gray-100">{stats.total - stats.present}</td>
-                          <td className="py-3 px-4 border-b border-gray-100">{stats.total - stats.present}</td>
-                          <td className="py-3 px-4 border-b border-gray-100">{stats.total - stats.present}</td>
+                          <td className="py-3 px-4 border-b border-gray-100">
+                            {stats.present} 
+                            <span className="text-xs text-gray-500 ml-1">
+                              ({stats.total > 0 ? Math.round((stats.present/stats.total)*100) : 0}%)
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 border-b border-gray-100">
+                            {stats.absent}
+                            <span className="text-xs text-gray-500 ml-1">
+                              ({stats.total > 0 ? Math.round((stats.absent/stats.total)*100) : 0}%)
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 border-b border-gray-100">
+                            {stats.late}
+                            <span className="text-xs text-gray-500 ml-1">
+                              ({stats.total > 0 ? Math.round((stats.late/stats.total)*100) : 0}%)
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 border-b border-gray-100">
+                            {stats.excused}
+                            <span className="text-xs text-gray-500 ml-1">
+                              ({stats.total > 0 ? Math.round((stats.excused/stats.total)*100) : 0}%)
+                            </span>
+                          </td>
                         </tr>
                       );
                     })}
