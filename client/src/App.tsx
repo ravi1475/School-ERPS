@@ -38,6 +38,7 @@ import AssignmentManager from './components/Teacher/Assignment';
 import TeacherDirectory from './components/Schools/TeacherDirectory';
 import ExamSchedule from './components/Teacher/ExamSchedule';
 import FeeCollectionApp from "./components/Schools/FeesCollection";
+import  AttendanceManagement from "./components/Teacher/AttendanceManagement";
 // Uncomment these when the components are available
 // import StudentFeeDetails from './pages/StudentFeeDetails';
 // import PaymentGateway from './pages/PaymentGateway';
@@ -270,6 +271,16 @@ function App() {
             <ProtectedRoute allowedRoles={['teacher']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
                 <CreateExam />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/students/Attendance"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <Layout userRole={userRole} onLogout={handleLogout}>
+                <AttendanceManagement />
               </Layout>
             </ProtectedRoute>
           }
