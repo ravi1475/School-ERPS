@@ -1,4 +1,4 @@
-import React, { useState,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { 
   School, 
@@ -18,16 +18,24 @@ interface LayoutProps {
   userRole?: string | null;
 }
 
+interface Notification {
+  id: number;
+  text: string;
+  isRead: boolean;
+  date?: string; // Optional date field
+}
+
 // Main Layout Component
 const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
   const location = useLocation();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [notifications, setNotifications] = useState<{ id: number; text: string; isRead: boolean }[]>([
-    { id: 1, text: "New student registration", isRead: false },
-    { id: 2, text: "Fee payment reminder", isRead: false },
-    { id: 3, text: "Staff meeting at 3:00 PM", isRead: true }
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notifications, setNotifications] = useState<Notification[]>([
+    { id: 1, text: "New student registration", isRead: false, date: "2025-03-12" },
+    { id: 2, text: "Fee payment reminder", isRead: false, date: "2025-03-11" },
+    { id: 3, text: "Staff meeting at 3:00 PM", isRead: true, date: "2025-03-10" }
   ]);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -55,10 +63,85 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
   };
 
   const handleNotificationClick = (id: number) => {
+    // Mark notification as read
     setNotifications(notifications.map(n => 
       n.id === id ? { ...n, isRead: true } : n
     ));
+    
+    // Optionally close the notifications dropdown
+    // setIsNotificationsOpen(false);
   };
+
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Handle search submit
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      console.log("Searching for:", searchQuery);
+      // Add your search logic here
+    }
+  };
+
+  // Mark all notifications as read
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+  };
+
+  // Close sidebar when clicking a link on mobile
+  const closeMobileSidebar = () => {
+    if (window.innerWidth < 1024) {
+      setIsMobileSidebarOpen(false);
+    }
+  };
+
+  // Modify the useEffect to handle all three dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Handle profile dropdown
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileDropdownOpen(false);
+      }
+
+      // Handle notifications dropdown
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationsOpen(false);
+      }
+
+      // Handle search dropdown
+      if (
+        isSearchOpen &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('button')?.contains(event.target as Node)
+      ) {
+        setIsSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSearchOpen]);
+
+  // Close active dropdowns when route changes
+  useEffect(() => {
+    setActiveDropdown(null);
+    setIsProfileDropdownOpen(false);
+    setIsNotificationsOpen(false);
+    setIsSearchOpen(false);
+    closeMobileSidebar();
+  }, [location.pathname]);
 
   // Create props for navigation components
   const navbarProps = {
@@ -68,7 +151,8 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
     onLogout,
     isProfileDropdownOpen,
     setIsProfileDropdownOpen,
-    profileDropdownRef
+    profileDropdownRef,
+    closeMobileSidebar
   };
 
   // Get the appropriate header based on user role
@@ -117,6 +201,8 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
     }
   };
 
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm sticky top-0 z-30">
@@ -127,6 +213,8 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
               <button
                 onClick={toggleMobileSidebar}
                 className="p-2 rounded-md text-gray-500 lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                aria-expanded={isMobileSidebarOpen}
+                aria-label="Open navigation menu"
               >
                 {isMobileSidebarOpen ? (
                   <X className="h-6 w-6" aria-hidden="true" />
@@ -148,23 +236,29 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
                   <button
                     onClick={toggleSearch}
                     className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    aria-label="Search"
+                    aria-expanded={isSearchOpen}
                   >
                     <Search className="h-5 w-5" />
                   </button>
                   
                   {isSearchOpen && (
                     <div className="absolute right-0 mt-2 w-96 bg-white rounded-md shadow-lg p-4 z-50">
-                      <div className="flex items-center border border-gray-300 rounded-md">
-                        <div className="pl-3">
-                          <Search className="h-5 w-5 text-gray-400" />
+                      <form onSubmit={handleSearchSubmit}>
+                        <div className="flex items-center border border-gray-300 rounded-md">
+                          <div className="pl-3">
+                            <Search className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            ref={searchInputRef}
+                            type="text"
+                            placeholder="Search..."
+                            className="w-full p-2 focus:outline-none"
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                          />
                         </div>
-                        <input
-                          ref={searchInputRef}
-                          type="text"
-                          placeholder="Search..."
-                          className="w-full p-2 focus:outline-none"
-                        />
-                      </div>
+                      </form>
                     </div>
                   )}
                 </div>
@@ -178,11 +272,13 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
                 <button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                   className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  aria-label="View notifications"
+                  aria-expanded={isNotificationsOpen}
                 >
                   <span className="sr-only">View notifications</span>
                   <div className="relative">
                     <Bell className="h-6 w-6" />
-                    {notifications.some(n => !n.isRead) && (
+                    {unreadCount > 0 && (
                       <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                     )}
                   </div>
@@ -190,8 +286,16 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
                 
                 {isNotificationsOpen && (
                   <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
-                    <div className="px-4 py-2 border-b border-gray-100">
+                    <div className="px-4 py-2 border-b border-gray-100 flex justify-between items-center">
                       <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <button 
+                          onClick={markAllAsRead}
+                          className="text-xs text-indigo-600 hover:text-indigo-800"
+                        >
+                          Mark all as read
+                        </button>
+                      )}
                     </div>
                     
                     <div className="max-h-60 overflow-y-auto">
@@ -207,6 +311,11 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
                             <p className={`text-sm ${!notification.isRead ? 'font-medium text-gray-900' : 'text-gray-500'}`}>
                               {notification.text}
                             </p>
+                            {notification.date && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                {new Date(notification.date).toLocaleDateString()}
+                              </p>
+                            )}
                           </div>
                         ))
                       )}
@@ -228,6 +337,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
           <div
             className="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 lg:hidden"
             onClick={toggleMobileSidebar}
+            aria-hidden="true"
           ></div>
         )}
 
@@ -242,11 +352,11 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
           {renderRoleBasedSidebar()}
 
           {/* Sidebar Footer */}
-          <div className="border-t border-gray-200 p-4">
+          <div className="border-t border-gray-200 p-4 mt-auto">
             <a 
               href="/help" 
               className="flex items-center text-sm text-gray-600 hover:text-indigo-600"
-              onClick={() => setIsMobileSidebarOpen(false)}
+              onClick={closeMobileSidebar}
             >
               <User className="h-5 w-5 mr-3" />
               Help & Support

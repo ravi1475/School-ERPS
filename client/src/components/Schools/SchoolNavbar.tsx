@@ -246,6 +246,11 @@ const SchoolNavbar = {
               onClick={() => setIsMobileSidebarOpen(false)}
             />
             <NavLink 
+              to="/School/FeeCollection" 
+              label="Fees Collection" 
+              onClick={() => setIsMobileSidebarOpen(false)}
+            />
+            <NavLink 
               to="/School/BudgetPlanning" 
               label="Budget Planning" 
               onClick={() => setIsMobileSidebarOpen(false)}

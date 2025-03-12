@@ -14,9 +14,9 @@ interface FormData {
 type Role = 'admin' | 'school' | 'teacher';
 
 const demoAccounts = {
-  admin: { email: 'abhay@gmail.com', password: 'Abhay@1234' },
-  school: { email: 'ymca@gmail.com', password: 'Ymca@1234' },
-  teacher: { email: 'abhay@gmail.com', password: 'Abhay@1234' },
+  admin: { email: 'Ram@gmail.com', password: 'Ram@1234' },
+  school: { email: 'Ram2@gmail.com', password: 'Ram@1234' },
+  teacher: { email: 'Ram3@gmail.com', password: 'Ram@1234' },
 };
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {

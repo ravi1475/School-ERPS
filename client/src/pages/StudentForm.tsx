@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 
-const StudentRegistrationForm = () => {
+const StudentRegistrationForm: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     middleName: '',
@@ -73,8 +74,8 @@ const StudentRegistrationForm = () => {
       }));
     }
     
-    // Clear error message when user starts typing
     if (error) setError('');
+    if (success) setSuccess(false);
   };
 
   const validateCurrentStep = () => {
@@ -107,7 +108,6 @@ const StudentRegistrationForm = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Final validation
     const validationError = validateCurrentStep();
     if (validationError) {
       setError(validationError);
@@ -118,122 +118,132 @@ const StudentRegistrationForm = () => {
     setError('');
 
     try {
-      // Format dates properly
+      // Format dates for backend
       const formattedDateOfBirth = formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null;
       const formattedAdmissionDate = formData.admissionDate ? new Date(formData.admissionDate).toISOString() : new Date().toISOString();
-
-      // Get the schoolId from context/storage (this depends on your auth setup)
-      const schoolId = 1; // Replace with actual schoolId from your auth context
-
-      const payload = {
-        firstName: formData.firstName,
-        middleName: formData.middleName || '',
-        lastName: formData.lastName,
+      
+      // Map form data to API expected format
+      const studentData = {
+        firstName: formData.firstName.trim(),
+        middleName: formData.middleName?.trim() || null,
+        lastName: formData.lastName.trim(),
         dateOfBirth: formattedDateOfBirth,
-        gender: formData.gender,
-        bloodGroup: formData.bloodGroup || '',
-        nationality: formData.nationality || '',
-        religion: formData.religion || '',
-        category: formData.category || '',
-        aadhaarNumber: formData.aadhaarNumber || '',
-        mobileNumber: formData.mobileNumber,
-        email: formData.email || '',
-        emergencyContact: formData.emergencyContact || '',
-        admissionNo: formData.admissionNo,
-        rollNumber: formData.rollNumber || '',
-        className: formData.className,
-        section: formData.section || '',
+        gender: formData.gender, 
+        bloodGroup: formData.bloodGroup || null,
+        nationality: formData.nationality?.trim() || null,
+        religion: formData.religion?.trim() || null,
+        category: formData.category?.trim() || null,
+        aadhaarNumber: formData.aadhaarNumber?.trim() || null,
+        mobileNumber: formData.mobileNumber?.trim(),
+        email: formData.email?.trim() || null,
+        emergencyContact: formData.emergencyContact?.trim() || null,
+        admissionNo: formData.admissionNo.trim(),
+        rollNumber: formData.rollNumber?.trim() || null,
+        className: formData.className.trim(),
+        section: formData.section?.trim() || null,
         admissionDate: formattedAdmissionDate,
-        previousSchool: formData.previousSchool || '',
+        previousSchool: formData.previousSchool?.trim() || null,
         
-        // Address fields
-        houseNo: formData.address.houseNo || '',
-        street: formData.address.street || '',
-        city: formData.address.city,
-        state: formData.address.state,
-        pinCode: formData.address.pinCode || '',
+        // Address fields flattened
+        houseNo: formData.address.houseNo?.trim() || null,
+        street: formData.address.street?.trim() || null,
+        city: formData.address.city.trim(),
+        state: formData.address.state.trim(),
+        pinCode: formData.address.pinCode?.trim() || null,
         
-        // Parent fields
-        fatherName: formData.father.name,
-        fatherOccupation: formData.father.occupation || '',
-        fatherContact: formData.father.contactNumber || '',
-        fatherEmail: formData.father.email || '',
+        // Parent fields flattened
+        fatherName: formData.father.name.trim(),
+        fatherOccupation: formData.father.occupation?.trim() || null,
+        fatherContact: formData.father.contactNumber?.trim() || null,
+        fatherEmail: formData.father.email?.trim() || null,
+        motherName: formData.mother.name.trim(),
+        motherOccupation: formData.mother.occupation?.trim() || null,
+        motherContact: formData.mother.contactNumber?.trim() || null,
+        motherEmail: formData.mother.email?.trim() || null,
         
-        motherName: formData.mother.name,
-        motherOccupation: formData.mother.occupation || '',
-        motherContact: formData.mother.contactNumber || '',
-        motherEmail: formData.mother.email || '',
-        
-        // School relationship
-        schoolId: schoolId
+        // Add school ID - this is what was missing!
+        schoolId: 1  // Use the appropriate school ID for your system
       };
 
-      console.log("Submitting payload:", payload);
-
-      const response = await fetch("http://localhost:5000/api/students", {
-        method: "POST",
+      console.log("Sending student data to API:", studentData);
+      
+      // Make the API call
+      const response = await fetch('http://localhost:5000/api/students', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        credentials: "include", // Add this to include cookies
-        body: JSON.stringify(payload),
+        body: JSON.stringify(studentData),
       });
 
-      const data = await response.json();
+      // Parse response even if it's an error
+      const result = await response.json().catch(err => {
+        console.error("Error parsing response:", err);
+        return { message: "Invalid server response" };
+      });
 
-      if (response.ok) {
-        console.log("Submission successful:", data);
-        alert("Student registration successful!");
+      console.log("Server response:", response.status, result);
+
+      if (!response.ok) {
+        // Extract detailed error message if available
+        const errorMessage = 
+          result.message || 
+          result.error || 
+          result.errors?.map(e => e.msg).join(", ") ||
+          `Server error (${response.status}): Failed to register student`;
         
-        // Reset form
-        setFormData({
-          firstName: '',
-          middleName: '',
-          lastName: '',
-          dateOfBirth: '',
-          gender: '',
-          bloodGroup: '',
-          nationality: '',
-          religion: '',
-          category: '',
-          aadhaarNumber: '',
-          mobileNumber: '',
-          email: '',
-          emergencyContact: '',
-          admissionNo: '',
-          rollNumber: '',
-          className: '',
-          section: '',
-          admissionDate: new Date().toISOString().split('T')[0],
-          previousSchool: '',
-          address: {
-            houseNo: '',
-            street: '',
-            city: '',
-            state: '',
-            pinCode: ''
-          },
-          father: {
-            name: '',
-            occupation: '',
-            contactNumber: '',
-            email: ''
-          },
-          mother: {
-            name: '',
-            occupation: '',
-            contactNumber: '',
-            email: ''
-          }
-        });
-        setCurrentStep(1);
-      } else {
-        console.error("Submission error:", data);
-        setError(data.message || "Failed to submit form. Please try again.");
+        throw new Error(errorMessage);
       }
+
+      console.log("Student registered successfully:", result);
+      setSuccess(true);
+      
+      // Reset form after successful submission
+      setFormData({
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        dateOfBirth: '',
+        gender: '',
+        bloodGroup: '',
+        nationality: '',
+        religion: '',
+        category: '',
+        aadhaarNumber: '',
+        mobileNumber: '',
+        email: '',
+        emergencyContact: '',
+        admissionNo: '',
+        rollNumber: '',
+        className: '',
+        section: '',
+        admissionDate: new Date().toISOString().split('T')[0],
+        previousSchool: '',
+        address: {
+          houseNo: '',
+          street: '',
+          city: '',
+          state: '',
+          pinCode: ''
+        },
+        father: {
+          name: '',
+          occupation: '',
+          contactNumber: '',
+          email: ''
+        },
+        mother: {
+          name: '',
+          occupation: '',
+          contactNumber: '',
+          email: ''
+        }
+      });
+      setCurrentStep(1);
+      
     } catch (error) {
-      console.error("Exception during form submission:", error);
-      setError("Network error. Please check your connection and try again.");
+      console.error("Form submission error:", error);
+      setError(error instanceof Error ? error.message : "An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -416,6 +426,17 @@ const StudentRegistrationForm = () => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
+
+                 </label>
+                       <label className="block mb-4">
+                         <span className="text-gray-700">Student Email</span>
+                         <input
+                           type="email"
+                           name="email"
+                           value={formData.email}
+                           onChange={handleChange}
+                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                         />
             </label>
             <label className="block mb-4">
               <span className="text-gray-700">Emergency Contact</span>
@@ -433,7 +454,7 @@ const StudentRegistrationForm = () => {
       3: (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <label className="block mb-4">
-            <span className="text-gray-700">Admission Number</span>
+            <span className="text-gray-700">Admission Number *</span>
             <input
               type="text"
               name="admissionNo"
@@ -444,7 +465,7 @@ const StudentRegistrationForm = () => {
             />
           </label>
           <label className="block mb-4">
-            <span className="text-gray-700">Class</span>
+            <span className="text-gray-700">Class *</span>
             <input
               type="text"
               name="className"
@@ -454,11 +475,51 @@ const StudentRegistrationForm = () => {
               required
             />
           </label>
+          <label className="block mb-4">
+            <span className="text-gray-700">Roll Number</span>
+            <input
+              type="text"
+              name="rollNumber"
+              value={formData.rollNumber}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </label>
+          <label className="block mb-4">
+            <span className="text-gray-700">Section</span>
+            <input
+              type="text"
+              name="section"
+              value={formData.section}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </label>
+          <label className="block mb-4">
+            <span className="text-gray-700">Previous School</span>
+            <input
+              type="text"
+              name="previousSchool"
+              value={formData.previousSchool}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </label>
         </div>
       ),
       4: (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
+            <label className="block mb-4">
+              <span className="text-gray-700">House/Flat No.</span>
+              <input
+                type="text"
+                name="address.houseNo"
+                value={formData.address.houseNo}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </label>
             <label className="block mb-4">
               <span className="text-gray-700">Street Address</span>
               <input
@@ -467,11 +528,12 @@ const StudentRegistrationForm = () => {
                 value={formData.address.street}
                 onChange={handleChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
               />
             </label>
+          </div>
+          <div>
             <label className="block mb-4">
-              <span className="text-gray-700">City</span>
+              <span className="text-gray-700">City *</span>
               <input
                 type="text"
                 name="address.city"
@@ -481,10 +543,8 @@ const StudentRegistrationForm = () => {
                 required
               />
             </label>
-          </div>
-          <div>
             <label className="block mb-4">
-              <span className="text-gray-700">State</span>
+              <span className="text-gray-700">State *</span>
               <input
                 type="text"
                 name="address.state"
@@ -502,7 +562,6 @@ const StudentRegistrationForm = () => {
                 value={formData.address.pinCode}
                 onChange={handleChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
               />
             </label>
           </div>
@@ -514,7 +573,7 @@ const StudentRegistrationForm = () => {
             <h3 className="text-lg font-medium mb-4">Father's Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <label className="block mb-4">
-                <span className="text-gray-700">Name</span>
+                <span className="text-gray-700">Name *</span>
                 <input
                   type="text"
                   name="father.name"
@@ -560,7 +619,7 @@ const StudentRegistrationForm = () => {
             <h3 className="text-lg font-medium mb-4">Mother's Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <label className="block mb-4">
-                <span className="text-gray-700">Name</span>
+                <span className="text-gray-700">Name *</span>
                 <input
                   type="text"
                   name="mother.name"
@@ -618,6 +677,12 @@ const StudentRegistrationForm = () => {
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
             <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+            <span className="block sm:inline">Student registration successful!</span>
           </div>
         )}
         
