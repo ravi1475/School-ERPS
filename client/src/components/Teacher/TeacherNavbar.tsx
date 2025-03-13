@@ -138,11 +138,6 @@ const TeacherNavbar = {
               label="Teaching Materials" 
               onClick={() => setIsMobileSidebarOpen(false)}
             />
-             <NavLink 
-              to="/students/attendance" 
-              label="Attendance" 
-              onClick={() => setIsMobileSidebarOpen(false)}
-            />
             <NavLink 
               to="/teachers/myclasses/assignment" 
               label="Assignments" 
@@ -162,7 +157,11 @@ const TeacherNavbar = {
               label="Student Directory" 
               onClick={() => setIsMobileSidebarOpen(false)}
             />
-           
+            <NavLink 
+              to="/students/attendance" 
+              label="Take Attendance" 
+              onClick={() => setIsMobileSidebarOpen(false)}
+            />
             <NavLink 
               to="/students/grades" 
               label="Grade Management" 
@@ -178,18 +177,13 @@ const TeacherNavbar = {
             onClick={() => toggleDropdown("examination")}
           >
             <NavLink 
-              to="/examination/create" 
+              to="/teachers/examination/create-exam" 
               label="Create Exam" 
               onClick={() => setIsMobileSidebarOpen(false)}
             />
             <NavLink 
-              to="/examination/schedule" 
+              to="/teachers/examination/exam-schedule" 
               label="Exam Schedule" 
-              onClick={() => setIsMobileSidebarOpen(false)}
-            />
-            <NavLink 
-              to="/examination/results" 
-              label="Enter Results" 
               onClick={() => setIsMobileSidebarOpen(false)}
             />
           </NavDropdown>

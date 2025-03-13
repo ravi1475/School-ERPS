@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -11,6 +11,7 @@ enum Role {
   ADMIN
   SCHOOL
   TEACHER
+  STUDENT
 }
 
 model Admin {
@@ -20,7 +21,7 @@ model Admin {
   password  String
   username  String   @default("unknown")
   role      Role     @default(ADMIN)
-  phone     String   @default("0123456789") @db.VarChar(10) // Enforce 10-character length
+  phone     String   @default("0123456789") @db.VarChar(10)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -37,10 +38,10 @@ model School {
   established Int          @default(2000)
   role        Role         @default(SCHOOL)
   teachers    Teacher[]
-  // departments Department[]
+  students    Student[]
+  departments Department[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  Department  Department[]
 }
 
 model Teacher {
@@ -48,8 +49,8 @@ model Teacher {
   fullName     String
   email        String   @unique
   password     String
-  class        String[]
-  subjects     String[]
+  class        String   @db.Text
+  subjects     String   @db.Text
   joining_year DateTime @default(now())
   experience   String   @default("5+")
   role         Role     @default(TEACHER)
@@ -59,12 +60,201 @@ model Teacher {
   updatedAt    DateTime @updatedAt
 }
 
+model Student {
+  id               Int       @id @default(autoincrement())
+  // Student Information
+  branchName       String?
+  firstName        String
+  middleName       String?
+  lastName         String
+  admissionNo      String    @unique
+  studentId        String?
+  dateOfBirth      DateTime
+  gender           String
+  bloodGroup       String?
+  nationality      String?
+  religion         String?
+  category         String?
+  caste            String?
+  aadhaarNumber    String?
+  mobileNumber     String
+  email            String?
+  emergencyContact String?
+  
+  // Academic fields
+  rollNumber       String?
+  className        String
+  section          String?
+  admissionDate    DateTime  @default(now())
+  previousSchool   String?   @db.Text
+  
+  // Address fields
+  houseNo          String?
+  street           String?   @db.Text
+  city             String
+  state            String
+  pinCode          String?
+  
+  // Parent information (reduced to essential fields)
+  fatherName       String
+  motherName       String
+  
+  // Relations
+  schoolId        Int
+  school          School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  parentInfo      ParentInfo?
+  sessionInfo     SessionInfo?
+  transportInfo   TransportInfo?
+  documents       Documents?
+  educationInfo   EducationInfo?
+  otherInfo       OtherInfo?
+  
+  // Meta
+  role            Role      @default(STUDENT)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// Normalized tables to reduce row size
+
+model ParentInfo {
+  id                  Int      @id @default(autoincrement())
+  // Father details
+  fatherQualification String?
+  fatherOccupation    String?
+  fatherContact       String?
+  fatherEmail         String?
+  fatherAadhaarNo     String?
+  fatherAnnualIncome  String?
+  fatherIsCampusEmployee String? @default("no")
+  
+  // Mother details
+  motherQualification String?
+  motherOccupation    String?
+  motherContact       String?
+  motherEmail         String?
+  motherAadhaarNo     String?
+  motherAnnualIncome  String?
+  motherIsCampusEmployee String? @default("no")
+  
+  // Guardian information
+  guardianName        String?
+  guardianAddress     String?  @db.Text
+  guardianContact     String?
+  
+  // Relation
+  studentId           Int      @unique
+  student             Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model SessionInfo {
+  id               Int     @id @default(autoincrement())
+  // Admit Session
+  admitGroup       String?
+  admitStream      String?
+  admitClass       String?
+  admitSection     String?
+  admitRollNo      String?
+  admitSemester    String?
+  admitFeeGroup    String?
+  admitHouse       String?
+  
+  // Current Session
+  currentGroup     String?
+  currentStream    String?
+  currentClass     String?
+  currentSection   String?
+  currentRollNo    String?
+  currentSemester  String?
+  currentFeeGroup  String?
+  currentHouse     String?
+  
+  // Relation
+  studentId        Int     @unique
+  student          Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model TransportInfo {
+  id              Int     @id @default(autoincrement())
+  transportMode   String?
+  transportArea   String?
+  transportStand  String?
+  transportRoute  String?
+  transportDriver String?
+  
+  // Relation
+  studentId       Int     @unique
+  student         Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model Documents {
+  id                     Int     @id @default(autoincrement())
+  studentImagePath       String? @db.Text
+  fatherImagePath        String? @db.Text
+  motherImagePath        String? @db.Text
+  guardianImagePath      String? @db.Text
+  signaturePath          String? @db.Text
+  fatherAadharPath       String? @db.Text
+  motherAadharPath       String? @db.Text
+  birthCertificatePath   String? @db.Text
+  migrationCertificatePath String? @db.Text
+  aadhaarCardPath        String? @db.Text
+  
+  // Academic registration
+  academicRegistrationNo String?
+  
+  // Relation
+  studentId              Int     @unique
+  student                Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model EducationInfo {
+  id                Int       @id @default(autoincrement())
+  lastSchool        String?   @db.Text
+  lastSchoolAddress String?   @db.Text
+  lastTcDate        DateTime?
+  lastClass         String?
+  lastPercentage    String?
+  lastAttendance    String?
+  lastExtraActivity String?   @db.Text
+  
+  // Relation
+  studentId         Int       @unique
+  student           Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model OtherInfo {
+  id                 Int     @id @default(autoincrement())
+  belongToBPL        String? @default("no")
+  minority           String? @default("no")
+  disability         String?
+  accountNo          String?
+  bank               String?
+  ifscCode           String?
+  medium             String?
+  lastYearResult     String?
+  singleParent       String? @default("no")
+  onlyChild          String? @default("no")
+  onlyGirlChild      String? @default("no")
+  adoptedChild       String? @default("no")
+  siblingAdmissionNo String?
+  transferCase       String? @default("no")
+  livingWith         String?
+  motherTongue       String?
+  admissionType      String? @default("new")
+  udiseNo            String?
+  
+  // Relation
+  studentId          Int     @unique
+  student            Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
 model Department {
   id             Int      @id @default(autoincrement())
   departmentName String
   hOD            String
   faculty_count  Int
-  description    String
+  description    String   @db.Text
   schoolId       Int
   school         School   @relation(fields: [schoolId], references: [id])
   createdAt      DateTime @default(now())

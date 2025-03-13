@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState} from "react";
 import { Edit2, Clock, Users, BookOpen, Calendar, Plus, Search, Filter, Trash2 } from "lucide-react";
 import ClassDetails from './ClassDetails'; // Add this import at the top with other imports
 

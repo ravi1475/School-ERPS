@@ -14,9 +14,9 @@ interface FormData {
 type Role = 'admin' | 'school' | 'teacher';
 
 const demoAccounts = {
-  admin: { email: 'abhay@gmail.com', password: 'Abhay@1234' },
-  school: { email: 'ymca@gmail.com', password: 'Ymca@1234' },
-  teacher: { email: 'abhay@gmail.com', password: 'Abhay@1234' },
+  admin: { email: 'Ram@gmail.com', password: 'Ram@1234' },
+  school: { email: 'Ram2@gmail.com', password: 'Ram@1234' },
+  teacher: { email: 'Ram3@gmail.com', password: 'Ram@1234' },
 };
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
@@ -94,20 +94,35 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
 
-
     if (!validateForm() || !selectedRole) return;
-
-    // Trigger the API call via useEffect
-    setSubmitForm(true);
+    
+    setIsLoading(true);
+    
+    // Check if using demo credentials
+    const selectedDemoAccount = demoAccounts[selectedRole];
+    if (formData.email === selectedDemoAccount.email && 
+        formData.password === selectedDemoAccount.password) {
+      
+      // Simulate loading for better UX
+      setTimeout(() => {
+        // Mock successful login with demo token
+        const mockToken = `demo-token-${selectedRole}-${Date.now()}`;
+        onLoginSuccess(mockToken, selectedRole);
+        setIsLoading(false);
+      }, 800);
+    } else {
+      // For non-demo credentials, still try the API
+      setSubmitForm(true);
+    }
   };
 
-  // useEffect to handle the API call when submitForm becomes true
+  // Update useEffect to handle non-demo credentials
   useEffect(() => {
     if (!submitForm || !selectedRole) return;
 
     setIsLoading(true);
 
-    console.log(`http://localhost:5000/api/${selectedRole}Login`);
+    console.log(`Attempting to call API: http://localhost:5000/api/${selectedRole}Login`);
     fetch(`http://localhost:5000/api/${selectedRole}Login`, {
       method: 'POST',
       headers: {
@@ -118,16 +133,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
     })
       .then(response => response.json())
       .then(data => {
-        if (data.data.token) {
-          onLoginSuccess(data.token, selectedRole);
-          // alert("Login Successfull!");
+        if (data.data && data.data.token) {
+          onLoginSuccess(data.data.token, selectedRole);
         } else {
           setLoginError('Invalid email or password');
         }
       })
       .catch(error => {
         console.error('Login failed', error);
-        setLoginError('An error occurred during login. Please try again.');
+        setLoginError('Backend connection failed. Try using the demo credentials.');
       })
       .finally(() => {
         setIsLoading(false);

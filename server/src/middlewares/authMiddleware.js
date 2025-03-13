@@ -1,22 +1,18 @@
-import jwt from "jsonwebtoken";
+import { PrismaClient } from '@prisma/client';
 
-export const authMiddleware = (req, res, next) => {
-  const token = req.header("auth_token");
+const prisma = new PrismaClient();
 
-  if (!token) {
-    return res
-      .status(401)
-      .json({ message: "Access denied. No token provided." });
-  }
+// Completely passive auth middleware
+export const authenticateToken = (req, res, next) => {
+  console.log("Auth middleware bypassed");
+  // No authentication needed, just continue
+  next();
+};
 
-  try {
-    const decoded = jwt.verify(
-      token.replace("Bearer ", ""),
-      process.env.JWT_SECRET
-    );
-    req.user = decoded; // Attach decoded user info to request object
-    next(); // Proceed to the next middleware or route handler
-  } catch (error) {
-    return res.status(403).json({ message: "Invalid or expired token." });
-  }
+// Passive authorization that allows everything
+export const authorize = (...allowedRoles) => {
+  return (req, res, next) => {
+    console.log("Authorization bypassed");
+    next();
+  };
 };
