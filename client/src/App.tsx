@@ -77,31 +77,25 @@ function App() {
     setIsAuthenticated(true);
   };
 
-  const handleLogout = async () => {
-    try {
-      // Make API call to backend logout route
-      const response = await fetch("http://localhost:5000/api/logout", {
-        method: "POST",
-        credentials: "include", // Ensures cookies are sent with the request
-      });
-
-      if (response.ok) {
-        // Clear auth info from local storage
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userRole");
-
-        // Reset state
-        setToken(null);
-        setUserRole(null);
-        setIsAuthenticated(false);
-
-        console.log("Logout successful");
-      } else {
-        console.error("Logout failed");
-      }
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
+  const handleLogout = () => {
+    // Clear auth info from local storage
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("loginTimestamp");
+    
+    // Clear any session storage
+    sessionStorage.clear();
+    
+    // Clear any auth cookies if present
+    document.cookie = 'authCookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    
+    // Reset state
+    setToken(null);
+    setUserRole(null);
+    setIsAuthenticated(false);
+    
+    console.log("Logout successful");
   };
 
   // Protected route component

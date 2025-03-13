@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiUser } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 interface LoginFormProps {
   onLoginSuccess: (token: string, role: string) => void;
@@ -20,6 +21,7 @@ const demoAccounts = {
 };
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
+  const navigate = useNavigate(); // Initialize navigate
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -91,6 +93,28 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
     setLoginError('');
   };
 
+  // Function to handle successful login and navigation
+  const handleLoginSuccess = (token: string, role: Role) => {
+    // Call the provided callback for parent component state
+    onLoginSuccess(token, role);
+    
+    // Navigate based on role
+    switch (role) {
+      case 'admin':
+        navigate('/admin');
+        break;
+      case 'school':
+        navigate('/school');
+        break;
+      case 'teacher':
+        navigate('/teacher');
+        break;
+      default:
+        // Fallback
+        navigate('/dashboard');
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
 
@@ -107,7 +131,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       setTimeout(() => {
         // Mock successful login with demo token
         const mockToken = `demo-token-${selectedRole}-${Date.now()}`;
-        onLoginSuccess(mockToken, selectedRole);
+        handleLoginSuccess(mockToken, selectedRole);
         setIsLoading(false);
       }, 800);
     } else {
@@ -134,7 +158,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       .then(response => response.json())
       .then(data => {
         if (data.data && data.data.token) {
-          onLoginSuccess(data.data.token, selectedRole);
+          handleLoginSuccess(data.data.token, selectedRole);
         } else {
           setLoginError('Invalid email or password');
         }

@@ -98,41 +98,50 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout, userRole }) => {
     }
   };
 
-  // Modify the useEffect to handle all three dropdowns
+  // Replace the existing useEffect for click handling with this:
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Handle profile dropdown
+      // Handle profile dropdown - only if it's currently open
       if (
+        isProfileDropdownOpen &&
         profileDropdownRef.current &&
-        !profileDropdownRef.current.contains(event.target as Node)
+        !profileDropdownRef.current.contains(event.target as Node) &&
+        // Make sure we're not clicking the button that toggles the dropdown
+        !(event.target as Element).closest('button')?.getAttribute('aria-label')?.includes('profile')
       ) {
         setIsProfileDropdownOpen(false);
       }
 
-      // Handle notifications dropdown
+      // Handle notifications dropdown - only if it's currently open
       if (
+        isNotificationsOpen &&
         notificationsRef.current &&
-        !notificationsRef.current.contains(event.target as Node)
+        !notificationsRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('button')?.getAttribute('aria-label')?.includes('notifications')
       ) {
         setIsNotificationsOpen(false);
       }
 
-      // Handle search dropdown
+      // Handle search dropdown - only if it's currently open
       if (
         isSearchOpen &&
         searchInputRef.current &&
         !searchInputRef.current.contains(event.target as Node) &&
-        !(event.target as Element).closest('button')?.contains(event.target as Node)
+        !(event.target as Element).closest('button')?.getAttribute('aria-label')?.includes('search')
       ) {
         setIsSearchOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    // Only add listener if any dropdown is open
+    if (isProfileDropdownOpen || isNotificationsOpen || isSearchOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isSearchOpen]);
+  }, [isProfileDropdownOpen, isNotificationsOpen, isSearchOpen]);
 
   // Close active dropdowns when route changes
   useEffect(() => {
