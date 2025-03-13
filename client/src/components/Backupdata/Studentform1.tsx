@@ -747,7 +747,7 @@
 
 
 import React from 'react';
-import {useStudentRegistration} from '../components/Hooks/useStudentRegistration';
+import {useStudentRegistration} from '../Hooks/useStudentRegistration';
 
 
 const StudentRegistrationForm: React.FC = () => {

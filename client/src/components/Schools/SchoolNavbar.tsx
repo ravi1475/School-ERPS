@@ -281,7 +281,7 @@ const SchoolNavbar = {
 
           {/* School Calendar */}
           <NavLink 
-            to="/Calender" 
+            to="/school/GradeManagementSchool" 
             icon={<Book className="h-5 w-5 text-indigo-600" />} 
             label="Exams & Grade Management" 
             onClick={() => setIsMobileSidebarOpen(false)}

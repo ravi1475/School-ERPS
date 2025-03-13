@@ -40,6 +40,7 @@ import ExamSchedule from './components/Teacher/ExamSchedule';
 import FeeCollectionApp from "./components/Schools/FeesCollection";
 import  AttendanceManagement from "./components/Teacher/AttendanceManagement";
 import CheckBounceSystem from "./components/Schools/ChequeBounce";
+import GradeManagementSchool from "./components/Schools/ExamGrade"
 // Uncomment these when the components are available
 // import StudentFeeDetails from './pages/StudentFeeDetails';
 // import PaymentGateway from './pages/PaymentGateway';
@@ -355,6 +356,16 @@ function App() {
             <ProtectedRoute allowedRoles={['school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
                 <DepartmentManagement/>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/school/GradeManagementSchool"
+          element={
+            <ProtectedRoute allowedRoles={['school']}>
+              <Layout userRole={userRole} onLogout={handleLogout}>
+                <GradeManagementSchool/>
               </Layout>
             </ProtectedRoute>
           }
