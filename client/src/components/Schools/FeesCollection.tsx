@@ -49,6 +49,8 @@ const FeeCollectionApp: React.FC = () => {
   // Update functionality
   const [selectedRecord, setSelectedRecord] = useState<FeeRecord | null>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  // Add this state to track previous fee amount
+  const [previousFeeAmount, setPreviousFeeAmount] = useState(0);
 
   // Class options with Nursery and 1-12
   const classOptions = ['Nursery', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
@@ -96,11 +98,13 @@ const FeeCollectionApp: React.FC = () => {
         [name]: ['feeAmount', 'totalFees', 'amountPaid'].includes(name) ? parseFloat(value) || 0 : value
       };
 
-      // When feeAmount changes, automatically update amountPaid (previously paid + current payment)
+      // When feeAmount changes, correctly update amountPaid
       if (name === 'feeAmount') {
         const currentPayment = parseFloat(value) || 0;
-        // Only include the current payment in total paid when entering a new fee amount
-        updatedData.amountPaid = prev.amountPaid + currentPayment;
+        // Remove the previous fee amount and add the new one
+        updatedData.amountPaid = prev.amountPaid - previousFeeAmount + currentPayment;
+        // Update the previous fee amount for next change
+        setPreviousFeeAmount(currentPayment);
       }
 
       // Auto-calculate status based on totalFees and amountPaid
@@ -121,6 +125,24 @@ const FeeCollectionApp: React.FC = () => {
     });
   };
 
+  // When the form is reset, also reset the previous fee amount
+  const resetForm = () => {
+    setFormData({
+      admissionNumber: '',
+      studentName: '',
+      class: '',
+      section: '',
+      totalFees: 0,
+      amountPaid: 0,
+      feeAmount: 0,
+      paymentDate: new Date().toISOString().split('T')[0],
+      paymentMode: 'Cash',
+      receiptNumber: '',
+      status: 'Paid'
+    });
+    setPreviousFeeAmount(0); // Reset previous fee amount
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -130,16 +152,21 @@ const FeeCollectionApp: React.FC = () => {
       
       // Create payload with correct data types as expected by the API
       const payload = {
-        ...formData,
-        // Ensure numbers are sent as numbers, not strings
-        totalFees: parseFloat(formData.totalFees.toString()),
-        amountPaid: parseFloat(formData.amountPaid.toString()),
-        feeAmount: parseFloat(formData.feeAmount.toString()),
-        // Format date to YYYY-MM-DD to match validator
-        paymentDate: formData.paymentDate,
-        // Add schoolId if required by your backend (check your Prisma schema)
-        schoolId: 1 // Add the appropriate school ID from your context or state
+        admissionNumber: formData.admissionNumber.trim(),
+        studentName: formData.studentName.trim(),
+        class: formData.class,
+        section: formData.section,
+        totalFees: Number(formData.totalFees),
+        amountPaid: Number(formData.amountPaid),
+        feeAmount: Number(formData.feeAmount),
+        paymentDate: formData.paymentDate.toString(),
+        paymentMode: formData.paymentMode,
+        receiptNumber: formData.receiptNumber.trim(),
+        status: formData.status,
+        schoolId: 1  // Make sure this matches your database schema
       };
+
+    
       
       console.log('Sending data to API:', payload);
       
@@ -156,20 +183,8 @@ const FeeCollectionApp: React.FC = () => {
         setRecords(prev => [savedRecord, ...prev]);
         showNotification('Fee record added successfully!', 'success');
         
-        // Reset form
-        setFormData({
-          admissionNumber: '',
-          studentName: '',
-          class: '',
-          section: '',
-          totalFees: 0,
-          amountPaid: 0,
-          feeAmount: 0,
-          paymentDate: new Date().toISOString().split('T')[0],
-          paymentMode: 'Cash',
-          receiptNumber: '',
-          status: 'Paid'
-        });
+        // Use the resetForm function to reset the form
+        resetForm();
         
         // Close form with animation
         setIsFormVisible(false);
@@ -181,7 +196,12 @@ const FeeCollectionApp: React.FC = () => {
       // Enhanced error logging
       if (err.response) {
         console.error('Server response:', err.response.data);
-        showNotification(`Server error: ${err.response.data.message || 'Unknown error'}`, 'error');
+        if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
+          // Show detailed validation errors
+          showNotification(`Validation errors: ${err.response.data.errors.join(', ')}`, 'error');
+        } else {
+          showNotification(`Server error: ${err.response.data.message || 'Unknown error'}`, 'error');
+        }
       } else {
         showNotification(`Failed to add fee record: ${err.message || 'Unknown error'}`, 'error');
       }
@@ -201,29 +221,48 @@ const FeeCollectionApp: React.FC = () => {
     try {
       setIsLoading(true);
       
+      // Create payload with proper data formatting
+      const payload = {
+        admissionNumber: updatedRecord.admissionNumber.trim(),
+        studentName: updatedRecord.studentName.trim(),
+        class: updatedRecord.class,
+        section: updatedRecord.section,
+        totalFees: Number(updatedRecord.totalFees),
+        amountPaid: Number(updatedRecord.amountPaid),
+        feeAmount: Number(updatedRecord.feeAmount),
+        paymentDate: updatedRecord.paymentDate,
+        paymentMode: updatedRecord.paymentMode,
+        receiptNumber: updatedRecord.receiptNumber.trim(),
+        status: updatedRecord.status,
+        schoolId: 1
+      };
+      
+      // Log the payload for debugging
+      console.log('Updating record with payload:', JSON.stringify(payload, null, 2));
+      
       // Call API to update the record
-      const response = await axios.put(`${API_URL}/${updatedRecord.id}`, updatedRecord);
+      const response = await axios.put(`${API_URL}/${updatedRecord.id}`, payload);
       
       if (response.data.success) {
-        // Format the date for UI
-        const formattedRecord = {
-          ...response.data.data,
-          paymentDate: new Date(response.data.data.paymentDate).toISOString().split('T')[0]
-        };
-        
-        // Update the record in the local state
-        setRecords(records.map(record => 
-          record.id === formattedRecord.id ? formattedRecord : record
-        ));
-        
-        showNotification('Fee record updated successfully!', 'success');
-        setIsUpdateModalOpen(false);
-      } else {
-        showNotification(`Failed to update record: ${response.data.message}`, 'error');
+        // Rest of your code...
       }
     } catch (err: any) {
       console.error('Error updating fee record:', err);
-      showNotification(`Failed to update fee record: ${err.message || 'Unknown error'}`, 'error');
+      
+      // Enhanced error logging with complete details
+      if (err.response) {
+        console.error('Full server response:', JSON.stringify(err.response.data, null, 2));
+        
+        if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
+          const errorDetails = err.response.data.errors.join(', ');
+          console.log('Validation errors:', errorDetails);
+          showNotification(`Validation errors: ${errorDetails}`, 'error');
+        } else {
+          showNotification(`Server error: ${err.response.data.message || 'Unknown error'}`, 'error');
+        }
+      } else {
+        showNotification(`Failed to update fee record: ${err.message || 'Unknown error'}`, 'error');
+      }
     } finally {
       setIsLoading(false);
     }

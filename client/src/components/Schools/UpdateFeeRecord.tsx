@@ -54,12 +54,14 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [originalAmountPaid, setOriginalAmountPaid] = useState(0);
+  const [originalFeeAmount, setOriginalFeeAmount] = useState(0);
   
   // Initialize form data when record changes
   useEffect(() => {
     if (record) {
       setFormData({...record});
-      setOriginalAmountPaid(record.amountPaid - record.feeAmount); // Store the original amount paid without current payment
+      setOriginalFeeAmount(record.feeAmount);
+      setOriginalAmountPaid(record.amountPaid - record.feeAmount); // Original amount paid without current payment
     }
   }, [record]);
   
@@ -71,22 +73,36 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
         [name]: ['feeAmount', 'totalFees', 'amountPaid'].includes(name) ? parseFloat(value) || 0 : value
       };
 
-      // When feeAmount changes, automatically update amountPaid
+      // When feeAmount changes, recalculate the amountPaid
       if (name === 'feeAmount') {
-        const currentPayment = parseFloat(value) || 0;
-        updatedData.amountPaid = originalAmountPaid + currentPayment;
+        const newFeeAmount = parseFloat(value) || 0;
+        // Remove original fee amount and add the new one
+        updatedData.amountPaid = originalAmountPaid + newFeeAmount;
       }
 
-      // Auto-calculate status based on totalFees and amountPaid
-      if (['totalFees', 'amountPaid', 'feeAmount'].includes(name) && updatedData.totalFees > 0) {
-        const totalPaid = updatedData.amountPaid;
-        
-        if (totalPaid >= updatedData.totalFees) {
+      // When totalFees changes, we need to recalculate the status
+      if (name === 'totalFees' && updatedData.amountPaid > 0) {
+        if (updatedData.amountPaid >= updatedData.totalFees) {
           updatedData.status = 'Paid';
-        } else if (totalPaid > 0) {
+        } else if (updatedData.amountPaid > 0) {
           updatedData.status = 'Partial';
         } else {
           updatedData.status = 'Pending';
+        }
+      }
+
+      // If status is manually changed
+      if (name === 'status') {
+        // If setting to "Paid" but amount doesn't match, adjust amount
+        if (value === 'Paid' && updatedData.amountPaid < updatedData.totalFees) {
+          updatedData.amountPaid = updatedData.totalFees;
+          // Update feeAmount to make up the difference
+          updatedData.feeAmount = updatedData.totalFees - originalAmountPaid;
+        }
+        // If setting to "Pending" but amount is not zero, set amount to zero
+        else if (value === 'Pending' && updatedData.amountPaid > 0) {
+          updatedData.amountPaid = 0;
+          updatedData.feeAmount = 0;
         }
       }
 
@@ -101,37 +117,71 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
       setIsLoading(true);
       setError(null);
       
-      // Create payload with proper data formatting
+      // Create a clean payload with properly formatted date
       const payload = {
-        ...formData,
-        // Ensure numbers are sent as numbers
-        totalFees: parseFloat(formData.totalFees.toString()),
-        amountPaid: parseFloat(formData.amountPaid.toString()),
-        feeAmount: parseFloat(formData.feeAmount.toString()),
-        // Keep date in YYYY-MM-DD format
+        admissionNumber: formData.admissionNumber.trim(),
+        studentName: formData.studentName.trim(),
+        class: formData.class,
+        section: formData.section,
+        totalFees: Number(formData.totalFees),
+        amountPaid: Number(formData.amountPaid),
+        feeAmount: Number(formData.feeAmount),
+        // Format date properly to ensure it's valid
         paymentDate: formData.paymentDate,
-        // Include schoolId if needed by your API
-        schoolId: 1 // Use the appropriate school ID
+        paymentMode: formData.paymentMode,
+        receiptNumber: formData.receiptNumber.trim(),
+        status: formData.status,
+        schoolId: 1
       };
-      
-      console.log('Updating fee record:', payload);
+
+      // Validate the payload before sending
+      if (!payload.admissionNumber || !payload.studentName || !payload.class || !payload.section || 
+          !payload.paymentMode || !payload.receiptNumber || !payload.paymentDate) {
+        setError('Please fill all required fields');
+        return;
+      }
+
+      // Additional validation for numeric fields
+      if (isNaN(payload.totalFees) || isNaN(payload.amountPaid) || isNaN(payload.feeAmount)) {
+        setError('Fee amounts must be valid numbers');
+        return;
+      }
+
+      // Validate status is one of allowed values
+      if (!['Paid', 'Partial', 'Pending'].includes(payload.status)) {
+        setError('Status must be Paid, Partial, or Pending');
+        return;
+      }
+
+      // Log the exact payload being sent for debugging
+      console.log('Update payload:', JSON.stringify(payload, null, 2));
       
       // Call API to update the record
       const response = await axios.put(`${API_URL}/${formData.id}`, payload);
       
       if (response.data.success) {
-        // Call the update function from parent component
-        onUpdate(formData);
+        // Format the date for UI
+        const updatedRecord = {
+          ...response.data.data,
+          paymentDate: new Date(response.data.data.paymentDate).toISOString().split('T')[0]
+        };
+        onUpdate(updatedRecord);
         onClose();
       } else {
         setError(`Failed to update: ${response.data.message}`);
       }
     } catch (err: any) {
       console.error('Error updating fee record:', err);
-      // Enhanced error logging
+      
+      // Enhanced error logging with complete error details
       if (err.response) {
-        console.error('Server response:', err.response.data);
-        setError(`Server error: ${err.response.data.message || 'Unknown error'}`);
+        console.error('Full server response:', JSON.stringify(err.response.data, null, 2));
+        if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
+          // Show the specific validation errors from the server
+          setError(`Validation errors: ${err.response.data.errors.join(', ')}`);
+        } else {
+          setError(`Server error: ${err.response.data.message || 'Unknown error'}`);
+        }
       } else {
         setError(`Failed to update fee record: ${err.message || 'Unknown error'}`);
       }
@@ -139,6 +189,9 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
       setIsLoading(false);
     }
   };
+
+  // Calculate balance amount
+  const balanceAmount = formData.totalFees - formData.amountPaid;
 
   return (
     <AnimatePresence>
@@ -249,14 +302,12 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Previously Paid Amount <span className="text-xs text-gray-500">(excluding current payment)</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Previously Paid Amount</label>
                   <input
                     disabled
                     type="number"
-                    value={originalAmountPaid}
+                    value={originalAmountPaid.toFixed(2)}
                     className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2"
-                    min="0"
-                    step="0.01"
                   />
                 </div>
 
@@ -277,10 +328,20 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
                   <input
                     disabled
                     type="number"
-                    value={formData.amountPaid}
+                    value={formData.amountPaid.toFixed(2)}
                     className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2"
-                    min="0"
-                    step="0.01"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Balance Amount</label>
+                  <input
+                    disabled
+                    type="number"
+                    value={balanceAmount.toFixed(2)}
+                    className={`w-full rounded-md border px-3 py-2 ${
+                      balanceAmount > 0 ? 'border-yellow-300 bg-yellow-50' : 'border-green-300 bg-green-50'
+                    }`}
                   />
                 </div>
 
@@ -306,9 +367,11 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
                     required
                   >
                     <option value="Cash">Cash</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
                     <option value="Cheque">Cheque</option>
-                    <option value="Online">Online Transfer</option>
-                    <option value="Card">Card Payment</option>
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="Debit Card">Debit Card</option>
                   </select>
                 </div>
 
