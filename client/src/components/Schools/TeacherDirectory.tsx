@@ -17,6 +17,9 @@ import {
   Trash
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Toaster, toast } from 'react-hot-toast';
+
+const AVAILABLE_CLASSES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 
 const MOCK_TEACHERS = [
   {
@@ -27,11 +30,19 @@ const MOCK_TEACHERS = [
     designation: 'Mathematics Teacher',
     subjects: ['Mathematics', 'Calculus'],
     classes: '4, 5, 6',
+    sections: [
+      { class: '4', sections: ['A', 'B'] },
+      { class: '5', sections: ['A', 'C'] },
+      { class: '6', sections: ['B'] },
+    ],
     joinDate: '2020-07-05',
     address: '78 Green Street, Knowledge City',
     education: 'M.Sc. in Mathematics',
     experience: '8 years',
-    profileImage: 'https://randomuser.me/api/portraits/men/64.jpg'
+    profileImage: 'https://randomuser.me/api/portraits/men/64.jpg',
+    isClassIncharge: true,
+    inchargeClass: '4',
+    inchargeSection: 'A',
   },
   {
     id: 2,
@@ -41,11 +52,18 @@ const MOCK_TEACHERS = [
     designation: 'English Teacher',
     subjects: ['English Literature', 'Creative Writing'],
     classes: '3, 4',
+    sections: [
+      { class: '3', sections: ['A'] },
+      { class: '4', sections: ['B'] },
+    ],
     joinDate: '2016-05-18',
     address: '56 Scholar Lane, Brilliance City',
     education: 'M.A. in English Literature',
     experience: '6 years',
-    profileImage: 'https://randomuser.me/api/portraits/women/36.jpg'
+    profileImage: 'https://randomuser.me/api/portraits/women/36.jpg',
+    isClassIncharge: true,
+    inchargeClass: '3',
+    inchargeSection: 'A',
   },
   {
     id: 3,
@@ -55,11 +73,19 @@ const MOCK_TEACHERS = [
     designation: 'Science Teacher',
     subjects: ['Physics', 'Chemistry'],
     classes: '5, 6, 7',
+    sections: [
+      { class: '5', sections: ['A'] },
+      { class: '6', sections: ['A', 'B'] },
+      { class: '7', sections: ['A'] },
+    ],
     joinDate: '2020-02-15',
     address: '89 Excellence Road, Brilliance City',
     education: 'M.Sc. in Physics',
     experience: '7 years',
-    profileImage: 'https://randomuser.me/api/portraits/men/22.jpg'
+    profileImage: 'https://randomuser.me/api/portraits/men/22.jpg',
+    isClassIncharge: true,
+    inchargeClass: '5',
+    inchargeSection: 'A',
   },
   {
     id: 4,
@@ -69,11 +95,18 @@ const MOCK_TEACHERS = [
     designation: 'Arts Teacher',
     subjects: ['Fine Arts', 'Art History'],
     classes: '2, 3',
+    sections: [
+      { class: '2', sections: ['A'] },
+      { class: '3', sections: ['A'] },
+    ],
     joinDate: '2018-09-01',
     address: '12 Heritage Lane, Heritage District',
     education: 'Ph.D. in Fine Arts',
     experience: '11 years',
-    profileImage: 'https://randomuser.me/api/portraits/women/54.jpg'
+    profileImage: 'https://randomuser.me/api/portraits/women/54.jpg',
+    isClassIncharge: true,
+    inchargeClass: '2',
+    inchargeSection: 'A',
   },
   {
     id: 5,
@@ -83,11 +116,19 @@ const MOCK_TEACHERS = [
     designation: 'Computer Science Teacher',
     subjects: ['Computer Science', 'Algorithms'],
     classes: '6, 7, 8',
+    sections: [
+      { class: '6', sections: ['A'] },
+      { class: '7', sections: ['A'] },
+      { class: '8', sections: ['A'] },
+    ],
     joinDate: '2019-01-15',
     address: '42 Innovation Street, Tech Park',
     education: 'Ph.D. in Computer Science',
     experience: '16 years',
-    profileImage: 'https://randomuser.me/api/portraits/men/67.jpg'
+    profileImage: 'https://randomuser.me/api/portraits/men/67.jpg',
+    isClassIncharge: true,
+    inchargeClass: '6',
+    inchargeSection: 'A',
   },
 ];
 
@@ -99,11 +140,18 @@ interface Teacher {
   designation: string;
   subjects: string[];
   classes: string;
+  sections: {
+    class: string;
+    sections: string[];
+  }[];
   joinDate: string;
   address: string;
   education: string;
   experience: string;
   profileImage: string;
+  isClassIncharge: boolean;
+  inchargeClass?: string;
+  inchargeSection?: string;
 }
 
 const TeacherDirectory: React.FC = () => {
@@ -111,6 +159,7 @@ const TeacherDirectory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [subjectFilter, setSubjectFilter] = useState('all');
+  const [classFilter, setClassFilter] = useState('all');
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -118,10 +167,12 @@ const TeacherDirectory: React.FC = () => {
   const [newTeacher, setNewTeacher] = useState<Partial<Teacher>>({
     subjects: [],
     classes: '',
+    sections: [],
   });
   const [editTeacher, setEditTeacher] = useState<Partial<Teacher>>({
     subjects: [],
     classes: '',
+    sections: [],
   });
 
   const itemsPerPage = 5;
@@ -142,7 +193,11 @@ const TeacherDirectory: React.FC = () => {
       subjectFilter === 'all' || 
       teacher.subjects.includes(subjectFilter);
     
-    return matchesSearch && matchesSubject;
+    const matchesClass = 
+      classFilter === 'all' || 
+      teacher.sections.some(section => section.class === classFilter);
+    
+    return matchesSearch && matchesSubject && matchesClass;
   });
 
   const totalPages = Math.ceil(filteredTeachers.length / itemsPerPage);
@@ -163,18 +218,62 @@ const TeacherDirectory: React.FC = () => {
   };
 
   const handleDeleteTeacher = (id: number) => {
-    setTeachers(prev => prev.filter(teacher => teacher.id !== id));
+    if (window.confirm('Are you sure you want to delete this teacher?')) {
+      setTeachers(prev => prev.filter(teacher => teacher.id !== id));
+      toast.success('Teacher deleted successfully!', {
+        duration: 4000,
+        style: {
+          background: '#4C1D95',
+          color: '#fff',
+        },
+      });
+    }
+  };
+
+  const validateInchargeClass = (value: string): string => {
+    const classes = value.replace(/\s/g, '').split(',');
+    return classes[0] || '';
   };
 
   const handleInputChange = (field: keyof Teacher, value: any) => {
-    setNewTeacher(prev => ({ ...prev, [field]: value }));
+    if (field === 'inchargeClass') {
+      const formattedValue = validateInchargeClass(value);
+      setNewTeacher(prev => ({ ...prev, [field]: formattedValue }));
+    } else {
+      setNewTeacher(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleEditInputChange = (field: keyof Teacher, value: any) => {
-    setEditTeacher(prev => ({ ...prev, [field]: value }));
+    if (field === 'inchargeClass') {
+      const formattedValue = validateInchargeClass(value);
+      setEditTeacher(prev => ({ ...prev, [field]: formattedValue }));
+    } else {
+      setEditTeacher(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSubmit = () => {
+    // Validate incharge class and section if isClassIncharge is true
+    if (newTeacher.isClassIncharge) {
+      if (!newTeacher.inchargeClass || !newTeacher.inchargeSection) {
+        toast.error('Please select both incharge class and section');
+      return;
+    }
+
+      // Check if another teacher is already incharge of this class and section
+      const existingIncharge = teachers.find(t => 
+        t.isClassIncharge && 
+        t.inchargeClass === newTeacher.inchargeClass && 
+        t.inchargeSection === newTeacher.inchargeSection
+      );
+
+      if (existingIncharge) {
+        toast.error(`${existingIncharge.name} is already incharge of Class ${newTeacher.inchargeClass} Section ${newTeacher.inchargeSection}`);
+      return;
+    }
+    }
+
     const teacherToAdd: Teacher = {
       id: teachers.length + 1,
       name: newTeacher.name || '',
@@ -183,24 +282,63 @@ const TeacherDirectory: React.FC = () => {
       designation: newTeacher.designation || '',
       subjects: newTeacher.subjects || [],
       classes: newTeacher.classes || '',
+      sections: newTeacher.sections || [],
       joinDate: newTeacher.joinDate || new Date().toISOString().split('T')[0],
       address: newTeacher.address || '',
       education: newTeacher.education || '',
       experience: newTeacher.experience || '',
-      profileImage: newTeacher.profileImage || 'https://randomuser.me/api/portraits/men/0.jpg'
+      profileImage: newTeacher.profileImage || 'https://randomuser.me/api/portraits/men/0.jpg',
+      isClassIncharge: newTeacher.isClassIncharge ?? false,
+      inchargeClass: newTeacher.isClassIncharge ? newTeacher.inchargeClass : undefined,
+      inchargeSection: newTeacher.isClassIncharge ? newTeacher.inchargeSection : undefined,
     };
     
     setTeachers(prev => [...prev, teacherToAdd]);
     setIsAddModalOpen(false);
-    setNewTeacher({ subjects: [], classes: '' });
+    setNewTeacher({ subjects: [], classes: '', sections: [] });
+    toast.success('Teacher added successfully!', {
+      duration: 4000,
+      style: {
+        background: '#4C1D95',
+        color: '#fff',
+      },
+    });
   };
 
   const handleEditSubmit = () => {
+    // Validate incharge class and section if isClassIncharge is true
+    if (editTeacher.isClassIncharge) {
+      if (!editTeacher.inchargeClass || !editTeacher.inchargeSection) {
+        toast.error('Please select both incharge class and section');
+        return;
+      }
+
+      // Check if another teacher is already incharge of this class and section
+      const existingIncharge = teachers.find(t => 
+        t.id !== editTeacher.id && 
+        t.isClassIncharge && 
+        t.inchargeClass === editTeacher.inchargeClass && 
+        t.inchargeSection === editTeacher.inchargeSection
+      );
+
+      if (existingIncharge) {
+        toast.error(`${existingIncharge.name} is already incharge of Class ${editTeacher.inchargeClass} Section ${editTeacher.inchargeSection}`);
+        return;
+      }
+    }
+
     const updatedTeachers = teachers.map(teacher => 
       teacher.id === editTeacher.id ? { ...teacher, ...editTeacher } : teacher
     );
     setTeachers(updatedTeachers);
     setIsEditModalOpen(false);
+    toast.success('Teacher updated successfully!', {
+      duration: 4000,
+      style: {
+        background: '#4C1D95',
+        color: '#fff',
+      },
+    });
   };
 
   useEffect(() => {
@@ -223,10 +361,12 @@ const TeacherDirectory: React.FC = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, subjectFilter]);
+  }, [searchTerm, subjectFilter, classFilter]);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
+      <Toaster position="top-right" />
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center">
           <Users className="h-6 w-6 mr-2 text-indigo-600" />
@@ -269,6 +409,22 @@ const TeacherDirectory: React.FC = () => {
               ))}
             </select>
           </div>
+
+          <div className="flex items-center space-x-2">
+            <Users className="h-4 w-4 text-gray-500" />
+            <select
+              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              value={classFilter}
+              onChange={(e) => setClassFilter(e.target.value)}
+            >
+              <option value="all">All Classes</option>
+              {AVAILABLE_CLASSES.map(classNum => (
+                <option key={classNum} value={classNum}>
+                  Class {classNum}
+                </option>
+              ))}
+            </select>
+          </div>
           
           <button className="flex items-center text-gray-600 hover:text-indigo-600 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-300">
             <Download className="h-4 w-4 mr-2" />
@@ -291,7 +447,10 @@ const TeacherDirectory: React.FC = () => {
                 Subjects
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Classes
+                Class Incharge
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Incharge Details
               </th>
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -341,7 +500,23 @@ const TeacherDirectory: React.FC = () => {
                       <div className="text-sm text-gray-900">{teacher.subjects.join(', ')}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{teacher.classes}</div>
+                      <div className="text-sm text-gray-900">
+                        {teacher.isClassIncharge ? 'Yes' : 'No'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {teacher.isClassIncharge ? (
+                        <div className="text-sm text-gray-900">
+                          <span className="font-medium">Class {teacher.inchargeClass}</span>
+                          {teacher.sections.find(s => s.class === teacher.inchargeClass)?.sections.length > 0 && (
+                            <span className="ml-2 text-gray-500">
+                              (Section {teacher.sections.find(s => s.class === teacher.inchargeClass)?.sections.join(', ')})
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-500">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
@@ -496,6 +671,44 @@ const TeacherDirectory: React.FC = () => {
                       </p>
                     </div>
                     
+                    {selectedTeacher.isClassIncharge && (
+                      <div className="bg-gray-50 p-3 rounded-md col-span-2">
+                        <p className="text-xs text-gray-500 uppercase mb-2">Class Incharge Details</p>
+                        <div className="bg-white p-3 rounded border border-gray-200">
+                          <div className="font-medium text-indigo-600">Class {selectedTeacher.inchargeClass}</div>
+                          {selectedTeacher.sections.find(s => s.class === selectedTeacher.inchargeClass)?.sections.length > 0 && (
+                            <div className="text-sm text-gray-600 mt-1">
+                              Sections: {selectedTeacher.sections
+                                .find(s => s.class === selectedTeacher.inchargeClass)
+                                ?.sections.map(section => (
+                                  <span key={section} className="inline-block bg-gray-100 px-2 py-1 rounded-full text-xs mr-1 mb-1">
+                                    {section}
+                                  </span>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="bg-gray-50 p-3 rounded-md col-span-2">
+                      <p className="text-xs text-gray-500 uppercase mb-2">Teaching Classes & Sections</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {selectedTeacher.sections.map((item, index) => (
+                          <div key={index} className="bg-white p-3 rounded border border-gray-200">
+                            <div className="font-medium text-indigo-600">Class {item.class}</div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              Sections: {item.sections.map(section => (
+                                <span key={section} className="inline-block bg-gray-100 px-2 py-1 rounded-full text-xs mr-1 mb-1">
+                                  {section}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="bg-gray-50 p-3 rounded-md">
                       <p className="text-xs text-gray-500 uppercase">Experience</p>
                       <p className="text-sm font-medium text-gray-900">
@@ -504,26 +717,19 @@ const TeacherDirectory: React.FC = () => {
                     </div>
 
                     <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs text-gray-500 uppercase">Classes Taught</p>
+                      <p className="text-xs text-gray-500 uppercase">Education</p>
                       <p className="text-sm font-medium text-gray-900">
-                        {selectedTeacher.classes}
+                        {selectedTeacher.education}
                       </p>
                     </div>
-                  </div>
-                  
-                  <div className="mt-4 bg-gray-50 p-3 rounded-md">
-                    <p className="text-xs text-gray-500 uppercase">Education</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedTeacher.education}
-                    </p>
-                  </div>
-                  
-                  <div className="mt-4 bg-gray-50 p-3 rounded-md">
-                    <p className="text-xs text-gray-500 uppercase">Address</p>
-                    <p className="text-sm font-medium text-gray-900 flex items-start">
-                      <MapPin className="h-4 w-4 mr-2 text-indigo-500 mt-0.5" />
-                      {selectedTeacher.address}
-                    </p>
+                    
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs text-gray-500 uppercase">Address</p>
+                      <p className="text-sm font-medium text-gray-900 flex items-start">
+                        <MapPin className="h-4 w-4 mr-2 text-indigo-500 mt-0.5" />
+                        {selectedTeacher.address}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -620,6 +826,74 @@ const TeacherDirectory: React.FC = () => {
                       onChange={(e) => handleInputChange('designation', e.target.value)}
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Class Incharge
+                    </label>
+                    <div className="flex items-center space-y-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        checked={newTeacher.isClassIncharge || false}
+                        onChange={(e) => handleInputChange('isClassIncharge', e.target.checked)}
+                      />
+                      <span className="ml-2 text-sm text-gray-600">Is class incharge</span>
+                    </div>
+                  </div>
+
+                  {newTeacher.isClassIncharge && (
+                    <div className="mt-2 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Incharge Class* <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          required
+                          className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 ${
+                            newTeacher.isClassIncharge && !newTeacher.inchargeClass ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          value={newTeacher.inchargeClass || ''}
+                          onChange={(e) => {
+                            handleInputChange('inchargeClass', e.target.value);
+                            handleInputChange('inchargeSection', ''); // Reset section when class changes
+                          }}
+                        >
+                          <option value="">Select Class</option>
+                          {AVAILABLE_CLASSES.map((classNum) => (
+                            <option key={classNum} value={classNum}>
+                              Class {classNum}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {newTeacher.inchargeClass && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Incharge Section* <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            required
+                            className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 ${
+                              newTeacher.isClassIncharge && !newTeacher.inchargeSection ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                            value={newTeacher.inchargeSection || ''}
+                            onChange={(e) => handleInputChange('inchargeSection', e.target.value)}
+                          >
+                            <option value="">Select Section</option>
+                            {newTeacher.sections
+                              ?.find(s => s.class === newTeacher.inchargeClass)
+                              ?.sections.map((section) => (
+                                <option key={section} value={section}>
+                                  Section {section}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -638,15 +912,45 @@ const TeacherDirectory: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Classes* (comma separated)
+                      Classes and Sections
                     </label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
-                      value={newTeacher.classes || ''}
-                      onChange={(e) => handleInputChange('classes', e.target.value)}
-                    />
+                    {AVAILABLE_CLASSES.map((classNum) => {
+                      const classData = newTeacher.sections?.find(s => s.class === classNum) || { class: classNum, sections: [] };
+                      return (
+                        <div key={classNum} className="mb-4">
+                          <div className="flex items-center mb-2">
+                            <input
+                              type="checkbox"
+                              checked={newTeacher.sections?.some(s => s.class === classNum)}
+                              onChange={(e) => {
+                                const updatedSections = e.target.checked
+                                  ? [...(newTeacher.sections || []), { class: classNum, sections: [] }]
+                                  : (newTeacher.sections || []).filter(s => s.class !== classNum);
+                                handleInputChange('sections', updatedSections);
+                              }}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2">Class {classNum}</span>
+                          </div>
+                          {newTeacher.sections?.some(s => s.class === classNum) && (
+                            <div className="flex items-center space-x-2 mb-2">
+                              <input
+                                type="text"
+                                value={classData.sections.join(', ')}
+                                placeholder={`Sections for Class ${classNum} (comma separated)`}
+                                onChange={(e) => {
+                                  const updatedSections = e.target.value.split(', ').filter(s => s);
+                                  handleInputChange('sections', (newTeacher.sections || []).map(s =>
+                                    s.class === classNum ? { ...s, sections: updatedSections } : s
+                                  ));
+                                }}
+                                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div>
@@ -775,6 +1079,74 @@ const TeacherDirectory: React.FC = () => {
                       onChange={(e) => handleEditInputChange('designation', e.target.value)}
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Class Incharge
+                    </label>
+                    <div className="flex items-center space-y-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        checked={editTeacher.isClassIncharge || false}
+                        onChange={(e) => handleEditInputChange('isClassIncharge', e.target.checked)}
+                      />
+                      <span className="ml-2 text-sm text-gray-600">Is class incharge</span>
+                    </div>
+                  </div>
+
+                  {editTeacher.isClassIncharge && (
+                    <div className="mt-2 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Incharge Class* <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          required
+                          className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 ${
+                            editTeacher.isClassIncharge && !editTeacher.inchargeClass ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          value={editTeacher.inchargeClass || ''}
+                          onChange={(e) => {
+                            handleEditInputChange('inchargeClass', e.target.value);
+                            handleEditInputChange('inchargeSection', ''); // Reset section when class changes
+                          }}
+                        >
+                          <option value="">Select Class</option>
+                          {AVAILABLE_CLASSES.map((classNum) => (
+                            <option key={classNum} value={classNum}>
+                              Class {classNum}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {editTeacher.inchargeClass && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Incharge Section* <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            required
+                            className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 ${
+                              editTeacher.isClassIncharge && !editTeacher.inchargeSection ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                            value={editTeacher.inchargeSection || ''}
+                            onChange={(e) => handleEditInputChange('inchargeSection', e.target.value)}
+                          >
+                            <option value="">Select Section</option>
+                            {editTeacher.sections
+                              ?.find(s => s.class === editTeacher.inchargeClass)
+                              ?.sections.map((section) => (
+                                <option key={section} value={section}>
+                                  Section {section}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -793,15 +1165,48 @@ const TeacherDirectory: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Classes* (comma separated)
+                      Classes and Sections
                     </label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
-                      value={editTeacher.classes || ''}
-                      onChange={(e) => handleEditInputChange('classes', e.target.value)}
-                    />
+                    {AVAILABLE_CLASSES.map((classNum) => {
+                      const classData = editTeacher.sections?.find(s => s.class === classNum) || { class: classNum, sections: [] };
+                      return (
+                        <div key={classNum} className="mb-4">
+                          <div className="flex items-center mb-2">
+                            <input
+                              type="checkbox"
+                              checked={editTeacher.sections?.some(s => s.class === classNum)}
+                              onChange={(e) => {
+                                const updatedSections = e.target.checked
+                                  ? [...(editTeacher.sections || []), { class: classNum, sections: [] }]
+                                  : (editTeacher.sections || []).filter(s => s.class !== classNum);
+                                handleEditInputChange('sections', updatedSections);
+                                // Update classes string when sections change
+                                const classesString = updatedSections.map(s => s.class).join(', ');
+                                handleEditInputChange('classes', classesString);
+                              }}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2">Class {classNum}</span>
+                          </div>
+                          {editTeacher.sections?.some(s => s.class === classNum) && (
+                            <div className="flex items-center space-x-2 mb-2">
+                              <input
+                                type="text"
+                                value={classData.sections.join(', ')}
+                                placeholder={`Sections for Class ${classNum} (comma separated)`}
+                                onChange={(e) => {
+                                  const updatedSections = e.target.value.split(', ').filter(s => s);
+                                  handleEditInputChange('sections', (editTeacher.sections || []).map(s =>
+                                    s.class === classNum ? { ...s, sections: updatedSections } : s
+                                  ));
+                                }}
+                                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div>

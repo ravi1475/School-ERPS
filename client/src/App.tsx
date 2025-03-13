@@ -16,7 +16,7 @@ import CreateExam from './components/Teacher/Exam'
 
 // import { ClassSectionManagement } from './components/Admin/Class'
 import { ManageTeachers } from './pages/ManageTeachers'
-import { ManageStudent } from './pages/ManageStudents'
+import { ManageStudent } from './components/Schools/ManageStudents'
 // import  StudentFeeDetails  from './components/StudentFeeDetails'
 
 import ManageSchools from './components/Admin/ManageSchools';

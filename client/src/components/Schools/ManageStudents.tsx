@@ -1,92 +1,218 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Student {
   id: number;
-  srNo: number;
   name: string;
   class: string;
   section: string;
   rollNo: number;
+  admissionNo: string;
 }
 
-export const ManageStudent = () => {
-  const initialStudents: Student[] = [
-    { id: 1, srNo: 1, name: 'John Doe', class: '10th', section: 'A', rollNo: 101 },
-    { id: 2, srNo: 2, name: 'Jane Smith', class: '9th', section: 'B', rollNo: 102 },
-    { id: 3, srNo: 3, name: 'Alice Johnson', class: '10th', section: 'C', rollNo: 103 },
-    // Add more initial data as needed
-  ];
+const API_BASE_URL = 'http://localhost:5000';
 
-  const [students, setStudents] = useState<Student[]>(initialStudents);
+export const ManageStudent = () => {
+  const [students, setStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
+  const [selectedSection, setSelectedSection] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     name: '',
     class: '',
     section: '',
     rollNo: '',
+    admissionNo: '',
   });
 
-  // Get unique classes for the filter dropdown
+  // Fetch students from backend
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/students`, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch students');
+        }
+        
+        const data = await response.json();
+        
+        // Map the backend data to match our interface
+        const mappedStudents: Student[] = data.data.map((student: any) => ({
+          id: student.id,
+          name: `${student.firstName} ${student.lastName}`,
+          class: student.className,
+          section: student.section || '',
+          rollNo: parseInt(student.rollNumber) || 0,
+          admissionNo: student.admissionNo
+        }));
+        
+        setStudents(mappedStudents);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
+  // Get unique classes and sections from actual data
   const uniqueClasses = [...new Set(students.map((student) => student.class))];
+  const uniqueSections = [...new Set(students.map((student) => student.section))];
 
   // Filtered students based on search term and selected class
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.rollNo.toString().includes(searchTerm);
+      student.rollNo.toString().includes(searchTerm) ||
+      student.admissionNo.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesClass = selectedClass ? student.class === selectedClass : true;
+    const matchesSection = selectedSection ? student.section === selectedSection : true;
 
-    return matchesSearch && matchesClass;
+    return matchesSearch && matchesClass && matchesSection;
   });
 
   // Handle add/edit
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.class.trim() || !formData.section.trim() || !formData.rollNo.trim()) {
       alert('Please fill all fields');
       return;
     }
 
-    if (currentStudent) {
-      // Update existing student
-      setStudents(
-        students.map((student) =>
-          student.id === currentStudent.id
-            ? {
-                ...student,
-                name: formData.name.trim(),
-                class: formData.class.trim(),
-                section: formData.section.trim(),
-                rollNo: parseInt(formData.rollNo),
-              }
-            : student
-        )
-      );
-    } else {
-      // Add new student
-      const newStudent: Student = {
-        id: Math.max(...students.map((student) => student.id)) + 1,
-        srNo: students.length + 1,
-        name: formData.name.trim(),
-        class: formData.class.trim(),
-        section: formData.section.trim(),
-        rollNo: parseInt(formData.rollNo),
-      };
-      setStudents([...students, newStudent]);
-    }
+    try {
+      if (currentStudent) {
+        // Update existing student
+        const response = await fetch(`${API_BASE_URL}/api/students/${currentStudent.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            firstName: formData.name.split(' ')[0],
+            lastName: formData.name.split(' ')[1] || '',
+            className: formData.class,
+            section: formData.section,
+            rollNumber: formData.rollNo,
+            admissionNo: formData.admissionNo,
+          }),
+        });
 
-    resetForm();
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to update student');
+        }
+
+        setStudents(students.map(student => 
+          student.id === currentStudent.id ? {
+            ...student,
+            name: formData.name.trim(),
+            class: formData.class.trim(),
+            section: formData.section.trim(),
+            rollNo: parseInt(formData.rollNo),
+            admissionNo: formData.admissionNo,
+          } : student
+        ));
+      } else {
+        // Add new student
+        const response = await fetch(`${API_BASE_URL}/api/students`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            firstName: formData.name.split(' ')[0],
+            lastName: formData.name.split(' ')[1] || '',
+            className: formData.class,
+            section: formData.section,
+            rollNumber: formData.rollNo,
+            admissionNo: formData.admissionNo,
+            branchName: 'Main',
+            gender: 'OTHER',
+            mobileNumber: '0000000000',
+            schoolId: 1,
+            // Add required fields with default values
+            dateOfBirth: new Date().toISOString(),
+            admissionDate: new Date().toISOString(),
+            city: 'Unknown',
+            state: 'Unknown',
+            fatherName: 'Unknown',
+            motherName: 'Unknown',
+            // Add parent info
+            'father.name': 'Unknown',
+            'mother.name': 'Unknown',
+            // Add session info
+            'admitSession.class': formData.class,
+            'admitSession.section': formData.section,
+            'currentSession.class': formData.class,
+            'currentSession.section': formData.section
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to add student');
+        }
+
+        const { data: newStudent } = await response.json();
+        
+        // Map the response to match our Student interface
+        const mappedStudent: Student = {
+          id: newStudent.id,
+          name: `${newStudent.firstName} ${newStudent.lastName}`,
+          class: newStudent.className,
+          section: newStudent.section || '',
+          rollNo: parseInt(newStudent.rollNumber) || 0,
+          admissionNo: newStudent.admissionNo,
+        };
+
+        setStudents(prevStudents => [...prevStudents, mappedStudent]);
+        resetForm();
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    }
   };
 
   // Handle delete
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this student?')) {
-      setStudents(students.filter((student) => student.id !== id));
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/students/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to delete student');
+        }
+
+        setStudents(students.filter((student) => student.id !== id));
+        setError(null);
+      } catch (err) {
+        console.error('Error deleting student:', err);
+        setError(err instanceof Error ? err.message : 'Failed to delete student');
+      }
     }
   };
 
@@ -98,6 +224,7 @@ export const ManageStudent = () => {
       class: student.class,
       section: student.section,
       rollNo: student.rollNo.toString(),
+      admissionNo: student.admissionNo,
     });
     setIsModalOpen(true);
   };
@@ -109,10 +236,19 @@ export const ManageStudent = () => {
       class: '',
       section: '',
       rollNo: '',
+      admissionNo: '',
     });
     setCurrentStudent(null);
     setIsModalOpen(false);
   };
+
+  if (isLoading) {
+    return <div>Loading students...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -158,6 +294,19 @@ export const ManageStudent = () => {
                   </option>
                 ))}
               </select>
+
+              <select
+                value={selectedSection}
+                onChange={(e) => setSelectedSection(e.target.value)}
+                className="w-full md:w-48 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">All Sections</option>
+                {uniqueSections.map((section) => (
+                  <option key={section} value={section}>
+                    {section}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -167,8 +316,8 @@ export const ManageStudent = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sr. No</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Admission No</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Class</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Section</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Roll No</th>
@@ -178,8 +327,8 @@ export const ManageStudent = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredStudents.map((student) => (
                 <tr key={student.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-500">{student.srNo}</td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{student.name}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{student.admissionNo}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{student.class}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{student.section}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{student.rollNo}</td>
@@ -213,7 +362,7 @@ export const ManageStudent = () => {
               </svg>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No students found</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {searchTerm || selectedClass
+                {searchTerm || selectedClass || selectedSection
                   ? 'Try adjusting your search or filter'
                   : 'Get started by adding a new student'}
               </p>
@@ -245,6 +394,19 @@ export const ManageStudent = () => {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Admission No <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.admissionNo}
+                    onChange={(e) => setFormData({ ...formData, admissionNo: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
                     required
                   />
@@ -305,6 +467,21 @@ export const ManageStudent = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
             </div>
           </div>
         )}

@@ -14,6 +14,13 @@ enum Role {
   STUDENT
 }
 
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
 model Admin {
   id        Int      @id @default(autoincrement())
   fullName  String
@@ -45,19 +52,47 @@ model School {
 }
 
 model Teacher {
-  id           Int      @id @default(autoincrement())
-  fullName     String
-  email        String   @unique
-  password     String
-  class        String   @db.Text
-  subjects     String   @db.Text
-  joining_year DateTime @default(now())
-  experience   String   @default("5+")
-  role         Role     @default(TEACHER)
-  schoolId     Int
-  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              Int          @id @default(autoincrement())
+  // Personal Information
+  fullName        String
+  email           String       @unique
+  password        String
+  phone           String       @default("0123456789")
+  profileImage    String?      @db.Text
+  address         String       @db.Text
+  
+  // Professional Information
+  designation     String       @default("Teacher")
+  education       String
+  experience      String       @default("0 years")
+  joinDate        DateTime     @default(now())
+  
+  // Teaching Details
+  subjects        String       @db.Text  // Store as JSON string of array
+  classes         String       @db.Text  // Store as comma-separated values
+  sections        String       @db.Text  // Store as JSON string of array of objects
+  isClassIncharge Boolean      @default(false)
+  inchargeClass   String?      // Single class number
+  inchargeSection String?      // Section for incharge class
+  
+  // System Fields
+  role            Role         @default(TEACHER)
+  status          String       @default("active") // active, inactive, suspended
+  lastLogin       DateTime?
+  
+  // Relations
+  schoolId        Int
+  school          School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  attendance      Attendance[]
+  
+  // Timestamps
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Indexes for better query performance
+  @@index([email])
+  @@index([schoolId])
+  @@index([isClassIncharge])
 }
 
 model Student {
@@ -108,6 +143,7 @@ model Student {
   documents       Documents?
   educationInfo   EducationInfo?
   otherInfo       OtherInfo?
+  attendance       Attendance[]
   
   // Meta
   role            Role      @default(STUDENT)
@@ -259,4 +295,27 @@ model Department {
   school         School   @relation(fields: [schoolId], references: [id])
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model Attendance {
+  id          Int             @id @default(autoincrement())
+  date        DateTime
+  status      AttendanceStatus
+  notes       String?         @db.Text
+  recordedBy  Int            // Teacher ID who recorded attendance
+  timestamp   DateTime        @default(now())
+  
+  // Relations
+  studentId   Int
+  student     Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId   Int
+  teacher     Teacher        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  
+  // Meta
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([date])
+  @@index([studentId])
+  @@index([teacherId])
 }
