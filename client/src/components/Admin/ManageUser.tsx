@@ -18,10 +18,33 @@ import {
 } from 'lucide-react';
 import { loadingState } from '@/recoil/atoms';
 import { useSetRecoilState } from 'recoil';
-import { fetchUsers, getCache, getLoadingState,clearCache } from '@/utils/getUsersWithLimit';
+import { fetchUsers } from '@/utils/getUsersWithLimit';
+
+// Define a single consistent UserData interface
+interface UserData {
+  id: number;
+  name: string;
+  username: string;
+  email: string;
+  phone: string;
+  role: string;
+  status: string;
+  lastLogin: string;
+  createdAt: string;
+}
+
+interface UserFormData {
+  name: string;
+  username: string;
+  email: string;
+  phone: string;
+  role: string;
+  password: string;
+  confirmPassword: string;
+}
 
 // Mock data for users
-const MOCK_USERS = [
+const MOCK_USERS: UserData[] = [
   { 
     id: 1, 
     name: 'John Doe', 
@@ -79,35 +102,13 @@ const MOCK_USERS = [
   },
 ];
 
-interface UserData {
-  id: number;
-  name: string;
-  username: string;
-  email: string;
-  phone: string;
-  role: string;
-  status: string;
-  lastLogin: string;
-  createdAt: string;
-}
-
-interface UserFormData {
-  name: string;
-  username: string;
-  email: string;
-  phone: string;
-  role: string;
-  password: string;
-  confirmPassword: string;
-}
-
 const ManageUsers: React.FC = () => {
   const [users, setUsers] = useState<UserData[]>(MOCK_USERS);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
-  const setLoading =  useSetRecoilState(loadingState)
+  const setLoading = useSetRecoilState(loadingState);
 
   const [formData, setFormData] = useState<UserFormData>({
     name: '',
@@ -126,17 +127,23 @@ const ManageUsers: React.FC = () => {
   const itemsPerPage = 5;
 
   // Fetching Users 
-  type UserData = {
-    id: number;
-    name: string;
-    email: string;
-    // Add other user fields as needed
-  };
-
-  useEffect(()=>{
-  const AllUsers = fetchUsers(1);
-  console.log("All Users : " , AllUsers)
-  },[]);
+  useEffect(() => {
+    const getUsers = async () => {
+      try {
+        setLoading(true);
+        const fetchedUsers = await fetchUsers(1);
+        if (fetchedUsers && Array.isArray(fetchedUsers)) {
+          setUsers(fetchedUsers as UserData[]);
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    getUsers();
+  }, [setLoading]);
   
   // Filter users based on search term, role and status
   const filteredUsers = users.filter(user => {
@@ -220,83 +227,101 @@ const ManageUsers: React.FC = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-  
+    
     if (!validateForm()) {
       return;
-    };
+    }
 
-    
-    if (editingUser) {
-      // Update existing user
-      const updatedUsers = users.map(user => 
-        user.id === editingUser.id 
-          ? { 
-              ...user, 
-              name: formData.name,
-              username: formData.username,
-              email: formData.email,
-              phone: formData.phone,
-              role: formData.role
-            } 
-          : user
-      );
-      setUsers(updatedUsers);
-    } else {
-      // Direct fetch request
-fetch('http://localhost:5000/api/admin/users/add', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify(formData),
-})
-  .then((response) => {
-    // Check if the response is OK (status code 200-299)
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    setLoading(true);
+
+    try {
+      if (editingUser) {
+        // Update existing user
+        const response = await fetch(`http://localhost:5000/api/admin/users/${editingUser.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            username: formData.username,
+            email: formData.email,
+            phone: formData.phone,
+            role: formData.role
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        // Update local state
+        const updatedUsers = users.map(user => 
+          user.id === editingUser.id 
+            ? { 
+                ...user, 
+                name: formData.name,
+                username: formData.username,
+                email: formData.email,
+                phone: formData.phone,
+                role: formData.role
+              } 
+            : user
+        );
+        setUsers(updatedUsers);
+      } else {
+        // Add new user
+        const response = await fetch('http://localhost:5000/api/admin/users/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Add the newly created user to the local state
+        const newUser: UserData = {
+          id: data.id || users.length + 1, // Use the ID from the API or generate one
+          name: formData.name,
+          username: formData.username,
+          email: formData.email,
+          phone: formData.phone,
+          role: formData.role,
+          status: 'active',
+          lastLogin: '-',
+          createdAt: new Date().toISOString().split('T')[0]
+        };
+        
+        setUsers(prevUsers => [...prevUsers, newUser]);
+      }
+    } catch (error) {
+      console.error('Failed to save user:', error);
+      // You might want to show an error message to the user here
+    } finally {
+      setLoading(false);
+      
+      // Reset form and state
+      setShowForm(false);
+      setEditingUser(null);
+      setFormData({
+        name: '',
+        username: '',
+        email: '',
+        phone: '',
+        role: 'teacher',
+        password: '',
+        confirmPassword: ''
+      });
+      setFormErrors({});
     }
-    return response.json(); // Parse the JSON response
-  })
-  .then((data) => {
-    setLoading(false);
-    console.log('User added successfully:', data);
-  })
-  .catch((error) => {
-    setLoading(false);
-    console.error('Failed to add user:', error);
-  });
-      // Add new user
-      const newUser: UserData = {
-        id: users.length + 1,
-        name: formData.name,
-        username: formData.username,
-        email: formData.email,
-        phone: formData.phone,
-        role: formData.role,
-        status: 'active',
-        lastLogin: '-',
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setUsers([...users, newUser]);
-    }
-  
-    // Reset form and state
-    setShowForm(false);
-    setEditingUser(null);
-    setFormData({
-      name: '',
-      username: '',
-      email: '',
-      phone: '',
-      role: 'teacher',
-      password: '',
-      confirmPassword: ''
-    });
-    setFormErrors({});
   };
 
   // Handle edit user
@@ -315,19 +340,66 @@ fetch('http://localhost:5000/api/admin/users/add', {
   };
 
   // Handle delete user
-  const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) {
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      // Update local state
       setUsers(users.filter(user => user.id !== id));
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      // You might want to show an error message to the user here
+    } finally {
+      setLoading(false);
     }
   };
 
   // Handle toggle status
-  const handleToggleStatus = (id: number) => {
-    setUsers(users.map(user => 
-      user.id === id 
-        ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' } 
-        : user
-    ));
+  const handleToggleStatus = async (id: number) => {
+    const userToUpdate = users.find(user => user.id === id);
+    if (!userToUpdate) return;
+    
+    const newStatus = userToUpdate.status === 'active' ? 'inactive' : 'active';
+    
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`http://localhost:5000/api/admin/users/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === id 
+          ? { ...user, status: newStatus } 
+          : user
+      ));
+    } catch (error) {
+      console.error('Failed to update user status:', error);
+      // You might want to show an error message to the user here
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Get role badge color
@@ -615,7 +687,7 @@ fetch('http://localhost:5000/api/admin/users/add', {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {currentUsers.length > 0 ?  (
+            {currentUsers.length > 0 ? (
               currentUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -675,18 +747,18 @@ fetch('http://localhost:5000/api/admin/users/add', {
                           <XCircle className="h-5 w-5" /> : 
                           <CheckCircle className="h-5 w-5" />
                         }
-                      </button>
+                                              </button>
                       <button 
                         onClick={() => handleEdit(user)}
-                        className="p-1 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-100 rounded-full"
-                        title="Edit"
+                        className="p-1 rounded-full text-blue-600 hover:bg-blue-100"
+                        title="Edit User"
                       >
                         <Edit className="h-5 w-5" />
                       </button>
                       <button 
                         onClick={() => handleDelete(user.id)}
-                        className="p-1 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full"
-                        title="Delete"
+                        className="p-1 rounded-full text-red-600 hover:bg-red-100"
+                        title="Delete User"
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
@@ -697,7 +769,7 @@ fetch('http://localhost:5000/api/admin/users/add', {
             ) : (
               <tr>
                 <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                  No users found. Try adjusting your search or filters.
+                  No users found matching your filters.
                 </td>
               </tr>
             )}
@@ -705,35 +777,44 @@ fetch('http://localhost:5000/api/admin/users/add', {
         </table>
       </div>
 
-      {/* Pagination */}
-      {filteredUsers.length > 0 && (
+      {/* Pagination Controls */}
+      {totalPages > 0 && (
         <div className="flex justify-between items-center mt-6">
-          <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{' '}
-            <span className="font-medium">
-              {Math.min(indexOfLastItem, filteredUsers.length)}
-            </span>{' '}
-            of <span className="font-medium">{filteredUsers.length}</span> users
+          <div className="text-sm text-gray-500">
+            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredUsers.length)} of {filteredUsers.length} users
           </div>
           <div className="flex space-x-2">
             <button
-              onClick={() => setCurrentPage(currentPage - 1)}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className={`px-3 py-1 rounded-md ${
-                currentPage === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+              className={`p-2 rounded-md flex items-center ${
+                currentPage === 1 
+                  ? 'text-gray-300 cursor-not-allowed' 
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === page
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
             <button
-              onClick={() => setCurrentPage(currentPage + 1)}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded-md ${
+              className={`p-2 rounded-md flex items-center ${
                 currentPage === totalPages
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                  ? 'text-gray-300 cursor-not-allowed'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
               <ChevronRight className="h-5 w-5" />
@@ -746,4 +827,3 @@ fetch('http://localhost:5000/api/admin/users/add', {
 };
 
 export default ManageUsers;
- 
