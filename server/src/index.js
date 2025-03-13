@@ -3,6 +3,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 // Import routes
 import studentRoutes from './routes/studentRoutes.js';
@@ -11,17 +14,31 @@ import studentRoutes from './routes/studentRoutes.js';
 // Initialize environment variables
 dotenv.config();
 
+// Get directory name (ESM compatible)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 const prisma = new PrismaClient();
 
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
   origin: '*', // Allow all origins for testing
   credentials: true
 }));
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(uploadsDir));
 
 // Root handler to help with navigation
 app.get('/', (req, res) => {

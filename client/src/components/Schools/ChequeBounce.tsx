@@ -675,3 +675,314 @@ const CheckBounceSystem: React.FC = () => {
                       Class
                       {sortField === 'class' && (
                         <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        // ...existing code...
+                      )}
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSort('section')}
+                    >
+                      <div className="flex items-center">
+                        Section
+                        {sortField === 'section' && (
+                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSort('amount')}
+                    >
+                      <div className="flex items-center">
+                        Amount
+                        {sortField === 'amount' && (
+                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSort('bounceDate')}
+                    >
+                      <div className="flex items-center">
+                        Bounce Date
+                        {sortField === 'bounceDate' && (
+                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSort('status')}
+                    >
+                      <div className="flex items-center">
+                        Status
+                        {sortField === 'status' && (
+                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500 font-medium">
+                        No bounced checks found matching your criteria
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRecords.map((record) => (
+                      <tr 
+                        key={record.id} 
+                        className="hover:bg-gray-50 transition-colors duration-150 ease-in-out"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {record.checkNumber}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {record.admissionNumber}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {record.studentName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {record.class}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {record.section}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          ₹{record.amount.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {new Date(record.bounceDate).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${record.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                              record.status === 'Recovered' ? 'bg-green-100 text-green-800' :
+                              record.status === 'Legal Action' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'}`}
+                          >
+                            {record.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button 
+                            onClick={() => handleViewDetails(record)}
+                            className="text-indigo-600 hover:text-indigo-900 mr-3"
+                          >
+                            View
+                          </button>
+                          <button 
+                            onClick={() => handleAddFollowup(record)}
+                            className="text-blue-600 hover:text-blue-900 mr-3"
+                          >
+                            Followup
+                          </button>
+                          <button 
+                            onClick={() => handleEdit(record)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+  
+          {/* Notification */}
+          <AnimatePresence>
+            {notification.show && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg 
+                  ${notification.type === 'success' ? 'bg-green-50 text-green-800 border-l-4 border-green-500' : 
+                  'bg-red-50 text-red-800 border-l-4 border-red-500'}`}
+              >
+                {notification.message}
+              </motion.div>
+            )}
+          </AnimatePresence>
+  
+          {/* Detail Modal */}
+          <AnimatePresence>
+            {isDetailModalOpen && selectedRecord && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+                onClick={() => setIsDetailModalOpen(false)}
+              >
+                <motion.div 
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.9 }}
+                  className="bg-white rounded-xl shadow-xl max-w-2xl w-full overflow-hidden"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-4 px-6">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-xl font-bold text-white">Check #{selectedRecord.checkNumber}</h3>
+                      <button 
+                        onClick={() => setIsDetailModalOpen(false)}
+                        className="text-white hover:text-gray-200"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                      <div>
+                        <h4 className="text-gray-500 text-sm font-medium mb-1">Student Information</h4>
+                        <p className="text-gray-900 font-medium">{selectedRecord.studentName}</p>
+                        <p className="text-gray-600">{`Admission: ${selectedRecord.admissionNumber}`}</p>
+                        <p className="text-gray-600">{`Class: ${selectedRecord.class} ${selectedRecord.section}`}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-gray-500 text-sm font-medium mb-1">Check Details</h4>
+                        <p className="text-gray-900 font-medium">{`₹${selectedRecord.amount.toLocaleString()}`}</p>
+                        <p className="text-gray-600">{`Bank: ${selectedRecord.bankName}`}</p>
+                        <p className="text-gray-600">{`Bounce Reason: ${selectedRecord.reason}`}</p>
+                      </div>
+                    </div>
+  
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                      <div>
+                        <h4 className="text-gray-500 text-sm font-medium mb-1">Dates</h4>
+                        <p className="text-gray-600">{`Issue Date: ${new Date(selectedRecord.issueDate).toLocaleDateString()}`}</p>
+                        <p className="text-gray-600">{`Bounce Date: ${new Date(selectedRecord.bounceDate).toLocaleDateString()}`}</p>
+                        {selectedRecord.recoveryDate && (
+                          <p className="text-gray-600">{`Recovery Date: ${new Date(selectedRecord.recoveryDate).toLocaleDateString()}`}</p>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-gray-500 text-sm font-medium mb-1">Contact Information</h4>
+                        <p className="text-gray-600">{`Parent Contact: ${selectedRecord.parentContact}`}</p>
+                        <p className={`mt-2 ${
+                          selectedRecord.status === 'Pending' ? 'text-yellow-600' : 
+                          selectedRecord.status === 'Recovered' ? 'text-green-600' :
+                          selectedRecord.status === 'Legal Action' ? 'text-red-600' :
+                          'text-gray-600'}`}
+                        >
+                          <strong>Status: {selectedRecord.status}</strong>
+                          {selectedRecord.status === 'Recovered' && selectedRecord.penaltyAmount > 0 && (
+                            <span className="block text-sm mt-1">{`Penalty collected: ₹${selectedRecord.penaltyAmount.toLocaleString()}`}</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+  
+                    {selectedRecord.status !== 'Recovered' && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <h4 className="text-gray-700 font-medium mb-2">Mark as Recovered</h4>
+                        <div className="flex flex-wrap gap-2">
+                          <button 
+                            onClick={() => markAsRecovered(selectedRecord.id, true)}
+                            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                          >
+                            Recovered with Penalty
+                          </button>
+                          <button 
+                            onClick={() => markAsRecovered(selectedRecord.id, false)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                          >
+                            Recovered without Penalty
+                          </button>
+                        </div>
+                      </div>
+                    )}
+  
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <h4 className="text-gray-700 font-medium mb-2">Follow-up History</h4>
+                      <div className="bg-gray-50 p-3 rounded-md max-h-40 overflow-y-auto whitespace-pre-wrap text-sm">
+                        {selectedRecord.followupNotes || "No follow-up notes yet."}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+  
+          {/* Followup Modal */}
+          <AnimatePresence>
+            {isFollowupModalOpen && selectedRecord && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+                onClick={() => setIsFollowupModalOpen(false)}
+              >
+                <motion.div 
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.9 }}
+                  className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 py-4 px-6">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-xl font-bold text-white">Add Follow-up Note</h3>
+                      <button 
+                        onClick={() => setIsFollowupModalOpen(false)}
+                        className="text-white hover:text-gray-200"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <p className="mb-4 text-gray-700">
+                      {`Adding follow-up for ${selectedRecord.studentName}'s check #${selectedRecord.checkNumber}`}
+                    </p>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Note</label>
+                      <textarea
+                        value={followupNote}
+                        onChange={e => setFollowupNote(e.target.value)}
+                        rows={4}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Enter details about communication, promises, follow-up actions..."
+                      />
+                    </div>
+                    
+                    <div className="flex justify-end">
+                      <button 
+                        onClick={submitFollowup}
+                        disabled={!followupNote.trim()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        Save Follow-up
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    );
+  };
+  
+  export default CheckBounceSystem;
