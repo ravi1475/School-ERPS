@@ -9,6 +9,7 @@ import fs from 'fs';
 
 // Import routes
 import studentRoutes from './routes/studentRoutes.js';
+import feeRoutes from './routes/feeRoutes.js';
 // Import other routes as needed
 
 // Initialize environment variables
@@ -48,6 +49,7 @@ app.get('/', (req, res) => {
     endpoints: {
       api: '/api',
       students: '/api/students',
+      fees: '/api/fees',
       health: '/api/health'
     }
   });
@@ -61,6 +63,7 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     endpoints: {
       students: '/api/students',
+      fees: '/api/fees',
       health: '/api/health',
       test: '/api/test'
     }
@@ -112,6 +115,10 @@ app.get('/api/test', (req, res) => {
 app.use('/api/students', studentRoutes);
 app.use('/student', studentRoutes);
 app.use('/students', studentRoutes);
+
+// Fee routes
+app.use('/api/fees', feeRoutes);
+app.use('/fees', feeRoutes);
 
 // Catch-all handler for unmatched routes
 app.use('*', (req, res) => {

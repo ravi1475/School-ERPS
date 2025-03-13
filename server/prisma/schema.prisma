@@ -260,3 +260,25 @@ model Department {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model Fee {
+  id              String   @id @default(uuid())
+  admissionNumber String
+  studentName     String
+  class           String
+  section         String
+  totalFees       Float
+  amountPaid      Float
+  feeAmount       Float
+  paymentDate     DateTime
+  paymentMode     String
+  receiptNumber   String
+  status          String   // 'Paid', 'Pending', 'Partial'
+  
+  // School relationship
+  schoolId        Int?
+
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
