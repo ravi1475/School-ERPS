@@ -11,8 +11,8 @@ import { createRequire } from 'module';
 // Import routes
 import studentRoutes from './routes/studentRoutes.js';
 import feeRoutes from './routes/feeRoutes.js';
-import adminRoutes from '../routes/adminRoutes.js';
-// Import other routes as needed
+import adminRoutes from './routes/adminRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -36,7 +36,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-  origin: '*', // Allow all origins for testing
+  origin: [
+    'http://localhost:3000', 
+    'http://127.0.0.1:3000',
+    'http://localhost:5173',    // Add this line
+    'http://127.0.0.1:5173'     // Add this line
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
@@ -52,7 +59,8 @@ app.get('/', (req, res) => {
       api: '/api',
       students: '/api/students',
       fees: '/api/fees',
-      health: '/api/health'
+      health: '/api/health',
+      auth: '/api/auth' // Add this line
     }
   });
 });
@@ -67,6 +75,7 @@ app.get('/api', (req, res) => {
       students: '/api/students',
       fees: '/api/fees',
       health: '/api/health',
+      auth: '/api/auth', // Add this line
       test: '/api/test'
     }
   });
@@ -125,6 +134,28 @@ app.use('/fees', feeRoutes);
 // Admin routes
 app.use('/api/admin', adminRoutes);
 app.use('/admin', adminRoutes);
+
+// Auth routes - Keep these lines for other auth routes
+app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes); 
+
+// Ensure this section is correct:
+
+// Direct route registration for login endpoints
+app.post('/api/adminLogin', (req, res) => {
+  console.log('Admin login attempt received');
+  return authRoutes.handle('admin', req, res);
+});
+
+app.post('/api/schoolLogin', (req, res) => {
+  console.log('School login attempt received');
+  return authRoutes.handle('school', req, res);
+});
+
+app.post('/api/teacherLogin', (req, res) => {
+  console.log('Teacher login attempt received');
+  return authRoutes.handle('teacher', req, res);
+});
 
 // Catch-all handler for unmatched routes
 app.use('*', (req, res) => {

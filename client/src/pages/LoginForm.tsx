@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FiMail, FiLock, FiEye, FiEyeOff, FiUser } from 'react-icons/fi';
+import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiAlertCircle } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 
 interface LoginFormProps {
   onLoginSuccess: (token: string, role: string) => void;
@@ -14,6 +14,7 @@ interface FormData {
 
 type Role = 'admin' | 'school' | 'teacher';
 
+// Demo accounts for fallback
 const demoAccounts = {
   admin: { email: 'Ram@gmail.com', password: 'Ram@1234' },
   school: { email: 'Ram2@gmail.com', password: 'Ram@1234' },
@@ -21,7 +22,7 @@ const demoAccounts = {
 };
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -32,17 +33,23 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const [loginError, setLoginError] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [step, setStep] = useState<'role' | 'credentials'>('role');
-  const [submitForm, setSubmitForm] = useState<boolean>(false);
+  const [useDemo, setUseDemo] = useState<boolean>(false);
 
-  // Pre-fill form data when role changes
+  // Pre-fill form data when role changes and demo is selected
   useEffect(() => {
-    if (selectedRole) {
+    if (selectedRole && useDemo) {
       setFormData({
         email: demoAccounts[selectedRole].email,
         password: demoAccounts[selectedRole].password,
       });
+    } else if (selectedRole) {
+      // Clear form when switching roles without demo
+      setFormData({
+        email: '',
+        password: '',
+      });
     }
-  }, [selectedRole]);
+  }, [selectedRole, useDemo]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
@@ -68,7 +75,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       [name]: value,
     }));
 
-    // Clear error when typing
+    // Clear errors when typing
     if (errors[name as keyof FormData]) {
       setErrors((prev) => ({
         ...prev,
@@ -85,6 +92,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const handleRoleSelect = (role: Role) => {
     setSelectedRole(role);
     setStep('credentials');
+    setLoginError('');
   };
 
   const handleBackToRoles = () => {
@@ -94,7 +102,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   };
 
   // Function to handle successful login and navigation
-  const handleLoginSuccess = (token: string, role: Role) => {
+  const handleLoginSuccess = (token: string, role: Role, userData: any) => {
+    // Store user data in localStorage for persistence
+    localStorage.setItem('token', token);
+    localStorage.setItem('role', role);
+    localStorage.setItem('userData', JSON.stringify(userData));
+    
     // Call the provided callback for parent component state
     onLoginSuccess(token, role);
     
@@ -109,11 +122,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       case 'teacher':
         navigate('/teacher/dashboard');
         break;
-    
     }
   };
 
-  const handleSubmit = (e: React.FormEvent): void => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
 
     if (!validateForm() || !selectedRole) return;
@@ -121,55 +133,77 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
     setIsLoading(true);
     
     // Check if using demo credentials
-    const selectedDemoAccount = demoAccounts[selectedRole];
-    if (formData.email === selectedDemoAccount.email && 
-        formData.password === selectedDemoAccount.password) {
+    if (useDemo) {
+      const selectedDemoAccount = demoAccounts[selectedRole];
+      if (formData.email === selectedDemoAccount.email && 
+          formData.password === selectedDemoAccount.password) {
+        
+        // Simulate loading for better UX
+        setTimeout(() => {
+          // Mock successful login with demo token
+          const mockToken = `demo-token-${selectedRole}-${Date.now()}`;
+          const mockUserData = {
+            id: 1,
+            name: `Demo ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`,
+            email: formData.email
+          };
+          handleLoginSuccess(mockToken, selectedRole, mockUserData);
+          setIsLoading(false);
+        }, 800);
+        return;
+      }
+    }
+    
+    // For real authentication with the API
+    try {
+      console.log(`Authenticating ${selectedRole} with credentials:`, {
+        email: formData.email,
+        password: formData.password ? '******' : 'empty' // Log without exposing password
+      });
       
-      // Simulate loading for better UX
-      setTimeout(() => {
-        // Mock successful login with demo token
-        const mockToken = `demo-token-${selectedRole}-${Date.now()}`;
-        handleLoginSuccess(mockToken, selectedRole);
+      const response = await fetch(`http://localhost:5000/api/${selectedRole}Login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        // Change from credentials: "include" to credentials: "omit"
+        // This prevents cookies from being sent, which may be causing CORS issues
+        credentials: "include",
+        body: JSON.stringify(formData)
+      });
+      
+      console.log('Server response status:', response.status);
+      const data = await response.json();
+      console.log('Server response data:', data);
+      
+      if (!response.ok) {
+        // Provide more specific error messages based on status codes
+        if (response.status === 403) {
+          setLoginError('This account is inactive. Please contact administrator.');
+        } else if (response.status === 401) {
+          setLoginError('Invalid email or password.');
+        } else if (response.status === 404) {
+          setLoginError(`Login endpoint for ${selectedRole} not found.`);
+        } else {
+          setLoginError(data.error || data.message || 'Login failed. Please check your credentials.');
+        }
         setIsLoading(false);
-      }, 800);
-    } else {
-      // For non-demo credentials, still try the API
-      setSubmitForm(true);
+        return;
+      }
+      
+      if (data.success && data.data && data.data.token) {
+        handleLoginSuccess(data.data.token, selectedRole as Role, data.data.user);
+      } else {
+        console.error('Invalid response structure:', data);
+        setLoginError('Invalid response from server. Missing token or user data.');
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      setLoginError('Cannot connect to the server. Try using demo credentials or check network.');
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  // Update useEffect to handle non-demo credentials
-  useEffect(() => {
-    if (!submitForm || !selectedRole) return;
-
-    setIsLoading(true);
-
-    console.log(`Attempting to call API: http://localhost:5000/api/${selectedRole}Login`);
-    fetch(`http://localhost:5000/api/${selectedRole}Login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      credentials: "include",
-      body: JSON.stringify(formData)
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.data && data.data.token) {
-          handleLoginSuccess(data.data.token, selectedRole);
-        } else {
-          setLoginError('Invalid email or password');
-        }
-      })
-      .catch(error => {
-        console.error('Login failed', error);
-        setLoginError('Backend connection failed. Try using the demo credentials.');
-      })
-      .finally(() => {
-        setIsLoading(false);
-        setSubmitForm(false);
-      });
-  }, [submitForm, selectedRole, formData, onLoginSuccess]);
 
   const roleOptions = [
     { role: 'admin', title: 'Administrator', description: 'Full system access and control', color: 'bg-purple-600 hover:bg-purple-700' },
@@ -184,8 +218,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       </h2>
 
       {loginError && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {loginError}
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded flex items-center">
+          <FiAlertCircle className="mr-2" />
+          <span>{loginError}</span>
         </div>
       )}
 
@@ -273,6 +308,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
               </button>
             </div>
             {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+          </div>
+
+          <div className="mb-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={useDemo}
+                onChange={() => setUseDemo(!useDemo)}
+                className="form-checkbox h-5 w-5 text-blue-600"
+              />
+              <span className="ml-2 text-sm text-gray-700">
+                Use demo credentials
+              </span>
+            </label>
           </div>
 
           <div className="flex gap-3">
