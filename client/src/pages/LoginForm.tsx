@@ -101,17 +101,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
     // Navigate based on role
     switch (role) {
       case 'admin':
-        navigate('/admin');
+        navigate('/admin/dashboard');
         break;
       case 'school':
-        navigate('/school');
+        navigate('/school/dashboard');
         break;
       case 'teacher':
-        navigate('/teacher');
+        navigate('/teacher/dashboard');
         break;
-      default:
-        // Fallback
-        navigate('/dashboard');
+    
     }
   };
 

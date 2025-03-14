@@ -6,10 +6,12 @@ import { PrismaClient } from '@prisma/client';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { createRequire } from 'module';
 
 // Import routes
 import studentRoutes from './routes/studentRoutes.js';
 import feeRoutes from './routes/feeRoutes.js';
+import adminRoutes from '../routes/adminRoutes.js';
 // Import other routes as needed
 
 // Initialize environment variables
@@ -119,6 +121,10 @@ app.use('/students', studentRoutes);
 // Fee routes
 app.use('/api/fees', feeRoutes);
 app.use('/fees', feeRoutes);
+
+// Admin routes
+app.use('/api/admin', adminRoutes);
+app.use('/admin', adminRoutes);
 
 // Catch-all handler for unmatched routes
 app.use('*', (req, res) => {
