@@ -23,7 +23,7 @@ interface SchoolNavbarProps {
   activeDropdown: string | null;
   toggleDropdown: (menu: string) => void;
   setIsMobileSidebarOpen: (isOpen: boolean) => void;
-  onLogout: () => void;
+  onLogout?: () => void;
   isProfileDropdownOpen: boolean;
   setIsProfileDropdownOpen: (isOpen: boolean) => void;
   profileDropdownRef: React.RefObject<HTMLDivElement>;
@@ -108,6 +108,81 @@ const NavLink: React.FC<NavLinkProps> = ({ to, icon, label, onClick, badge }) =>
         </span>
       )}
     </Link>
+  );
+};
+
+// Update the handleSignOutClick function in ProfileDropdown
+const ProfileDropdown = ({ onLogout }: { onLogout?: () => void }) => {
+  const handleSignOutClick = () => {
+    if (onLogout) {
+      onLogout(); // This will call the handleLogout function from App.tsx
+    } else {
+      // Fallback if onLogout prop is not available
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('loginTimestamp');
+      
+      sessionStorage.clear();
+      
+      document.cookie = 'authCookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      
+      window.location.href = '/login';
+    }
+  };
+  
+  return (
+    <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
+      <div className="px-4 py-3 border-b border-gray-100">
+        <p className="text-sm text-gray-500">Signed in as</p>
+        <p className="text-sm font-medium text-gray-900 truncate">principal@school.edu</p>
+        <div className="mt-1">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            School Admin
+          </span>
+        </div>
+      </div>
+
+      <Link
+        to="/school/profile"
+        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
+      >
+        <div className="flex items-center">
+          <User className="h-4 w-4 mr-3 text-blue-600" />
+          School Profile
+        </div>
+      </Link>
+      
+      <Link
+        to="/school/settings"
+        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
+      >
+        <div className="flex items-center">
+          <Settings className="h-4 w-4 mr-3 text-blue-600" />
+          School Settings
+        </div>
+      </Link>
+      
+      <Link
+        to="/school/notifications"
+        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
+      >
+        <div className="flex items-center">
+          <Bell className="h-4 w-4 mr-3 text-blue-600" />
+          Notification Settings
+        </div>
+      </Link>
+      
+      <button
+        onClick={handleSignOutClick}
+        className="block w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
+      >
+        <div className="flex items-center">
+          <LogOut className="h-4 w-4 mr-3" />
+          Sign out
+        </div>
+      </button>
+    </div>
   );
 };
 
@@ -321,63 +396,7 @@ const SchoolNavbar = {
     );
   },
 
-  renderProfileDropdown: (props: SchoolNavbarProps) => {
-    const { onLogout } = props;
-    
-    return (
-      <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
-        <div className="px-4 py-3 border-b border-gray-100">
-          <p className="text-sm text-gray-500">Signed in as</p>
-          <p className="text-sm font-medium text-gray-900 truncate">principal@school.edu</p>
-          <div className="mt-1">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              School Admin
-            </span>
-          </div>
-        </div>
-
-        <Link
-          to="/school/profile"
-          className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
-        >
-          <div className="flex items-center">
-            <User className="h-4 w-4 mr-3 text-blue-600" />
-            School Profile
-          </div>
-        </Link>
-        
-        <Link
-          to="/school/settings"
-          className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
-        >
-          <div className="flex items-center">
-            <Settings className="h-4 w-4 mr-3 text-blue-600" />
-            School Settings
-          </div>
-        </Link>
-        
-        <Link
-          to="/school/notifications"
-          className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
-        >
-          <div className="flex items-center">
-            <Bell className="h-4 w-4 mr-3 text-blue-600" />
-            Notification Settings
-          </div>
-        </Link>
-        
-        <button
-          onClick={onLogout}
-          className="block w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
-        >
-          <div className="flex items-center">
-            <LogOut className="h-4 w-4 mr-3" />
-            Sign out
-          </div>
-        </button>
-      </div>
-    );
-  },
+  ProfileDropdown,
 
   renderHeader: () => (
     <div className="flex items-center">
@@ -391,12 +410,18 @@ const SchoolNavbar = {
   ),
 
   renderProfileButton: (props: SchoolNavbarProps) => {
-    const { isProfileDropdownOpen, setIsProfileDropdownOpen, profileDropdownRef } = props;
+    const { isProfileDropdownOpen, setIsProfileDropdownOpen, profileDropdownRef, onLogout } = props;
+    
+    const handleClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsProfileDropdownOpen(!isProfileDropdownOpen);
+    };
     
     return (
       <div className="ml-3 relative" ref={profileDropdownRef}>
         <button
-          onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+          onClick={handleClick}
+          aria-label="Toggle profile dropdown"
           className="flex items-center max-w-xs text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 hover:ring-2 hover:ring-offset-2 hover:ring-blue-300"
         >
           <div className="bg-blue-100 text-blue-800 p-2 rounded-full">
@@ -404,7 +429,7 @@ const SchoolNavbar = {
           </div>
         </button>
         
-        {isProfileDropdownOpen && SchoolNavbar.renderProfileDropdown(props)}
+        {isProfileDropdownOpen && <ProfileDropdown onLogout={onLogout} />}
       </div>
     );
   }

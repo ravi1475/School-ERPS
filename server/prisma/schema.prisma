@@ -21,7 +21,9 @@ model Admin {
   password  String
   username  String   @default("unknown")
   role      Role     @default(ADMIN)
-  phone     String   @default("0123456789") @db.VarChar(10)
+  phone     String   @default("0123456789") @db.VarChar(15) // Changed length to 15
+  status    String   @default("active")  // Added status field
+  lastLogin DateTime? // Added lastLogin field
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -31,12 +33,16 @@ model School {
   fullName    String       @default("Unknown")
   email       String       @unique
   password    String
+  username    String       @unique @default(cuid()) // Added username field
   code        String       @unique @default("SC000")
   address     String       @default("Not Provided")
   contact     BigInt       @default(0)
+  phone       String       @default("0123456789") @db.VarChar(15) // Added phone field
   principal   String       @default("Unknown")
   established Int          @default(2000)
   role        Role         @default(SCHOOL)
+  status      String       @default("active") // Added status field
+  lastLogin   DateTime?    // Added lastLogin field
   teachers    Teacher[]
   students    Student[]
   departments Department[]
@@ -45,19 +51,23 @@ model School {
 }
 
 model Teacher {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   fullName     String
-  email        String   @unique
+  email        String    @unique
   password     String
-  class        String   @db.Text
-  subjects     String   @db.Text
-  joining_year DateTime @default(now())
-  experience   String   @default("5+")
-  role         Role     @default(TEACHER)
+  username     String    @unique @default(cuid()) // Added username field
+  phone        String    @default("0123456789") @db.VarChar(15) // Added phone field
+  class        String    @db.Text
+  subjects     String    @db.Text
+  joining_year DateTime  @default(now())
+  experience   String    @default("5+")
+  role         Role      @default(TEACHER)
+  status       String    @default("active") // Added status field
+  lastLogin    DateTime? // Added lastLogin field
   schoolId     Int
-  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Student {
@@ -259,4 +269,26 @@ model Department {
   school         School   @relation(fields: [schoolId], references: [id])
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model Fee {
+  id              String   @id @default(uuid())
+  admissionNumber String
+  studentName     String
+  class           String
+  section         String
+  totalFees       Float
+  amountPaid      Float
+  feeAmount       Float
+  paymentDate     DateTime
+  paymentMode     String
+  receiptNumber   String
+  status          String   // 'Paid', 'Pending', 'Partial'
+  
+  // School relationship
+  schoolId        Int?
+
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

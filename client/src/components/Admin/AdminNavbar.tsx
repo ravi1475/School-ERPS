@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Settings, 
   LogOut, 
@@ -17,13 +17,13 @@ import {
   UserPlus,
   Shield
 } from "lucide-react";
-
+import { handleSignOut } from "../../utils/auth";
 
 interface AdminNavbarProps {
   activeDropdown: string | null;
   toggleDropdown: (menu: string) => void;
   setIsMobileSidebarOpen: (isOpen: boolean) => void;
-  onLogout: () => void;
+  onLogout?: () => void;
   isProfileDropdownOpen?: boolean;
   setIsProfileDropdownOpen?: (isOpen: boolean) => void;
   profileDropdownRef?: React.RefObject<HTMLDivElement>;
@@ -234,54 +234,6 @@ const AdminNavbar = {
     );
   },
 
-  renderProfileDropdown: (props: AdminNavbarProps) => {
-    const { onLogout } = props;
-    
-    return (
-      <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
-        <div className="px-4 py-3 border-b border-gray-100">
-          <p className="text-sm text-gray-500">Signed in as</p>
-          <p className="text-sm font-medium text-gray-900 truncate">admin@school.edu</p>
-          <div className="mt-1">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-              Administrator
-            </span>
-          </div>
-        </div>
-
-        <Link
-          to="/profile"
-          className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
-        >
-          <div className="flex items-center">
-            <User className="h-4 w-4 mr-3 text-indigo-600" />
-            Your Profile
-          </div>
-        </Link>
-        
-        <Link
-          to="/settings"
-          className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
-        >
-          <div className="flex items-center">
-            <Settings className="h-4 w-4 mr-3 text-indigo-600" />
-            Settings
-          </div>
-        </Link>
-        
-        <button
-          onClick={onLogout}
-          className="block w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
-        >
-          <div className="flex items-center">
-            <LogOut className="h-4 w-4 mr-3" />
-            Sign out
-          </div>
-        </button>
-      </div>
-    );
-  },
-
   renderHeader: () => (
     <div className="flex items-center">
       <div className="bg-indigo-50 p-1.5 rounded-md">
@@ -294,25 +246,102 @@ const AdminNavbar = {
   ),
 
   renderProfileButton: (props: AdminNavbarProps) => {
-    const { isProfileDropdownOpen, setIsProfileDropdownOpen, profileDropdownRef } = props;
-    
-    if (!setIsProfileDropdownOpen) return null;
-    
-    return (
-      <div className="ml-3 relative" ref={profileDropdownRef}>
-        <button
-          onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-          className="flex items-center max-w-xs text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 hover:ring-2 hover:ring-offset-2 hover:ring-indigo-300"
-        >
-          <div className="bg-indigo-100 text-indigo-800 p-2 rounded-full">
-            <User className="h-6 w-6" />
-          </div>
-        </button>
-        
-        {isProfileDropdownOpen && AdminNavbar.renderProfileDropdown(props)}
-      </div>
-    );
+    return <ProfileButton {...props} />;
   }
+};
+
+const ProfileDropdown = ({ onLogout }: { onLogout?: () => void }) => {
+  const handleSignOutClick = () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      // Use a simpler approach without hooks
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userData');
+      window.location.href = '/login'; // Use direct navigation instead of useNavigate
+    }
+  };
+  
+  return (
+    <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
+      <div className="px-4 py-3 border-b border-gray-100">
+        <p className="text-sm text-gray-500">Signed in as</p>
+        <p className="text-sm font-medium text-gray-900 truncate">admin@school.edu</p>
+        <div className="mt-1">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+            Administrator
+          </span>
+        </div>
+      </div>
+
+      <Link
+        to="/profile"
+        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
+      >
+        <div className="flex items-center">
+          <User className="h-4 w-4 mr-3 text-indigo-600" />
+          Your Profile
+        </div>
+      </Link>
+      
+      <Link
+        to="/settings"
+        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
+      >
+        <div className="flex items-center">
+          <Settings className="h-4 w-4 mr-3 text-indigo-600" />
+          Settings
+        </div>
+      </Link>
+      
+      <button
+        onClick={handleSignOutClick}
+        className="block w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
+      >
+        <div className="flex items-center">
+          <LogOut className="h-4 w-4 mr-3" />
+          Sign out
+        </div>
+      </button>
+    </div>
+  );
+};
+
+const ProfileButton = ({ 
+  isProfileDropdownOpen, 
+  setIsProfileDropdownOpen, 
+  profileDropdownRef,
+  onLogout
+}: {
+  isProfileDropdownOpen?: boolean;
+  setIsProfileDropdownOpen?: (isOpen: boolean) => void;
+  profileDropdownRef?: React.RefObject<HTMLDivElement>;
+  onLogout?: () => void;
+}) => {
+  if (!setIsProfileDropdownOpen) return null;
+  
+  const handleClick = (e: React.MouseEvent) => {
+    // Stop event propagation to prevent conflicts
+    e.stopPropagation();
+    setIsProfileDropdownOpen(!isProfileDropdownOpen);
+  };
+  
+  return (
+    <div className="ml-3 relative" ref={profileDropdownRef}>
+      <button
+        onClick={handleClick}
+        aria-label="Toggle profile dropdown"
+        className="flex items-center max-w-xs text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 hover:ring-2 hover:ring-offset-2 hover:ring-indigo-300"
+      >
+        <div className="bg-indigo-100 text-indigo-800 p-2 rounded-full">
+          <User className="h-6 w-6" />
+        </div>
+      </button>
+      
+      {isProfileDropdownOpen && <ProfileDropdown onLogout={onLogout} />}
+    </div>
+  );
 };
 
 export default AdminNavbar;

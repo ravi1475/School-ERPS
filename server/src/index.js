@@ -6,10 +6,13 @@ import { PrismaClient } from '@prisma/client';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { createRequire } from 'module';
 
 // Import routes
 import studentRoutes from './routes/studentRoutes.js';
-// Import other routes as needed
+import feeRoutes from './routes/feeRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -32,10 +35,33 @@ if (!fs.existsSync(uploadsDir)) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// CORS configuration - More permissive for development
 app.use(cors({
-  origin: '*', // Allow all origins for testing
-  credentials: true
+  origin: function(origin, callback) {
+    // Allow any origin in development
+    const allowedOrigins = [
+      'http://localhost:3000', 
+      'http://127.0.0.1:3000',
+      'http://localhost:5173',
+      'http://127.0.0.1:5173'
+    ];
+    
+    // For development, we can be more permissive
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin);
+      callback(null, false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
+// Add preflight OPTIONS handling for all routes
+app.options('*', cors());
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(uploadsDir));
@@ -48,7 +74,9 @@ app.get('/', (req, res) => {
     endpoints: {
       api: '/api',
       students: '/api/students',
-      health: '/api/health'
+      fees: '/api/fees',
+      health: '/api/health',
+      auth: '/api/auth' // Add this line
     }
   });
 });
@@ -61,7 +89,9 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     endpoints: {
       students: '/api/students',
+      fees: '/api/fees',
       health: '/api/health',
+      auth: '/api/auth', // Add this line
       test: '/api/test'
     }
   });
@@ -112,6 +142,51 @@ app.get('/api/test', (req, res) => {
 app.use('/api/students', studentRoutes);
 app.use('/student', studentRoutes);
 app.use('/students', studentRoutes);
+
+// Fee routes
+app.use('/api/fees', feeRoutes);
+app.use('/fees', feeRoutes);
+
+// Add this before your admin routes registration:
+
+// Apply CORS specifically to admin routes
+app.use('/api/admin', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// Admin routes
+app.use('/api/admin', adminRoutes);
+app.use('/admin', adminRoutes);
+
+// Auth routes - Keep these lines for other auth routes
+app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes); 
+
+// Ensure this section is correct:
+
+// Direct route registration for login endpoints
+app.post('/api/adminLogin', (req, res) => {
+  console.log('Admin login attempt received');
+  return authRoutes.handle('admin', req, res);
+});
+
+app.post('/api/schoolLogin', (req, res) => {
+  console.log('School login attempt received');
+  return authRoutes.handle('school', req, res);
+});
+
+app.post('/api/teacherLogin', (req, res) => {
+  console.log('Teacher login attempt received');
+  return authRoutes.handle('teacher', req, res);
+});
 
 // Catch-all handler for unmatched routes
 app.use('*', (req, res) => {
