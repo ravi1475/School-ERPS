@@ -208,7 +208,7 @@ const SchoolNavbar = {
             isOpen={activeDropdown === "administration"} 
             onClick={() => toggleDropdown("administration")}
           >
-            <NavLink 
+            {/* <NavLink 
               to="/school/administration/manage-teachers" 
               label="Manage Teachers" 
               onClick={() => {
@@ -216,7 +216,7 @@ const SchoolNavbar = {
                   setIsMobileSidebarOpen(false);
                 }
               }}
-            />
+            /> */}
             <NavLink 
               to="/school/administration/departments" 
               label="Departments" 
