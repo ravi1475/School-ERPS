@@ -14,11 +14,11 @@ import {
   EyeOff,
   UserPlus,
   Mail,
-  Phone
+  Phone,
+  UserX
 } from 'lucide-react';
 import { loadingState } from '@/recoil/atoms';
-import { useSetRecoilState } from 'recoil';
-import { fetchUsers } from '@/utils/getUsersWithLimit';
+import { useSetRecoilState, useRecoilValue } from 'recoil';
 
 // Define a single consistent UserData interface
 interface UserData {
@@ -31,6 +31,7 @@ interface UserData {
   status: string;
   lastLogin: string;
   createdAt: string;
+  userType: string; // Add this field
 }
 
 interface UserFormData {
@@ -54,7 +55,8 @@ const MOCK_USERS: UserData[] = [
     role: 'admin',
     status: 'active',
     lastLogin: '2023-03-01 14:30:45',
-    createdAt: '2023-01-15'
+    createdAt: '2023-01-15',
+    userType: 'type1'
   },
   { 
     id: 2, 
@@ -65,7 +67,8 @@ const MOCK_USERS: UserData[] = [
     role: 'school',
     status: 'active',
     lastLogin: '2023-03-02 09:15:22',
-    createdAt: '2023-01-20'
+    createdAt: '2023-01-20',
+    userType: 'type2'
   },
   { 
     id: 3, 
@@ -76,7 +79,8 @@ const MOCK_USERS: UserData[] = [
     role: 'teacher',
     status: 'inactive',
     lastLogin: '2023-02-28 16:45:10',
-    createdAt: '2023-01-25'
+    createdAt: '2023-01-25',
+    userType: 'type3'
   },
   { 
     id: 4, 
@@ -87,7 +91,8 @@ const MOCK_USERS: UserData[] = [
     role: 'school',
     status: 'active',
     lastLogin: '2023-03-01 11:20:33',
-    createdAt: '2023-01-30'
+    createdAt: '2023-01-30',
+    userType: 'type4'
   },
   { 
     id: 5, 
@@ -98,11 +103,13 @@ const MOCK_USERS: UserData[] = [
     role: 'teacher',
     status: 'active',
     lastLogin: '2023-03-02 13:10:05',
-    createdAt: '2023-02-05'
+    createdAt: '2023-02-05',
+    userType: 'type5'
   },
 ];
 
 const ManageUsers: React.FC = () => {
+  const loading = useRecoilValue(loadingState); // Add this line to read the loading state
   const [users, setUsers] = useState<UserData[]>(MOCK_USERS);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -126,6 +133,97 @@ const ManageUsers: React.FC = () => {
   
   const itemsPerPage = 5;
 
+  // API helper functions
+  const API_URL = 'http://localhost:5000/api/admin';
+
+  // Function to fetch users
+  const fetchUsers = async (page: number, limit: number = 10) => {
+    try {
+      const response = await fetch(`${API_URL}/users?page=${page}&limit=${limit}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+  };
+
+  // Function to create a new user
+  const createUser = async (userData: UserFormData) => {
+    const response = await fetch(`${API_URL}/users/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create user');
+    }
+    
+    return await response.json();
+  };
+
+  // Function to update a user
+  const updateUser = async (id: number, userData: Partial<UserFormData>, userType: string) => {
+    const response = await fetch(`${API_URL}/users/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ...userData, userType }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update user');
+    }
+    
+    return await response.json();
+  };
+
+  // Function to delete a user
+  const deleteUser = async (id: number, userType: string) => {
+    const response = await fetch(`${API_URL}/users/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userType }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete user');
+    }
+    
+    return await response.json();
+  };
+
+  // Function to update user status
+  const updateUserStatus = async (id: number, status: string, userType: string) => {
+    const response = await fetch(`${API_URL}/users/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status, userType }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update user status');
+    }
+    
+    return await response.json();
+  };
+
   // Fetching Users 
   useEffect(() => {
     const getUsers = async () => {
@@ -133,10 +231,11 @@ const ManageUsers: React.FC = () => {
         setLoading(true);
         const fetchedUsers = await fetchUsers(1);
         if (fetchedUsers && Array.isArray(fetchedUsers)) {
-          setUsers(fetchedUsers as UserData[]);
+          setUsers(fetchedUsers);
         }
       } catch (error) {
         console.error("Error fetching users:", error);
+        // You could add toast notifications here
       } finally {
         setLoading(false);
       }
@@ -239,57 +338,38 @@ const ManageUsers: React.FC = () => {
     try {
       if (editingUser) {
         // Update existing user
-        const response = await fetch(`http://localhost:5000/api/admin/users/${editingUser.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            username: formData.username,
-            email: formData.email,
-            phone: formData.phone,
-            role: formData.role
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
+        const userData = {
+          name: formData.name,
+          username: formData.username,
+          email: formData.email,
+          phone: formData.phone,
+          role: formData.role
+        };
+        
+        await updateUser(editingUser.id, userData, editingUser.userType);
 
         // Update local state
-        const updatedUsers = users.map(user => 
-          user.id === editingUser.id 
-            ? { 
-                ...user, 
-                name: formData.name,
-                username: formData.username,
-                email: formData.email,
-                phone: formData.phone,
-                role: formData.role
-              } 
-            : user
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user.id === editingUser.id 
+              ? { 
+                  ...user, 
+                  name: formData.name,
+                  username: formData.username,
+                  email: formData.email,
+                  phone: formData.phone,
+                  role: formData.role
+                } 
+              : user
+          )
         );
-        setUsers(updatedUsers);
       } else {
         // Add new user
-        const response = await fetch('http://localhost:5000/api/admin/users/add', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const response = await createUser(formData);
         
         // Add the newly created user to the local state
         const newUser: UserData = {
-          id: data.id || users.length + 1, // Use the ID from the API or generate one
+          id: response.id,
           name: formData.name,
           username: formData.username,
           email: formData.email,
@@ -297,14 +377,20 @@ const ManageUsers: React.FC = () => {
           role: formData.role,
           status: 'active',
           lastLogin: '-',
-          createdAt: new Date().toISOString().split('T')[0]
+          createdAt: new Date().toISOString().split('T')[0],
+          userType: formData.role
         };
         
         setUsers(prevUsers => [...prevUsers, newUser]);
       }
-    } catch (error) {
+
+      // Show success notification
+      // You could add toast notifications here
+      
+    } catch (error: any) {
       console.error('Failed to save user:', error);
-      // You might want to show an error message to the user here
+      // Show error notification
+      // You could add toast notifications here
     } finally {
       setLoading(false);
       
@@ -340,7 +426,7 @@ const ManageUsers: React.FC = () => {
   };
 
   // Handle delete user
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number, userType: string) => {
     if (!window.confirm('Are you sure you want to delete this user?')) {
       return;
     }
@@ -348,26 +434,24 @@ const ManageUsers: React.FC = () => {
     setLoading(true);
     
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      await deleteUser(id, userType);
       
       // Update local state
-      setUsers(users.filter(user => user.id !== id));
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
+      
+      // Show success notification
+      // You could add toast notifications here
     } catch (error) {
       console.error('Failed to delete user:', error);
-      // You might want to show an error message to the user here
+      // Show error notification
+      // You could add toast notifications here
     } finally {
       setLoading(false);
     }
   };
 
   // Handle toggle status
-  const handleToggleStatus = async (id: number) => {
+  const handleToggleStatus = async (id: number, userType: string) => {
     const userToUpdate = users.find(user => user.id === id);
     if (!userToUpdate) return;
     
@@ -376,27 +460,23 @@ const ManageUsers: React.FC = () => {
     setLoading(true);
     
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/users/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      await updateUserStatus(id, newStatus, userType);
       
       // Update local state
-      setUsers(users.map(user => 
-        user.id === id 
-          ? { ...user, status: newStatus } 
-          : user
-      ));
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === id 
+            ? { ...user, status: newStatus } 
+            : user
+        )
+      );
+      
+      // Show success notification
+      // You could add toast notifications here
     } catch (error) {
       console.error('Failed to update user status:', error);
-      // You might want to show an error message to the user here
+      // Show error notification
+      // You could add toast notifications here
     } finally {
       setLoading(false);
     }
@@ -703,14 +783,8 @@ const ManageUsers: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col">
-                      <div className="text-sm text-gray-900 flex items-center">
-                        <Mail className="h-4 w-4 mr-1 text-gray-500" />
-                        {user.email}
-                      </div>
-                      <div className="text-sm text-gray-500 flex items-center">
-                        <Phone className="h-4 w-4 mr-1 text-gray-500" />
-                        {user.phone}
-                      </div>
+                      <div className="text-sm text-gray-900">{user.email}</div>
+                      <div className="text-sm text-gray-500">{user.phone}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -719,46 +793,31 @@ const ManageUsers: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span 
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
+                    <span
+                      onClick={() => handleToggleStatus(user.id, user.userType)}
+                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
+                        user.status === 'active'
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {user.status === 'active' ? 'Active' : 'Inactive'}
+                      {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.lastLogin}
+                    {user.lastLogin || 'Never'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">
-                      <button 
-                        onClick={() => handleToggleStatus(user.id)}
-                        className={`p-1 rounded-full ${
-                          user.status === 'active' 
-                            ? 'text-red-600 hover:bg-red-100' 
-                            : 'text-green-600 hover:bg-green-100'
-                        }`}
-                        title={user.status === 'active' ? 'Deactivate' : 'Activate'}
-                      >
-                        {user.status === 'active' ? 
-                          <XCircle className="h-5 w-5" /> : 
-                          <CheckCircle className="h-5 w-5" />
-                        }
-                                              </button>
-                      <button 
+                      <button
                         onClick={() => handleEdit(user)}
-                        className="p-1 rounded-full text-blue-600 hover:bg-blue-100"
-                        title="Edit User"
+                        className="text-indigo-600 hover:text-indigo-900"
                       >
                         <Edit className="h-5 w-5" />
                       </button>
-                      <button 
-                        onClick={() => handleDelete(user.id)}
-                        className="p-1 rounded-full text-red-600 hover:bg-red-100"
-                        title="Delete User"
+                      <button
+                        onClick={() => handleDelete(user.id, user.userType)}
+                        className="text-red-600 hover:text-red-900"
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
@@ -769,13 +828,52 @@ const ManageUsers: React.FC = () => {
             ) : (
               <tr>
                 <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                  No users found matching your filters.
+                  No users found
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Loading and No Users Found */}
+      {loading && (
+        <div className="flex justify-center items-center py-10">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+        </div>
+      )}
+
+      {!loading && currentUsers.length === 0 && (
+        <div className="text-center py-10">
+          <UserX className="h-12 w-12 mx-auto text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Get started by creating a new user.
+          </p>
+          <div className="mt-6">
+            <button
+              onClick={() => {
+                setEditingUser(null);
+                setFormData({
+                  name: '',
+                  username: '',
+                  email: '',
+                  phone: '',
+                  role: 'teacher',
+                  password: '',
+                  confirmPassword: ''
+                });
+                setFormErrors({});
+                setShowForm(true);
+              }}
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <UserPlus className="-ml-1 mr-2 h-5 w-5" />
+              New User
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Pagination Controls */}
       {totalPages > 0 && (
