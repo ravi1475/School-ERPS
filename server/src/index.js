@@ -35,17 +35,33 @@ if (!fs.existsSync(uploadsDir)) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// CORS configuration - More permissive for development
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'http://127.0.0.1:3000',
-    'http://localhost:5173',    // Add this line
-    'http://127.0.0.1:5173'     // Add this line
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  origin: function(origin, callback) {
+    // Allow any origin in development
+    const allowedOrigins = [
+      'http://localhost:3000', 
+      'http://127.0.0.1:3000',
+      'http://localhost:5173',
+      'http://127.0.0.1:5173'
+    ];
+    
+    // For development, we can be more permissive
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin);
+      callback(null, false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
+// Add preflight OPTIONS handling for all routes
+app.options('*', cors());
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(uploadsDir));
@@ -130,6 +146,21 @@ app.use('/students', studentRoutes);
 // Fee routes
 app.use('/api/fees', feeRoutes);
 app.use('/fees', feeRoutes);
+
+// Add this before your admin routes registration:
+
+// Apply CORS specifically to admin routes
+app.use('/api/admin', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Admin routes
 app.use('/api/admin', adminRoutes);
