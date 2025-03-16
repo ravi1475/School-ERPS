@@ -292,3 +292,27 @@ model Fee {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+// Fee Structure models for managing class fee structures
+model FeeStructure {
+  id           String        @id @default(uuid())
+  className    String
+  description  String?       @db.Text
+  schoolId     Int           // To associate with a particular school
+  categories   FeeCategory[]
+  totalAnnualFee Float       @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model FeeCategory {
+  id           String       @id @default(uuid())
+  name         String       // Name of the fee category (e.g., "Tuition Fee", "Library Fee")
+  amount       Float        // The fee amount
+  frequency    String       // "Monthly", "Quarterly", "Yearly"
+  description  String?      @db.Text
+  structureId  String       // Foreign key to relate to a fee structure
+  structure    FeeStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
