@@ -292,7 +292,7 @@ const SchoolNavbar = {
               onClick={() => setIsMobileSidebarOpen(false)}
             />
             <NavLink 
-              to="/school/faculty/Bustracking" 
+              to="/school/BusTracking" 
               label="Bus tracking" 
               onClick={() => setIsMobileSidebarOpen(false)}
             />
