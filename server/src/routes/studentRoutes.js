@@ -65,7 +65,16 @@ const documentFields = [
 // Get all students
 router.get('/', async (req, res) => {
   try {
+    const { page = 1, limit = 10, schoolId = 1 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
     const students = await prisma.student.findMany({
+      where: {
+        schoolId: parseInt(schoolId)
+      },
+      skip,
+      take: parseInt(limit),
+      orderBy: { createdAt: 'desc' },
       include: {
         parentInfo: true,
         sessionInfo: true,
@@ -76,7 +85,21 @@ router.get('/', async (req, res) => {
       }
     });
     
-    res.json({ success: true, data: students });
+    // Get total count for pagination
+    const total = await prisma.student.count({
+      where: { schoolId: parseInt(schoolId) }
+    });
+    
+    res.json({ 
+      success: true, 
+      data: students,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
   } catch (error) {
     console.error('Error fetching students:', error);
     res.status(500).json({ 
@@ -205,7 +228,7 @@ router.post('/', upload.fields(documentFields), async (req, res) => {
             state: data['address.state'] || '',
             pinCode: data['address.pinCode'] || null,
             fatherName: data['father.name'] || '',
-            motherName: data['mother.name'] || '',
+            motherName: data.motherName || '',
             schoolId: schoolId,
           }
         });
@@ -414,6 +437,40 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Error fetching student',
+      error: error.message
+    });
+  }
+});
+
+// Delete a student by ID
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Delete the student (cascading delete will handle related records)
+    const student = await prisma.student.delete({
+      where: { id: parseInt(id) }
+    });
+    
+    return res.status(200).json({
+      success: true,
+      message: `Student with ID ${id} has been deleted successfully`,
+      student
+    });
+    
+  } catch (error) {
+    console.error('Error deleting student:', error);
+    
+    if (error.code === 'P2025') {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+    
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to delete student',
       error: error.message
     });
   }
