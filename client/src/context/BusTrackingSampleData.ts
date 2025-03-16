@@ -10,7 +10,7 @@ import {
   TripLog,
   BusAlert,
   TripStopLog
-} from '../types/BusTrackingTypes';
+} from '../components/Schools/BusTrackingTypes';
 
 // Sample Buses
 export const sampleBuses: Bus[] = [
