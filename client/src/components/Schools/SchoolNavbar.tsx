@@ -266,7 +266,7 @@ const SchoolNavbar = {
               label="Manage Students" 
               onClick={() => setIsMobileSidebarOpen(false)}
             />
-            <NavLink 
+            {/* <NavLink 
               to="/school/students/enrollment" 
               label="Enrollment" 
               badge={24}
@@ -276,7 +276,7 @@ const SchoolNavbar = {
               to="/school/students/records" 
               label="Student Records" 
               onClick={() => setIsMobileSidebarOpen(false)}
-            />
+            /> */}
           </NavDropdown>
 
           {/* Faculty Management */}
@@ -377,20 +377,20 @@ const SchoolNavbar = {
           />
 
           {/* Accreditation */}
-          <NavLink 
+          {/* <NavLink 
             to="/School/Accreditation" 
             icon={<Award className="h-5 w-5 text-pink-600" />} 
             label="Accreditation" 
             onClick={() => setIsMobileSidebarOpen(false)}
-          />
+          /> */}
           
           {/* Help & Support */}
-          <NavLink 
+          {/* <NavLink 
             to="/school/help" 
             icon={<HelpCircle className="h-5 w-5 text-gray-600" />} 
             label="Help & Support" 
             onClick={() => setIsMobileSidebarOpen(false)}
-          />
+          /> */}
         </nav>
       </div>
     );
