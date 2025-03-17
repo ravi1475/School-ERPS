@@ -195,7 +195,7 @@ const SchoolNavbar = {
         <nav className="flex-1 px-3 space-y-1.5">
           {/* School Dashboard */}
           <NavLink 
-            to="/school/dashboard" 
+            to="/dashboard" 
             icon={<Home className="h-5 w-5 text-blue-600" />} 
             label="School Dashboard" 
             onClick={() => setIsMobileSidebarOpen(false)}

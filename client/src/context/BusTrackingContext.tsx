@@ -10,7 +10,7 @@ import {
   FuelRecord,
   TripLog,
   BusAlert
-} from '../types/BusTrackingTypes';
+} from '../components/Schools/BusTrackingTypes';
 
 // Sample data for initial state
 import { 

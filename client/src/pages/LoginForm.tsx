@@ -117,7 +117,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
         navigate('/admin/dashboard');
         break;
       case 'school':
-        navigate('/school/dashboard');
+        navigate('/dashboard');
         break;
       case 'teacher':
         navigate('/teacher/dashboard');
