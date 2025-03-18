@@ -55,11 +55,16 @@ const documentFields = [
   { name: 'documents.motherImage', maxCount: 1 },
   { name: 'documents.guardianImage', maxCount: 1 },
   { name: 'documents.signature', maxCount: 1 },
+  { name: 'documents.parentSignature', maxCount: 1 },
   { name: 'documents.fatherAadhar', maxCount: 1 },
   { name: 'documents.motherAadhar', maxCount: 1 },
   { name: 'documents.birthCertificate', maxCount: 1 },
   { name: 'documents.migrationCertificate', maxCount: 1 },
-  { name: 'documents.aadhaarCard', maxCount: 1 }
+  { name: 'documents.aadhaarCard', maxCount: 1 },
+  { name: 'documents.affidavitCertificate', maxCount: 1 },
+  { name: 'documents.incomeCertificate', maxCount: 1 },
+  { name: 'documents.addressProof1', maxCount: 1 },
+  { name: 'documents.addressProof2', maxCount: 1 }
 ];
 
 // Get all students
@@ -119,14 +124,32 @@ router.post('/', upload.fields(documentFields), async (req, res) => {
     console.log('Student registration data received:', Object.keys(data));
     
     // Validate required fields
-    const requiredFields = ['firstName', 'lastName', 'admissionNo', 'gender', 'mobileNumber', 'className', 'city', 'state', 'fatherName', 'motherName'];
-    const missingFields = requiredFields.filter(field => !data[field]);
+    const requiredFields = ['firstName', 'lastName', 'admissionNo', 'gender', 'mobileNumber', 'className', 'address.city', 'address.state', 'father.name', 'mother.name'];
+    const missingFields = requiredFields.filter(field => {
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.');
+        return !data[`${parent}.${child}`];
+      }
+      return !data[field];
+    });
     
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields);
+      // Map nested field names to their readable format for error messages
+      const fieldDisplayNames = {
+        'address.city': 'City',
+        'address.state': 'State',
+        'father.name': 'Father\'s Name',
+        'mother.name': 'Mother\'s Name'
+      };
+      
+      const readableMissingFields = missingFields.map(field => 
+        fieldDisplayNames[field] || field.charAt(0).toUpperCase() + field.slice(1)
+      );
+      
       return res.status(400).json({
         success: false,
-        message: `Missing required fields: ${missingFields.join(', ')}`,
+        message: `Missing required fields: ${readableMissingFields.join(', ')}`,
       });
     }
     
@@ -205,8 +228,10 @@ router.post('/', upload.fields(documentFields), async (req, res) => {
             middleName: data.middleName || null,
             lastName: data.lastName,
             admissionNo: data.admissionNo,
+            penNo: data.penNo || null,
             studentId: data.studentId || null,
             dateOfBirth: dateOfBirth,
+            age: data.age ? parseInt(data.age) : null,
             gender: data.gender,
             bloodGroup: data.bloodGroup || null,
             nationality: data.nationality || null,
@@ -220,13 +245,20 @@ router.post('/', upload.fields(documentFields), async (req, res) => {
             rollNumber: data.rollNumber || null,
             className: data.className || data['admitSession.class'] || '',
             section: data.section || null,
+            stream: data.stream || null,
+            semester: data.semester || null,
             admissionDate: admissionDate,
             previousSchool: data.previousSchool || null,
-            houseNo: data['address.houseNo'] || null,
-            street: data['address.street'] || null,
-            city: data['address.city'] || '',
-            state: data['address.state'] || '',
-            pinCode: data['address.pinCode'] || null,
+            presentHouseNo: data['address.houseNo'] || null,
+            presentStreet: data['address.street'] || null,
+            presentCity: data['address.city'] || '',
+            presentState: data['address.state'] || '',
+            presentPinCode: data['address.pinCode'] || null,
+            permanentHouseNo: data['address.permanentHouseNo'] || null,
+            permanentStreet: data['address.permanentStreet'] || null,
+            permanentCity: data['address.permanentCity'] || null,
+            permanentState: data['address.permanentState'] || null,
+            permanentPinCode: data['address.permanentPinCode'] || null,
             fatherName: data['father.name'] || '',
             motherName: data.motherName || '',
             schoolId: schoolId,
@@ -294,6 +326,8 @@ router.post('/', upload.fields(documentFields), async (req, res) => {
             transportStand: data['transport.stand'] || null,
             transportRoute: data['transport.route'] || null,
             transportDriver: data['transport.driver'] || null,
+            pickupLocation: data['transport.pickupLocation'] || null,
+            dropLocation: data['transport.dropLocation'] || null,
             studentId: newStudent.id
           }
         });

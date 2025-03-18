@@ -78,8 +78,10 @@ model Student {
   middleName       String?
   lastName         String
   admissionNo      String    @unique
+  penNo            String?   // Added PEN Number field
   studentId        String?
   dateOfBirth      DateTime
+  age              Int?      // Added calculated age field
   gender           String
   bloodGroup       String?
   nationality      String?
@@ -95,15 +97,23 @@ model Student {
   rollNumber       String?
   className        String
   section          String?
+  stream           String?   // Added stream field
+  semester         String?   // Added semester field
   admissionDate    DateTime  @default(now())
   previousSchool   String?   @db.Text
   
-  // Address fields
-  houseNo          String?
-  street           String?   @db.Text
-  city             String
-  state            String
-  pinCode          String?
+  // Address fields (modified to include permanent and present address)
+  presentHouseNo   String?
+  presentStreet    String?   @db.Text
+  presentCity      String
+  presentState     String
+  presentPinCode   String?
+  
+  permanentHouseNo String?
+  permanentStreet  String?   @db.Text
+  permanentCity    String?
+  permanentState   String?
+  permanentPinCode String?
   
   // Parent information (reduced to essential fields)
   fatherName       String
@@ -191,6 +201,8 @@ model TransportInfo {
   transportStand  String?
   transportRoute  String?
   transportDriver String?
+  pickupLocation  String?  // Added pickup location
+  dropLocation    String?  // Added drop location
   
   // Relation
   studentId       Int     @unique
@@ -204,11 +216,16 @@ model Documents {
   motherImagePath        String? @db.Text
   guardianImagePath      String? @db.Text
   signaturePath          String? @db.Text
+  parentSignaturePath    String? @db.Text  // Added parent signature
   fatherAadharPath       String? @db.Text
   motherAadharPath       String? @db.Text
   birthCertificatePath   String? @db.Text
   migrationCertificatePath String? @db.Text
   aadhaarCardPath        String? @db.Text
+  affidavitCertificatePath String? @db.Text  // Added affidavit certificate
+  incomeCertificatePath  String? @db.Text  // Added income certificate
+  addressProof1Path      String? @db.Text  // Added address proof 1
+  addressProof2Path      String? @db.Text  // Added address proof 2
   
   // Academic registration
   academicRegistrationNo String?

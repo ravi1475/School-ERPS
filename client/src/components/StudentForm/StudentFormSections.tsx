@@ -59,6 +59,14 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
       }
     };
     
+    // Special handling for date inputs
+    const handleDateFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+      if (type === 'date' && 'showPicker' in HTMLInputElement.prototype) {
+        // Use modern browsers' showPicker method if available
+        (e.target as any).showPicker?.();
+      }
+    };
+    
     return (
       <label className="block mb-5">
         <span className="text-gray-700 font-medium">{label} {required && <span className="text-red-500">*</span>}</span>
@@ -67,8 +75,9 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
           name={name}
           value={getValue()}
           onChange={handleChange}
+          onFocus={type === 'date' ? handleDateFocus : undefined}
           placeholder={placeholder}
-          className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all ${
+          className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all bg-gray-50 ${
             error ? 'border-red-300 bg-red-50' : 'border-gray-300'
           }`}
           required={required}
@@ -116,24 +125,33 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
       }
     };
     
+    const currentValue = getValue();
+    const placeholderText = `Select ${label}`;
+    
     return (
       <label className="block mb-5">
         <span className="text-gray-700 font-medium">{label} {required && <span className="text-red-500">*</span>}</span>
         <select
           name={name}
-          value={getValue()}
+          value={currentValue}
           onChange={handleChange}
-          className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all ${
+          className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all bg-gray-50 ${
             error ? 'border-red-300 bg-red-50' : 'border-gray-300'
           }`}
           required={required}
         >
-          <option value="">Select {label}</option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
+          {/* Show placeholder option only if no value is selected */}
+          {!currentValue && <option value="">{placeholderText}</option>}
+          
+          {/* Map through actual options (don't include the placeholder) */}
+          {options.map((option) => 
+            // Skip if this is the placeholder option that's already shown above
+            (option.value !== '' || option.label !== placeholderText) && (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            )
+          )}
         </select>
         {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
       </label>
@@ -186,7 +204,7 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
           value={getValue()}
           onChange={handleChange}
           rows={rows}
-          className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all ${
+          className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all bg-gray-50 ${
             error ? 'border-red-300 bg-red-50' : 'border-gray-300'
           }`}
           required={required}
@@ -208,7 +226,7 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
     return (
       <div className="block mb-5">
         <span className="text-gray-700 font-medium block mb-1">{label}</span>
-        <label className="flex items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-blue-400 focus:outline-none">
+        <label className="flex items-center justify-center w-full h-32 px-4 transition bg-gray-50 border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-blue-400 focus:outline-none">
           <div className="flex flex-col items-center space-y-2">
             {fileName ? (
               <>
@@ -249,12 +267,14 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {renderInput('Branch Name', 'branchName')}
           {renderInput('Admission No', 'admissionNo', 'text', true)}
+          {renderInput('PEN No', 'penNo', 'text')}
           {renderInput('First Name', 'firstName', 'text', true)}
           {renderInput('Middle Name', 'middleName')}
           {renderInput('Last Name', 'lastName', 'text', true)}
           {renderInput('Admission Date', 'admissionDate', 'date', true)}
           {renderInput('SR No / Student ID', 'studentId')}
           {renderInput('Date of Birth', 'dateOfBirth', 'date', true)}
+          {renderInput('Age', 'age', 'text', false, 'Auto-calculated')}
           {renderInput('Religion', 'religion')}
           {renderSelect('Gender', 'gender', [
             { value: '', label: 'Select Gender' },
@@ -285,11 +305,33 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
           <h3 className="text-lg font-medium mb-4 border-b pb-2">Admit Session</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {renderInput('Group', 'admitSession.group')}
-            {renderInput('Stream', 'admitSession.stream')}
-            {renderInput('Class', 'admitSession.class', 'text', true)}
-            {renderInput('Section', 'admitSession.section')}
+            {renderSelect('Stream', 'admitSession.stream', [
+              { value: '', label: 'Select Stream' },
+              ...['Science', 'Commerce', 'Arts', 'Vocational', 'General'].map(stream => ({ 
+                value: stream.toLowerCase(), label: stream 
+              }))
+            ])}
+            {renderSelect('Class', 'admitSession.class', [
+              { value: '', label: 'Select Class' },
+              ...['Nursery', 'LKG', 'UKG', 
+                 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5',
+                 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10',
+                 'Class 11', 'Class 12'].map(cls => ({ 
+                value: cls, label: cls 
+              }))
+            ], true)}
+            {renderSelect('Section', 'admitSession.section', [
+              { value: '', label: 'Select Section' },
+              ...['A', 'B', 'C', 'D'].map(section => ({ 
+                value: section, label: section 
+              }))
+            ])}
             {renderInput('Roll No.', 'admitSession.rollNo')}
-            {renderInput('Semester', 'admitSession.semester')}
+            {renderSelect('Semester', 'admitSession.semester', [
+              { value: '', label: 'Select Semester' },
+              { value: '1st sem', label: '1st Semester' },
+              { value: '2nd sem', label: '2nd Semester' }
+            ])}
             {renderInput('Fee Group', 'admitSession.feeGroup')}
             {renderInput('House', 'admitSession.house')}
           </div>
@@ -299,11 +341,33 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
           <h3 className="text-lg font-medium mb-4 border-b pb-2">Current Session</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {renderInput('Group', 'currentSession.group')}
-            {renderInput('Stream', 'currentSession.stream')}
-            {renderInput('Class', 'className', 'text', true)}
-            {renderInput('Section', 'section')}
+            {renderSelect('Stream', 'stream', [
+              { value: '', label: 'Select Stream' },
+              ...['Science', 'Commerce', 'Arts', 'Vocational', 'General'].map(stream => ({ 
+                value: stream.toLowerCase(), label: stream 
+              }))
+            ])}
+            {renderSelect('Class', 'className', [
+              { value: '', label: 'Select Class' },
+              ...['Nursery', 'LKG', 'UKG', 
+                 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5',
+                 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10',
+                 'Class 11', 'Class 12'].map(cls => ({ 
+                value: cls, label: cls 
+              }))
+            ], true)}
+            {renderSelect('Section', 'section', [
+              { value: '', label: 'Select Section' },
+              ...['A', 'B', 'C', 'D'].map(section => ({ 
+                value: section, label: section 
+              }))
+            ])}
             {renderInput('Roll No.', 'rollNumber')}
-            {renderInput('Semester', 'currentSession.semester')}
+            {renderSelect('Semester', 'semester', [
+              { value: '', label: 'Select Semester' },
+              { value: '1st sem', label: '1st Semester' },
+              { value: '2nd sem', label: '2nd Semester' }
+            ])}
             {renderInput('Fee Group', 'currentSession.feeGroup')}
             {renderInput('House', 'currentSession.house')}
           </div>
@@ -319,7 +383,7 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
       </div>
     ),
     
-    // Step 3: Contact & Transport
+    // Step 3: Contact Information (Transport moved to Address section)
     3: (
       <div className="space-y-8">
         <div className="space-y-6">
@@ -330,6 +394,72 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
             {renderInput('Father\'s Mobile', 'father.contactNumber', 'tel')}
             {renderInput('Mother\'s Mobile', 'mother.contactNumber', 'tel')}
             {renderInput('Emergency Contact', 'emergencyContact', 'tel')}
+          </div>
+        </div>
+      </div>
+    ),
+    
+    // Step 4: Address and Transport (Modified with present and permanent address)
+    4: (
+      <div className="space-y-8">
+        <div className="space-y-6">
+          <h3 className="text-lg font-medium mb-4 border-b pb-2">Present Address</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {renderInput('House/Flat No.', 'address.houseNo')}
+            {renderTextarea('Street/Area', 'address.street')}
+            {renderInput('City', 'address.city', 'text', true)}
+            {renderSelect('State', 'address.state', [
+              { value: '', label: 'Select State' },
+              ...['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+                 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
+                 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+                 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+                 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+                 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+                 'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+                 'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'].map(state => ({
+                value: state, label: state
+              }))
+            ], true)}
+            {renderInput('PIN Code', 'address.pinCode')}
+          </div>
+        </div>
+
+        {/* Checkbox for same as present address */}
+        <div className="flex items-center my-4">
+          <input
+            type="checkbox"
+            id="sameAsPresentAddress"
+            name="address.sameAsPresentAddress"
+            checked={formData.address.sameAsPresentAddress}
+            onChange={handleChange}
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <label htmlFor="sameAsPresentAddress" className="ml-2 block text-gray-700">
+            Same as Present Address
+          </label>
+        </div>
+
+        <div className="space-y-6">
+          <h3 className="text-lg font-medium mb-4 border-b pb-2">Permanent Address</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {renderInput('House/Flat No.', 'address.permanentHouseNo')}
+            {renderTextarea('Street/Area', 'address.permanentStreet')}
+            {renderInput('City', 'address.permanentCity')}
+            {renderSelect('State', 'address.permanentState', [
+              { value: '', label: 'Select State' },
+              ...['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+                 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
+                 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+                 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+                 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+                 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+                 'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+                 'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'].map(state => ({
+                value: state, label: state
+              }))
+            ])}
+            {renderInput('PIN Code', 'address.permanentPinCode')}
           </div>
         </div>
 
@@ -347,21 +477,9 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
             {renderInput('Stand', 'transport.stand')}
             {renderInput('Route', 'transport.route')}
             {renderInput('Driver', 'transport.driver')}
+            {renderInput('Pickup Location', 'transport.pickupLocation')}
+            {renderInput('Drop Location', 'transport.dropLocation')}
           </div>
-        </div>
-      </div>
-    ),
-    
-    // Step 4: Address
-    4: (
-      <div className="space-y-6">
-        <h3 className="text-lg font-medium mb-4 border-b pb-2">Permanent Address</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {renderTextarea('Address', 'address.street')}
-          {renderInput('House/Flat No.', 'address.houseNo')}
-          {renderInput('City', 'address.city', 'text', true)}
-          {renderInput('State', 'address.state', 'text', true)}
-          {renderInput('PIN Code', 'address.pinCode')}
         </div>
       </div>
     ),
@@ -422,12 +540,17 @@ const StudentFormSections: React.FC<StudentFormSectionsProps> = ({
           {renderFileInput('Father Image', 'fatherImage')}
           {renderFileInput('Mother Image', 'motherImage')}
           {renderFileInput('Guardian Image', 'guardianImage')}
-          {renderFileInput('Signature', 'signature')}
+          {renderFileInput('Student Signature', 'signature')}
+          {renderFileInput('Parent Signature', 'parentSignature')}
           {renderFileInput('Father Aadhar Card', 'fatherAadhar', 'application/pdf,image/*')}
           {renderFileInput('Mother Aadhar Card', 'motherAadhar', 'application/pdf,image/*')}
           {renderFileInput('Birth Certificate', 'birthCertificate', 'application/pdf,image/*')}
           {renderFileInput('Migration Certificate', 'migrationCertificate', 'application/pdf,image/*')}
           {renderFileInput('Aadhar Card', 'aadhaarCard', 'application/pdf,image/*')}
+          {renderFileInput('Affidavit Certificate', 'affidavitCertificate', 'application/pdf,image/*')}
+          {renderFileInput('Income Certificate', 'incomeCertificate', 'application/pdf,image/*')}
+          {renderFileInput('Address Proof 1', 'addressProof1', 'application/pdf,image/*')}
+          {renderFileInput('Address Proof 2', 'addressProof2', 'application/pdf,image/*')}
         </div>
       </div>
     ),
