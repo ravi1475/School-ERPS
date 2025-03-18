@@ -248,22 +248,12 @@ const TeacherNavbar = {
         </div>
 
         <Link
-          to="/profile"
+          to="/teacher/profile"
           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
         >
           <div className="flex items-center">
             <User className="h-4 w-4 mr-3 text-emerald-600" />
             Teacher Profile
-          </div>
-        </Link>
-        
-        <Link
-          to="/teacher/edit-profile"
-          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-        >
-          <div className="flex items-center">
-            <Settings className="h-4 w-4 mr-3 text-emerald-600" />
-            Edit Profile
           </div>
         </Link>
         

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Upload, Trash, Eye, XCircle, Calendar, Clock, Edit } from 'lucide-react';
+import { FileText, Upload, Trash, Eye, XCircle, Calendar, Clock, Edit, BookOpen, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exam } from './types'
 import toast, { Toaster } from 'react-hot-toast';
@@ -12,7 +12,7 @@ interface Teacher {
   assignedSubjects: string[];
 }
 
-// Mock API call - replace this with your actual API call
+
 const fetchTeacherData = async (teacherId: string): Promise<Teacher> => {
   const response = await fetch(`/api/teachers/${teacherId}`);
   if (!response.ok) {
@@ -238,60 +238,60 @@ const ExamManager: React.FC = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
       <Toaster />
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center">
-          <FileText className="h-6 w-6 mr-2 text-emerald-600" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+          <FileText className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-emerald-600" />
           Exams
         </h1>
         <button
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md flex items-center"
+          className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md flex items-center justify-center"
           onClick={() => setIsCreateModalOpen(true)}
         >
           <Upload className="h-4 w-4 mr-2" /> Create Exam
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {exams.map((exam) => (
-          <div key={exam.id} className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+          <div key={exam.id} className="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
-              <h2 className="text-xl font-bold text-gray-800">{exam.examName}</h2>
-              <div className="flex space-x-2">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 line-clamp-2">{exam.examName}</h2>
+              <div className="flex space-x-1 sm:space-x-2 ml-2">
                 <button 
-                  className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
+                  className="p-1.5 sm:p-2 text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
                   onClick={() => { setSelectedExam(exam); setIsModalOpen(true); }}
                   title="View Details"
                 >
-                  <Eye className="h-5 w-5" />
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
                 <button 
-                  className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
+                  className="p-1.5 sm:p-2 text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
                   onClick={() => { setEditExam(exam); setIsEditModalOpen(true); }}
                   title="Edit Exam"
                 >
-                  <Edit className="h-5 w-5" />
+                  <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
                 <button 
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                  className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
                   onClick={() => handleDeleteExam(exam.id)}
                   title="Delete Exam"
                 >
-                  <Trash className="h-5 w-5" />
+                  <Trash className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </div>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center text-gray-600">
-                <Calendar className="h-4 w-4 mr-2" />
+            <div className="space-y-2 sm:space-y-3">
+              <div className="flex items-center text-gray-600 text-sm sm:text-base">
+                <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span>{exam.date}</span>
               </div>
-              <div className="flex items-center text-gray-600">
-                <Clock className="h-4 w-4 mr-2" />
+              <div className="flex items-center text-gray-600 text-sm sm:text-base">
+                <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span>{exam.startTime} - {exam.endTime}</span>
               </div>
-              <div className="flex justify-between text-sm text-gray-600">
+              <div className="flex flex-col sm:flex-row sm:justify-between text-sm text-gray-600 gap-2">
                 <span><strong>Class:</strong> {exam.className}</span>
                 <span><strong>Subject:</strong> {exam.subject}</span>
               </div>
@@ -309,73 +309,89 @@ const ExamManager: React.FC = () => {
       <AnimatePresence>
         {isModalOpen && selectedExam && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
               ref={viewModalRef}
-              className="bg-white rounded-lg p-6 w-full max-w-2xl"
+              className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-lg mx-auto"
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
             >
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-xl font-bold">{selectedExam.examName}</h2>
+                <h2 className="text-lg sm:text-xl font-bold">{selectedExam.examName}</h2>
                 <button onClick={() => setIsModalOpen(false)}>
-                  <XCircle className="h-6 w-6 text-gray-500" />
+                  <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-gray-500" />
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center text-sm text-gray-600">
-                  <Calendar className="h-4 w-4 mr-2" />
+                <div className="flex items-center text-sm sm:text-base text-gray-600">
+                  <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
                   Date: {selectedExam.date}
                 </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <Clock className="h-4 w-4 mr-2" />
+                <div className="flex items-center text-sm sm:text-base text-gray-600">
+                  <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
+                  Time: {selectedExam.startTime} - {selectedExam.endTime}
+                </div>
+                <div className="flex items-center text-sm sm:text-base text-gray-600">
+                  <BookOpen className="h-4 w-4 mr-2 flex-shrink-0" />
                   Subject: {selectedExam.subject}
                 </div>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Class:</span> {selectedExam.className}
-                </p>
+                <div className="flex items-center text-sm sm:text-base text-gray-600">
+                  <Users className="h-4 w-4 mr-2 flex-shrink-0" />
+                  Class: {selectedExam.className}
+                </div>
+                {selectedExam.room && (
+                  <div className="flex items-center text-sm sm:text-base text-gray-600">
+                    <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                    Room: {selectedExam.room}
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Create Exam Modal */}
+      {/* Create/Edit Exam Modal */}
       <AnimatePresence>
-        {isCreateModalOpen && (
+        {(isCreateModalOpen || isEditModalOpen) && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              ref={createModalRef}
-              className="bg-white rounded-lg p-6 w-full max-w-2xl"
+              ref={isCreateModalOpen ? createModalRef : editModalRef}
+              className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto"
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-start mb-6">
-                <h2 className="text-xl font-bold">Create New Exam</h2>
-                <button onClick={() => setIsCreateModalOpen(false)}>
-                  <XCircle className="h-6 w-6 text-gray-500" />
+                <h2 className="text-lg sm:text-xl font-bold">
+                  {isCreateModalOpen ? 'Create New Exam' : 'Edit Exam'}
+                </h2>
+                <button onClick={() => isCreateModalOpen ? setIsCreateModalOpen(false) : setIsEditModalOpen(false)}>
+                  <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-gray-500" />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium mb-1">Exam Name*</label>
                   <input
                     type="text"
-                    className="w-full p-2 border rounded-md"
-                    value={newExam.examName || ''}
-                    onChange={(e) => setNewExam({ ...newExam, examName: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    value={isCreateModalOpen ? newExam.examName || '' : editExam.examName || ''}
+                    onChange={(e) => isCreateModalOpen 
+                      ? setNewExam({ ...newExam, examName: e.target.value })
+                      : setEditExam({ ...editExam, examName: e.target.value })
+                    }
                   />
                   {errors.examName && <p className="text-sm text-red-500 mt-1">{errors.examName}</p>}
                 </div>
@@ -383,15 +399,16 @@ const ExamManager: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1">Class*</label>
                   <select
-                    className="w-full p-2 border rounded-md"
-                    value={newExam.className || ''}
-                    onChange={(e) => setNewExam({ ...newExam, className: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    value={isCreateModalOpen ? newExam.className || '' : editExam.className || ''}
+                    onChange={(e) => isCreateModalOpen
+                      ? setNewExam({ ...newExam, className: e.target.value })
+                      : setEditExam({ ...editExam, className: e.target.value })
+                    }
                   >
                     <option value="">Select Class</option>
                     {teacherData?.assignedClasses.map((className) => (
-                      <option key={className} value={className}>
-                        Class {className}
-                      </option>
+                      <option key={className} value={className}>Class {className}</option>
                     ))}
                   </select>
                   {errors.className && <p className="text-sm text-red-500 mt-1">{errors.className}</p>}
@@ -400,15 +417,16 @@ const ExamManager: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1">Subject*</label>
                   <select
-                    className="w-full p-2 border rounded-md"
-                    value={newExam.subject || ''}
-                    onChange={(e) => setNewExam({ ...newExam, subject: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    value={isCreateModalOpen ? newExam.subject || '' : editExam.subject || ''}
+                    onChange={(e) => isCreateModalOpen
+                      ? setNewExam({ ...newExam, subject: e.target.value })
+                      : setEditExam({ ...editExam, subject: e.target.value })
+                    }
                   >
                     <option value="">Select Subject</option>
                     {teacherData?.assignedSubjects.map((subject) => (
-                      <option key={subject} value={subject}>
-                        {subject}
-                      </option>
+                      <option key={subject} value={subject}>{subject}</option>
                     ))}
                   </select>
                   {errors.subject && <p className="text-sm text-red-500 mt-1">{errors.subject}</p>}
@@ -418,9 +436,12 @@ const ExamManager: React.FC = () => {
                   <label className="block text-sm font-medium mb-1">Date*</label>
                   <input
                     type="date"
-                    className="w-full p-2 border rounded-md"
-                    value={newExam.date || ''}
-                    onChange={(e) => setNewExam({ ...newExam, date: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    value={isCreateModalOpen ? newExam.date || '' : editExam.date || ''}
+                    onChange={(e) => isCreateModalOpen
+                      ? setNewExam({ ...newExam, date: e.target.value })
+                      : setEditExam({ ...editExam, date: e.target.value })
+                    }
                   />
                   {errors.date && <p className="text-sm text-red-500 mt-1">{errors.date}</p>}
                 </div>
@@ -429,9 +450,12 @@ const ExamManager: React.FC = () => {
                   <label className="block text-sm font-medium mb-1">Start Time*</label>
                   <input
                     type="time"
-                    className="w-full p-2 border rounded-md"
-                    value={newExam.startTime || ''}
-                    onChange={(e) => setNewExam({ ...newExam, startTime: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    value={isCreateModalOpen ? newExam.startTime || '' : editExam.startTime || ''}
+                    onChange={(e) => isCreateModalOpen
+                      ? setNewExam({ ...newExam, startTime: e.target.value })
+                      : setEditExam({ ...editExam, startTime: e.target.value })
+                    }
                   />
                 </div>
 
@@ -439,120 +463,36 @@ const ExamManager: React.FC = () => {
                   <label className="block text-sm font-medium mb-1">End Time*</label>
                   <input
                     type="time"
-                    className="w-full p-2 border rounded-md"
-                    value={newExam.endTime || ''}
-                    onChange={(e) => setNewExam({ ...newExam, endTime: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    value={isCreateModalOpen ? newExam.endTime || '' : editExam.endTime || ''}
+                    onChange={(e) => isCreateModalOpen
+                      ? setNewExam({ ...newExam, endTime: e.target.value })
+                      : setEditExam({ ...editExam, endTime: e.target.value })
+                    }
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">Room*</label>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium mb-1">Room</label>
                   <input
                     type="text"
-                    className="w-full p-2 border rounded-md"
-                    value={newExam.room || ''}
-                    onChange={(e) => setNewExam({ ...newExam, room: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    value={isCreateModalOpen ? newExam.room || '' : editExam.room || ''}
+                    onChange={(e) => isCreateModalOpen
+                      ? setNewExam({ ...newExam, room: e.target.value })
+                      : setEditExam({ ...editExam, room: e.target.value })
+                    }
                   />
                 </div>
 
-                <button
-                  onClick={handleCreateExam}
-                  className="w-full bg-emerald-600 text-white py-2 rounded-md hover:bg-emerald-700"
-                >
-                  Create Exam
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Edit Exam Modal */}
-      <AnimatePresence>
-        {isEditModalOpen && (
-          <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              ref={editModalRef}
-              className="bg-white rounded-lg p-6 w-full max-w-2xl"
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-start mb-6">
-                <h2 className="text-xl font-bold">Edit Exam</h2>
-                <button onClick={() => setIsEditModalOpen(false)}>
-                  <XCircle className="h-6 w-6 text-gray-500" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Exam Name*</label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border rounded-md"
-                    value={editExam.examName || ''}
-                    onChange={(e) => setEditExam({ ...editExam, examName: e.target.value })}
-                  />
-                  {errors.examName && <p className="text-sm text-red-500 mt-1">{errors.examName}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Class*</label>
-                  <select
-                    className="w-full p-2 border rounded-md"
-                    value={editExam.className || ''}
-                    onChange={(e) => setEditExam({ ...editExam, className: e.target.value })}
+                <div className="sm:col-span-2">
+                  <button
+                    onClick={isCreateModalOpen ? handleCreateExam : handleUpdateExam}
+                    className="w-full bg-emerald-600 text-white py-2 rounded-md hover:bg-emerald-700 transition-colors"
                   >
-                    <option value="">Select Class</option>
-                    {teacherData?.assignedClasses.map((className) => (
-                      <option key={className} value={className}>
-                        Class {className}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.className && <p className="text-sm text-red-500 mt-1">{errors.className}</p>}
+                    {isCreateModalOpen ? 'Create Exam' : 'Update Exam'}
+                  </button>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Subject*</label>
-                  <select
-                    className="w-full p-2 border rounded-md"
-                    value={editExam.subject || ''}
-                    onChange={(e) => setEditExam({ ...editExam, subject: e.target.value })}
-                  >
-                    <option value="">Select Subject</option>
-                    {teacherData?.assignedSubjects.map((subject) => (
-                      <option key={subject} value={subject}>
-                        {subject}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.subject && <p className="text-sm text-red-500 mt-1">{errors.subject}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Date*</label>
-                  <input
-                    type="date"
-                    className="w-full p-2 border rounded-md"
-                    value={editExam.date || ''}
-                    onChange={(e) => setEditExam({ ...editExam, date: e.target.value })}
-                  />
-                  {errors.date && <p className="text-sm text-red-500 mt-1">{errors.date}</p>}
-                </div>
-
-                <button
-                  onClick={handleUpdateExam}
-                  className="w-full bg-emerald-600 text-white py-2 rounded-md hover:bg-emerald-700"
-                >
-                  Update Exam
-                </button>
               </div>
             </motion.div>
           </motion.div>

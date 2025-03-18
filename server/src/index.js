@@ -6,13 +6,13 @@ import { PrismaClient } from '@prisma/client';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { createRequire } from 'module';
 
 // Import routes
 import studentRoutes from './routes/studentRoutes.js';
 import feeRoutes from './routes/feeRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import feeStructureRoutes from './routes/feeStructureRoutes.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -146,6 +146,9 @@ app.use('/students', studentRoutes);
 // Fee routes
 app.use('/api/fees', feeRoutes);
 app.use('/fees', feeRoutes);
+
+// Fee Structure routes
+app.use('/api', feeStructureRoutes);
 
 // Add this before your admin routes registration:
 

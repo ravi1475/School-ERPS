@@ -195,7 +195,7 @@ const SchoolNavbar = {
         <nav className="flex-1 px-3 space-y-1.5">
           {/* School Dashboard */}
           <NavLink 
-            to="/school/dashboard" 
+            to="/dashboard" 
             icon={<Home className="h-5 w-5 text-blue-600" />} 
             label="School Dashboard" 
             onClick={() => setIsMobileSidebarOpen(false)}
@@ -208,7 +208,7 @@ const SchoolNavbar = {
             isOpen={activeDropdown === "administration"} 
             onClick={() => toggleDropdown("administration")}
           >
-            <NavLink 
+            {/* <NavLink 
               to="/school/administration/manage-teachers" 
               label="Manage Teachers" 
               onClick={() => {
@@ -216,7 +216,7 @@ const SchoolNavbar = {
                   setIsMobileSidebarOpen(false);
                 }
               }}
-            />
+            /> */}
             <NavLink 
               to="/school/administration/departments" 
               label="Departments" 
@@ -266,7 +266,7 @@ const SchoolNavbar = {
               label="Manage Students" 
               onClick={() => setIsMobileSidebarOpen(false)}
             />
-            <NavLink 
+            {/* <NavLink 
               to="/school/students/enrollment" 
               label="Enrollment" 
               badge={24}
@@ -276,7 +276,7 @@ const SchoolNavbar = {
               to="/school/students/records" 
               label="Student Records" 
               onClick={() => setIsMobileSidebarOpen(false)}
-            />
+            /> */}
           </NavDropdown>
 
           {/* Faculty Management */}
@@ -292,7 +292,7 @@ const SchoolNavbar = {
               onClick={() => setIsMobileSidebarOpen(false)}
             />
             <NavLink 
-              to="/school/faculty/Bustracking" 
+              to="/school/BusTracking" 
               label="Bus tracking" 
               onClick={() => setIsMobileSidebarOpen(false)}
             />
@@ -377,20 +377,20 @@ const SchoolNavbar = {
           />
 
           {/* Accreditation */}
-          <NavLink 
+          {/* <NavLink 
             to="/School/Accreditation" 
             icon={<Award className="h-5 w-5 text-pink-600" />} 
             label="Accreditation" 
             onClick={() => setIsMobileSidebarOpen(false)}
-          />
+          /> */}
           
           {/* Help & Support */}
-          <NavLink 
+          {/* <NavLink 
             to="/school/help" 
             icon={<HelpCircle className="h-5 w-5 text-gray-600" />} 
             label="Help & Support" 
             onClick={() => setIsMobileSidebarOpen(false)}
-          />
+          /> */}
         </nav>
       </div>
     );
