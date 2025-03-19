@@ -127,16 +127,49 @@ export const deleteFeeStructure = async (id: string): Promise<boolean> => {
 // Get all fee categories
 export const getFeeCategories = async (): Promise<string[]> => {
   try {
-    const response = await fetch(`${API_URL}/fee-categories`);
+    // Try the main endpoint first
+    const response = await fetch(`${API_URL}/fee-categories`, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
     
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
     
     const data = await response.json();
-    return data;
+    
+    // Validate we got an array of strings
+    if (Array.isArray(data)) {
+      return data;
+    } else {
+      // If invalid data, try the check endpoint
+      return await getFallbackCategories();
+    }
   } catch (error) {
-    console.error('Error fetching fee categories:', error);
+    // If error, try the check endpoint
+    return await getFallbackCategories();
+  }
+};
+
+// Fallback method to get categories from the check endpoint
+const getFallbackCategories = async (): Promise<string[]> => {
+  try {
+    const response = await fetch(`${API_URL}/fee-categories/check`);
+    
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.available_categories && Array.isArray(data.available_categories)) {
+      return data.available_categories;
+    } else {
+      throw new Error("Invalid data from fallback endpoint");
+    }
+  } catch (error) {
     throw error;
   }
 }; 

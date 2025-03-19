@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, Search } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Edit2, Trash2, Save, Search, AlertTriangle, X } from 'lucide-react';
 import { 
   ClassFeeStructure, 
   FeeCategory, 
@@ -16,162 +16,38 @@ import {
 } from '../components/fee/FeeStructureComponents';
 import * as feeStructureService from '../services/feeStructureService';
 
-// Expanded sample data for fallback
-const SAMPLE_FEE_STRUCTURES: ClassFeeStructure[] = [
-  {
-    id: '1',
-    className: 'Class 1',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '1-1', name: 'Tuition Fee', amount: 2000, frequency: 'Monthly' },
-      { id: '1-2', name: 'Development Fee', amount: 5000, frequency: 'Yearly' },
-      { id: '1-3', name: 'Library Fee', amount: 1000, frequency: 'Yearly' },
-      { id: '1-4', name: 'Sports Fee', amount: 800, frequency: 'Quarterly' }
-    ]
-  },
-  {
-    id: '2',
-    className: 'Class 2',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '2-1', name: 'Tuition Fee', amount: 2200, frequency: 'Monthly' },
-      { id: '2-2', name: 'Development Fee', amount: 5500, frequency: 'Yearly' },
-      { id: '2-3', name: 'Library Fee', amount: 1200, frequency: 'Yearly' },
-      { id: '2-4', name: 'Sports Fee', amount: 900, frequency: 'Quarterly' }
-    ]
-  },
-  {
-    id: '3',
-    className: 'Class 3',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '3-1', name: 'Tuition Fee', amount: 2500, frequency: 'Monthly' },
-      { id: '3-2', name: 'Development Fee', amount: 6000, frequency: 'Yearly' },
-      { id: '3-3', name: 'Computer Fee', amount: 1500, frequency: 'Quarterly' },
-      { id: '3-4', name: 'Activity Fee', amount: 2000, frequency: 'Yearly' }
-    ]
-  },
-  {
-    id: '4',
-    className: 'Class 4',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '4-1', name: 'Tuition Fee', amount: 2800, frequency: 'Monthly' },
-      { id: '4-2', name: 'Transport Fee', amount: 1500, frequency: 'Monthly' },
-      { id: '4-3', name: 'Library Fee', amount: 1500, frequency: 'Yearly' },
-      { id: '4-4', name: 'Examination Fee', amount: 3000, frequency: 'Yearly' }
-    ]
-  },
-  {
-    id: '5',
-    className: 'Class 5',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '5-1', name: 'Tuition Fee', amount: 3000, frequency: 'Monthly' },
-      { id: '5-2', name: 'Computer Fee', amount: 1800, frequency: 'Quarterly' },
-      { id: '5-3', name: 'Development Fee', amount: 7000, frequency: 'Yearly' },
-      { id: '5-4', name: 'Sports Fee', amount: 1200, frequency: 'Quarterly' }
-    ]
-  },
-  {
-    id: '6',
-    className: 'Class 6',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '6-1', name: 'Tuition Fee', amount: 3500, frequency: 'Monthly' },
-      { id: '6-2', name: 'Laboratory Fee', amount: 2000, frequency: 'Quarterly' },
-      { id: '6-3', name: 'Library Fee', amount: 2000, frequency: 'Yearly' },
-      { id: '6-4', name: 'Activity Fee', amount: 2500, frequency: 'Yearly' }
-    ]
-  },
-  {
-    id: '7',
-    className: 'Class 7',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '7-1', name: 'Tuition Fee', amount: 3800, frequency: 'Monthly' },
-      { id: '7-2', name: 'Computer Fee', amount: 2200, frequency: 'Quarterly' },
-      { id: '7-3', name: 'Transport Fee', amount: 1800, frequency: 'Monthly' },
-      { id: '7-4', name: 'Maintenance Fee', amount: 3000, frequency: 'Yearly' }
-    ]
-  },
-  {
-    id: '8',
-    className: 'Class 8',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '8-1', name: 'Tuition Fee', amount: 4000, frequency: 'Monthly' },
-      { id: '8-2', name: 'Laboratory Fee', amount: 2500, frequency: 'Quarterly' },
-      { id: '8-3', name: 'Sports Fee', amount: 1500, frequency: 'Quarterly' },
-      { id: '8-4', name: 'Examination Fee', amount: 4000, frequency: 'Yearly' }
-    ]
-  },
-  {
-    id: '9',
-    className: 'Class 9',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '9-1', name: 'Tuition Fee', amount: 4500, frequency: 'Monthly' },
-      { id: '9-2', name: 'Development Fee', amount: 8000, frequency: 'Yearly' },
-      { id: '9-3', name: 'Computer Fee', amount: 2800, frequency: 'Quarterly' },
-      { id: '9-4', name: 'Library Fee', amount: 2500, frequency: 'Yearly' }
-    ]
-  },
-  {
-    id: '10',
-    className: 'Class 10',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '10-1', name: 'Tuition Fee', amount: 5000, frequency: 'Monthly' },
-      { id: '10-2', name: 'Laboratory Fee', amount: 3000, frequency: 'Quarterly' },
-      { id: '10-3', name: 'Examination Fee', amount: 5000, frequency: 'Yearly' },
-      { id: '10-4', name: 'Activity Fee', amount: 3000, frequency: 'Yearly' }
-    ]
-  },
-  {
-    id: '11',
-    className: 'Class 11 (Science)',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '11-1', name: 'Tuition Fee', amount: 6000, frequency: 'Monthly' },
-      { id: '11-2', name: 'Laboratory Fee', amount: 4000, frequency: 'Quarterly' },
-      { id: '11-3', name: 'Library Fee', amount: 3000, frequency: 'Yearly' },
-      { id: '11-4', name: 'Computer Fee', amount: 3500, frequency: 'Quarterly' }
-    ]
-  },
-  {
-    id: '12',
-    className: 'Class 11 (Commerce)',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '12-1', name: 'Tuition Fee', amount: 5500, frequency: 'Monthly' },
-      { id: '12-2', name: 'Computer Fee', amount: 3000, frequency: 'Quarterly' },
-      { id: '12-3', name: 'Library Fee', amount: 3000, frequency: 'Yearly' },
-      { id: '12-4', name: 'Activity Fee', amount: 3000, frequency: 'Yearly' }
-    ]
-  },
-  {
-    id: '13',
-    className: 'Class 12 (Science)',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '13-1', name: 'Tuition Fee', amount: 6500, frequency: 'Monthly' },
-      { id: '13-2', name: 'Laboratory Fee', amount: 4500, frequency: 'Quarterly' },
-      { id: '13-3', name: 'Examination Fee', amount: 6000, frequency: 'Yearly' },
-      { id: '13-4', name: 'Development Fee', amount: 10000, frequency: 'Yearly' }
-    ]
-  },
-  {
-    id: '14',
-    className: 'Class 12 (Commerce)',
-    totalAnnualFee: 0,
-    categories: [
-      { id: '14-1', name: 'Tuition Fee', amount: 6000, frequency: 'Monthly' },
-      { id: '14-2', name: 'Computer Fee', amount: 3500, frequency: 'Quarterly' },
-      { id: '14-3', name: 'Examination Fee', amount: 6000, frequency: 'Yearly' },
-      { id: '14-4', name: 'Development Fee', amount: 9000, frequency: 'Yearly' }
-    ]
-  }
+// Define class options for dropdown
+const CLASS_OPTIONS = [
+  'Nursery',
+  'LKG',
+  'UKG',
+  'Class 1',
+  'Class 2',
+  'Class 3',
+  'Class 4',
+  'Class 5',
+  'Class 6',
+  'Class 7',
+  'Class 8',
+  'Class 9',
+  'Class 10',
+  'Class 11 (Science)',
+  'Class 11 (Commerce)',
+  'Class 11 (Arts)',
+  'Class 12 (Science)',
+  'Class 12 (Commerce)',
+  'Class 12 (Arts)'
+];
+
+// Define frequency options
+const FREQUENCY_OPTIONS = [
+  'Monthly',
+  'Bi-Monthly',
+  'Quarterly',
+  'Half-Yearly',
+  'Term-Wise',
+  'Yearly',
+  'One-Time'
 ];
 
 const FeeStructure = () => {
@@ -187,17 +63,30 @@ const FeeStructure = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryAmount, setNewCategoryAmount] = useState(0);
+  const [newCategoryFrequency, setNewCategoryFrequency] = useState('Monthly');
+  const [activeStructureId, setActiveStructureId] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Fetch fee categories from API
   useEffect(() => {
+    setIsLoading(true);
     feeStructureService.getFeeCategories()
       .then((data) => {
-        setCategories(data.length > 0 ? data : DEFAULT_CATEGORIES);
+        if (data && data.length > 0) {
+          setCategories(data);
+        } else {
+          setCategories(DEFAULT_CATEGORIES);
+        }
+        setIsLoading(false);
       })
       .catch((err) => {
-        console.error("Error fetching categories:", err);
-        // Fallback to default categories if API fails
+        setApiError("Failed to load fee categories. Using default categories.");
         setCategories(DEFAULT_CATEGORIES);
+        setIsLoading(false);
       });
   }, []);
 
@@ -206,7 +95,7 @@ const FeeStructure = () => {
     setIsLoading(true);
     feeStructureService.getFeeStructures()
       .then((data) => {
-        if (data && Array.isArray(data)) {
+        if (data && Array.isArray(data) && data.length > 0) {
           // Calculate totalAnnualFee for each structure if not set from backend
           const structuresWithTotal = data.map((structure: ClassFeeStructure) => ({
             ...structure,
@@ -214,50 +103,29 @@ const FeeStructure = () => {
           }));
           setFeeStructures(structuresWithTotal);
         } else {
-          // Fallback to local storage or sample data
-          loadLocalData();
+          setApiError("No fee structures found in the database. Please add new classes.");
+          setFeeStructures([]);
         }
         setIsLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching fee structures:", err);
-        setError("Failed to load fee structures from the server. Using local data instead.");
-        // Fallback to local storage or sample data
-        loadLocalData();
+        setError("Failed to load fee structures from the server.");
+        setFeeStructures([]);
         setIsLoading(false);
       });
   }, []);
 
-  // Function to load data from localStorage or use sample data as fallback
-  const loadLocalData = () => {
-    const savedStructures = localStorage.getItem('feeStructures');
-    if (savedStructures) {
-      setFeeStructures(JSON.parse(savedStructures));
-    } else {
-      // Initialize with sample data if no saved data exists
-      // Calculate and set the totalAnnualFee for each structure
-      const structuresWithTotal = SAMPLE_FEE_STRUCTURES.map(structure => ({
-        ...structure,
-        totalAnnualFee: calculateTotalAnnualFee(structure.categories)
-      }));
-      setFeeStructures(structuresWithTotal);
-    }
-  };
-
-  // Save to localStorage whenever feeStructures changes
-  useEffect(() => {
-    localStorage.setItem('feeStructures', JSON.stringify(feeStructures));
-  }, [feeStructures]);
-
   const handleAddStructure = async () => {
-    if (!newClassName) return;
+    if (!newClassName) {
+      setError("Please select a class before adding");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
     
-    // Format the class name to ensure it has "Class" prefix
-    const formattedClassName = newClassName.trim().match(/^\d+$/) 
-      ? `Class ${newClassName}`
-      : !newClassName.toLowerCase().startsWith('class') 
-        ? `Class ${newClassName}`
-        : newClassName;
+    setIsLoading(true);
+    
+    const formattedClassName = newClassName;
 
     const newStructure: ClassFeeStructure = {
       id: Date.now().toString(), // Temporary ID, will be replaced by backend
@@ -267,44 +135,65 @@ const FeeStructure = () => {
     };
     
     try {
-      // Try to add to API first
+      // Add to API
       const result = await feeStructureService.createFeeStructure(newStructure);
       
-      // If successful, add to state (or refetch all structures)
+      // If successful, add to state
       setFeeStructures(prev => [...prev, result]);
       setNewClassName('');
+      setError(null);
     } catch (err) {
       console.error("Error adding fee structure:", err);
-      // Still add to local state even if API fails
-      setFeeStructures(prev => [...prev, newStructure]);
-      setNewClassName('');
+      setError("Failed to add fee structure. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDeleteStructure = async (id: string) => {
     try {
+      setIsLoading(true);
       // Try to delete from API first
       await feeStructureService.deleteFeeStructure(id);
       
-      // Always update local state
+      // Update local state
       setFeeStructures(feeStructures.filter(structure => structure.id !== id));
+      setError(null);
     } catch (err) {
       console.error("Error deleting fee structure:", err);
-      // Still update local state if API fails
-      setFeeStructures(feeStructures.filter(structure => structure.id !== id));
+      setError("Failed to delete fee structure. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleAddCategory = async (structureId: string) => {
+  const handleAddCategoryClick = (structureId: string) => {
+    if (categories.length === 0) {
+      setError("No fee categories available to add");
+      return;
+    }
+
+    setActiveStructureId(structureId);
+    setNewCategoryName(categories[0]);
+    setNewCategoryAmount(0);
+    setNewCategoryFrequency('Monthly');
+    setShowAddModal(true);
+  };
+
+  const handleAddCategory = async () => {
+    if (!activeStructureId) return;
+    
+    setIsLoading(true);
+    
     const newCategory: FeeCategory = {
-      id: `${structureId}-${Date.now()}`, // Temporary ID
-      name: categories[0] || DEFAULT_CATEGORIES[0],
-      amount: 0,
-      frequency: 'Monthly'
+      id: `${activeStructureId}-${Date.now()}`, // Temporary ID
+      name: newCategoryName,
+      amount: newCategoryAmount,
+      frequency: newCategoryFrequency as any
     };
 
     const updatedStructures = feeStructures.map(structure =>
-      structure.id === structureId
+      structure.id === activeStructureId
         ? {
             ...structure,
             categories: [...structure.categories, newCategory],
@@ -316,21 +205,44 @@ const FeeStructure = () => {
     setFeeStructures(updatedStructures);
     
     // Find the updated structure to sync with API
-    const updatedStructure = updatedStructures.find(s => s.id === structureId);
+    const updatedStructure = updatedStructures.find(s => s.id === activeStructureId);
     if (updatedStructure) {
       try {
-        await feeStructureService.updateFeeStructure(structureId, updatedStructure);
+        await feeStructureService.updateFeeStructure(activeStructureId, updatedStructure);
+        setError(null);
       } catch (err) {
         console.error("Failed to sync category addition with API:", err);
+        setError("Failed to add fee category. Changes may not be saved.");
+      } finally {
+        setIsLoading(false);
+        setShowAddModal(false);
+        setActiveStructureId(null);
       }
     }
   };
+
+  // Close modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setShowAddModal(false);
+      }
+    };
+
+    if (showAddModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAddModal]);
 
   const handleUpdateCategory = async (
     structureId: string,
     categoryId: string,
     updates: Partial<FeeCategory>
   ) => {
+    setIsLoading(true);
     const updatedStructures = feeStructures.map(structure =>
       structure.id === structureId
         ? {
@@ -358,13 +270,18 @@ const FeeStructure = () => {
     if (updatedStructure) {
       try {
         await feeStructureService.updateFeeStructure(structureId, updatedStructure);
+        setError(null);
       } catch (err) {
         console.error("Failed to sync category update with API:", err);
+        setError("Failed to update fee category. Changes may not be saved.");
+      } finally {
+        setIsLoading(false);
       }
     }
   };
 
   const handleDeleteCategory = async (structureId: string, categoryId: string) => {
+    setIsLoading(true);
     const updatedStructures = feeStructures.map(structure =>
       structure.id === structureId
         ? {
@@ -388,8 +305,12 @@ const FeeStructure = () => {
     if (updatedStructure) {
       try {
         await feeStructureService.updateFeeStructure(structureId, updatedStructure);
+        setError(null);
       } catch (err) {
         console.error("Failed to sync category deletion with API:", err);
+        setError("Failed to delete fee category. Changes may not be saved.");
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -443,7 +364,7 @@ const FeeStructure = () => {
     setFilterFrequency('');
   };
 
-  if (isLoading) {
+  if (isLoading && feeStructures.length === 0) {
     return <LoadingSpinner message="Loading fee structures..." />;
   }
 
@@ -460,16 +381,30 @@ const FeeStructure = () => {
               Manage fee structures for different classes and their fee categories
             </p>
             {error && <ErrorMessage message={error} />}
+            {apiError && (
+              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-700 text-sm flex items-center">
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                {apiError}
+              </div>
+            )}
           </div>
           <div className="mt-6 sm:mt-0 flex flex-col sm:flex-row gap-4">
             <div className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="Enter class (e.g. 5 or Class 5)"
+              <select
+                className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm 
+                  focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 value={newClassName}
                 onChange={(e) => setNewClassName(e.target.value)}
-              />
-              <Button onClick={handleAddStructure}>
+                style={{ appearance: 'auto' }}
+              >
+                <option value="">Select Class</option>
+                {CLASS_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <Button onClick={handleAddStructure} disabled={isLoading}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Class
               </Button>
@@ -492,12 +427,18 @@ const FeeStructure = () => {
           toggleSort={toggleSort}
           sortField={sortField}
           sortDirection={sortDirection}
+          frequencyOptions={FREQUENCY_OPTIONS}
         />
 
         {/* Fee Structures List */}
         {filteredAndSortedStructures.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow">
-            <p className="text-gray-500">No fee structures found. Please add a new class or clear your filters.</p>
+            <p className="text-gray-500 mb-4">No fee structures found.</p>
+            <p className="text-sm text-gray-400">
+              {searchTerm || filterCategory || filterFrequency 
+                ? "Try clearing your filters or add a new class." 
+                : "Please add a new class to start managing fee structures."}
+            </p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -511,6 +452,7 @@ const FeeStructure = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteStructure(structure.id)}
+                        disabled={isLoading}
                         className="text-red-600 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -535,7 +477,8 @@ const FeeStructure = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleAddCategory(structure.id)}
+                        onClick={() => handleAddCategoryClick(structure.id)}
+                        disabled={isLoading}
                       >
                         <Plus className="mr-1 h-3 w-3" /> Add Fee
                       </Button>
@@ -567,7 +510,11 @@ const FeeStructure = () => {
                             const isEditing = editingCategoryId === category.id;
                             const annualAmount = category.amount * 
                               (category.frequency === 'Monthly' ? 12 : 
-                               category.frequency === 'Quarterly' ? 4 : 1);
+                               category.frequency === 'Bi-Monthly' ? 6 :
+                               category.frequency === 'Quarterly' ? 4 : 
+                               category.frequency === 'Half-Yearly' ? 2 :
+                               category.frequency === 'Term-Wise' ? 3 :
+                               category.frequency === 'One-Time' ? 1 : 1);
                             
                             return (
                               <tr key={category.id}>
@@ -578,7 +525,8 @@ const FeeStructure = () => {
                                       onChange={(e) => 
                                         handleUpdateCategory(structure.id, category.id, { name: e.target.value })
                                       }
-                                      className="border rounded-md p-1 w-full"
+                                      className="border rounded-md p-1 w-full bg-white"
+                                      style={{ appearance: 'auto' }}
                                     >
                                       {categories.map((cat) => (
                                         <option key={cat} value={cat}>{cat}</option>
@@ -615,19 +563,24 @@ const FeeStructure = () => {
                                         handleUpdateCategory(
                                           structure.id, 
                                           category.id, 
-                                          { frequency: e.target.value as 'Monthly' | 'Quarterly' | 'Yearly' }
+                                          { frequency: e.target.value as any }
                                         )
                                       }
-                                      className="border rounded-md p-1 w-full"
+                                      className="border rounded-md p-1 w-full bg-white"
+                                      style={{ appearance: 'auto' }}
                                     >
-                                      <option value="Monthly">Monthly</option>
-                                      <option value="Quarterly">Quarterly</option>
-                                      <option value="Yearly">Yearly</option>
+                                      {FREQUENCY_OPTIONS.map(freq => (
+                                        <option key={freq} value={freq}>{freq}</option>
+                                      ))}
                                     </select>
                                   ) : (
                                     <Badge color={
                                       category.frequency === 'Monthly' ? 'blue' :
-                                      category.frequency === 'Quarterly' ? 'purple' : 'green'
+                                      category.frequency === 'Bi-Monthly' ? 'cyan' :
+                                      category.frequency === 'Quarterly' ? 'purple' :
+                                      category.frequency === 'Half-Yearly' ? 'pink' :
+                                      category.frequency === 'Term-Wise' ? 'orange' :
+                                      category.frequency === 'One-Time' ? 'red' : 'green'
                                     }>
                                       {category.frequency}
                                     </Badge>
@@ -644,6 +597,7 @@ const FeeStructure = () => {
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => setEditingCategoryId(null)}
+                                      disabled={isLoading}
                                     >
                                       <Save className="h-4 w-4" />
                                     </Button>
@@ -653,6 +607,7 @@ const FeeStructure = () => {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setEditingCategoryId(category.id)}
+                                        disabled={isLoading}
                                       >
                                         <Edit2 className="h-4 w-4" />
                                       </Button>
@@ -660,6 +615,7 @@ const FeeStructure = () => {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => handleDeleteCategory(structure.id, category.id)}
+                                        disabled={isLoading}
                                       >
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
@@ -672,8 +628,12 @@ const FeeStructure = () => {
                           
                           {structure.categories.length === 0 && (
                             <tr>
-                              <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
-                                No fee categories added yet. Click "Add Fee" to add a category.
+                              <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
+                                <div className="flex flex-col items-center">
+                                  <AlertTriangle className="h-6 w-6 text-yellow-400 mb-2" />
+                                  <p>No fee categories added yet.</p>
+                                  <p className="mt-1 text-xs">Click "Add Fee" to add a category.</p>
+                                </div>
                               </td>
                             </tr>
                           )}
@@ -686,9 +646,90 @@ const FeeStructure = () => {
             ))}
           </div>
         )}
+
+        {/* Add Category Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div ref={modalRef} className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Add New Fee Category</h3>
+                <button 
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="block w-full bg-white border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    style={{ appearance: 'auto' }}
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Amount (₹)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={newCategoryAmount}
+                    onChange={(e) => setNewCategoryAmount(Number(e.target.value))}
+                    className="block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Frequency
+                  </label>
+                  <select
+                    value={newCategoryFrequency}
+                    onChange={(e) => setNewCategoryFrequency(e.target.value)}
+                    className="block w-full bg-white border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    style={{ appearance: 'auto' }}
+                  >
+                    {FREQUENCY_OPTIONS.map((freq) => (
+                      <option key={freq} value={freq}>{freq}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowAddModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleAddCategory}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Adding...' : 'Add Fee'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default FeeStructure;
+
+
