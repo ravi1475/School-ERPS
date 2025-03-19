@@ -328,6 +328,7 @@ const SchoolNavbar = {
               />
             </NavDropdown>
 
+
             {/* Student Management */}
             <NavDropdown 
               title="Student Management" 
@@ -349,6 +350,8 @@ const SchoolNavbar = {
                 isActive={isPathActive("/school/students/manage-students")}
               />
             </NavDropdown>
+
+         
 
             {/* Faculty Management */}
             <NavDropdown 
