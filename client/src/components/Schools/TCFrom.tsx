@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Eye, Edit, Trash, Printer, Search } from 'lucide-react';
-import ReactToPrint from 'react-to-print';
+import { useReactToPrint } from 'react-to-print';
 
 interface StudentDetails {
   fullName: string;
@@ -282,7 +282,7 @@ export default function TCForm() {
   // };
 
   const handleViewCertificate = (certificate: IssuedCertificate) => {
-    setSelectedCertificate(certificate);
+    setSelectedCertificate(certificate); // Ensure this is being called
     setIsViewModalOpen(true);
   };
 
@@ -331,6 +331,13 @@ export default function TCForm() {
       : true;
 
     return matchesClass && matchesSearch;
+  });
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: "Transfer_Certificate",
+    onAfterPrint: () => toast.success("Certificate printed successfully!"),
+    onPrintError: () => toast.error("Failed to print the certificate. Please try again."),
   });
 
 
@@ -984,7 +991,7 @@ export default function TCForm() {
                   </button>
                 </div>
 
-                <div ref={componentRef as React.RefObject<HTMLDivElement>} className="border border-gray-300 rounded-lg p-6 bg-gray-50">
+                <div ref={componentRef} className="border border-gray-300 rounded-lg p-6 bg-gray-50">
                   <div className="text-center mb-6">
                     <h3 className="text-xl font-bold uppercase">TRANSFER CERTIFICATE</h3>
                     <p className="text-gray-600 mt-1">School Management System</p>
@@ -1076,14 +1083,12 @@ export default function TCForm() {
                   <button onClick={() => setIsViewModalOpen(false)} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                     Close
                   </button>
-                  <ReactToPrint
-                    trigger={() => (
-                      <button className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 ml-2">
-                        <Printer className="h-5 w-5 inline-block" /> Print
-                      </button>
-                    )}
-                    content={() => componentRef.current as HTMLDivElement | null}
-                  />
+                  <button 
+                    onClick={handlePrint} 
+                    className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 ml-2"
+                  >
+                    <Printer className="h-5 w-5 inline-block" /> Print
+                  </button>
                 </div>
               </div>
             </div>
