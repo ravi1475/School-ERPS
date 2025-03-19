@@ -510,4 +510,116 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Update a student by ID
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    
+    console.log(`Updating student with ID: ${id}`);
+    
+    // First check if the student exists
+    const existingStudent = await prisma.student.findUnique({
+      where: { id: parseInt(id) }
+    });
+    
+    if (!existingStudent) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+    
+    // Update main student record
+    const updatedStudent = await prisma.$transaction(async (tx) => {
+      // 1. Update main student record
+      const student = await tx.student.update({
+        where: { id: parseInt(id) },
+        data: {
+          firstName: data.firstName,
+          middleName: data.middleName || null,
+          lastName: data.lastName,
+          gender: data.gender,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+          bloodGroup: data.bloodGroup || null,
+          mobileNumber: data.mobileNumber,
+          email: data.email || null,
+          className: data.className,
+          section: data.section || null,
+          rollNumber: data.rollNumber || null
+        }
+      });
+      
+      // 2. If parent info is provided, update it
+      if (data.father || data.mother) {
+        await tx.parentInfo.update({
+          where: { studentId: parseInt(id) },
+          data: {
+            fatherName: data.father?.name || existingStudent.fatherName,
+            fatherContact: data.father?.contactNumber || null,
+            motherName: data.mother?.name || existingStudent.motherName,
+            motherContact: data.mother?.contactNumber || null
+          }
+        });
+      }
+      
+      // 3. If address info is provided, update it
+      if (data.address) {
+        await tx.student.update({
+          where: { id: parseInt(id) },
+          data: {
+            presentCity: data.address.city || existingStudent.presentCity,
+            presentState: data.address.state || existingStudent.presentState,
+            presentPinCode: data.address.pinCode || existingStudent.presentPinCode
+          }
+        });
+      }
+      
+      // Return complete updated student with all relations
+      return tx.student.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          parentInfo: true,
+          sessionInfo: true,
+          transportInfo: true,
+          documents: true,
+          educationInfo: true,
+          otherInfo: true
+        }
+      });
+    });
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Student updated successfully',
+      data: updatedStudent
+    });
+    
+  } catch (error) {
+    console.error('Error updating student:', error);
+    
+    let errorMessage = 'Failed to update student';
+    
+    if (error.code) {
+      // Handle Prisma database errors
+      switch (error.code) {
+        case 'P2002': // Unique constraint violation
+          errorMessage = `A student with this ${error.meta?.target?.[0] || 'field'} already exists`;
+          break;
+        case 'P2025': // Record not found
+          errorMessage = 'Student not found';
+          break;
+        default:
+          errorMessage = `Database error: ${error.code}`;
+      }
+    }
+    
+    return res.status(500).json({
+      success: false,
+      message: errorMessage,
+      error: error.message
+    });
+  }
+});
+
 export default router;

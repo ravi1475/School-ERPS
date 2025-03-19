@@ -326,7 +326,7 @@ model FeeCategory {
   id           String       @id @default(uuid())
   name         String       // Name of the fee category (e.g., "Tuition Fee", "Library Fee")
   amount       Float        // The fee amount
-  frequency    String       // "Monthly", "Quarterly", "Yearly"
+  frequency    String       // "Monthly", "Quarterly", "Half-Yearly", "Yearly", "One-Time", "Term-Wise", "Bi-Monthly"
   description  String?      @db.Text
   structureId  String       // Foreign key to relate to a fee structure
   structure    FeeStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)

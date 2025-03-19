@@ -7,13 +7,15 @@ export const Button = ({
   variant = 'primary', 
   size = 'md',
   onClick,
-  className = ''
+  className = '',
+  disabled = false
 }: {
   children: React.ReactNode;
   variant?: 'primary' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   onClick?: () => void;
   className?: string;
+  disabled?: boolean;
 }) => {
   const baseStyles = 'rounded-md font-medium focus:outline-none transition-colors flex items-center justify-center';
   const variants = {
@@ -26,11 +28,14 @@ export const Button = ({
     md: 'px-4 py-2',
     lg: 'px-6 py-3 text-lg'
   };
+  
+  const disabledStyles = disabled ? 'opacity-50 cursor-not-allowed' : '';
 
   return (
     <button 
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${disabledStyles} ${className}`}
       onClick={onClick}
+      disabled={disabled}
     >
       {children}
     </button>
@@ -75,7 +80,7 @@ export const Badge = ({
   color = 'blue'
 }: {
   children: React.ReactNode;
-  color?: 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'gray';
+  color?: 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'gray' | 'cyan' | 'pink' | 'orange';
 }) => {
   const colors = {
     blue: 'bg-blue-100 text-blue-800',
@@ -83,7 +88,10 @@ export const Badge = ({
     red: 'bg-red-100 text-red-800',
     yellow: 'bg-yellow-100 text-yellow-800',
     purple: 'bg-purple-100 text-purple-800',
-    gray: 'bg-gray-100 text-gray-800'
+    gray: 'bg-gray-100 text-gray-800',
+    cyan: 'bg-cyan-100 text-cyan-800',
+    pink: 'bg-pink-100 text-pink-800',
+    orange: 'bg-orange-100 text-orange-800'
   };
 
   return (
@@ -125,6 +133,7 @@ export interface FilterProps {
   toggleSort: (field: string) => void;
   sortField: string;
   sortDirection: 'asc' | 'desc';
+  frequencyOptions?: string[];
 }
 
 export const FilterSection = ({
@@ -140,7 +149,8 @@ export const FilterSection = ({
   clearFilters,
   toggleSort,
   sortField,
-  sortDirection
+  sortDirection,
+  frequencyOptions = ['Monthly', 'Bi-Monthly', 'Quarterly', 'Half-Yearly', 'Term-Wise', 'Yearly', 'One-Time']
 }: FilterProps) => (
   <div className="bg-white p-4 rounded-lg shadow mb-6">
     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
@@ -184,6 +194,7 @@ export const FilterSection = ({
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
               className="block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              style={{ appearance: 'auto' }}
             >
               <option value="">All Categories</option>
               {categories.map((category) => (
@@ -197,11 +208,12 @@ export const FilterSection = ({
               value={filterFrequency}
               onChange={(e) => setFilterFrequency(e.target.value)}
               className="block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              style={{ appearance: 'auto' }}
             >
               <option value="">All Frequencies</option>
-              <option value="Monthly">Monthly</option>
-              <option value="Quarterly">Quarterly</option>
-              <option value="Yearly">Yearly</option>
+              {frequencyOptions.map(frequency => (
+                <option key={frequency} value={frequency}>{frequency}</option>
+              ))}
             </select>
           </div>
           <div className="flex items-end">
