@@ -13,6 +13,7 @@ import UserManagement from './pages/UserManagement';
 import UserEdit from './pages/UserEdit';
 import LoginForm from './pages/LoginForm';
 import CreateExam from './components/Teacher/Exam'
+import TCFrom from './components/Schools/TCFrom'  
 
 // import { ClassSectionManagement } from './components/Admin/Class'
 // import { ManageTeachers } from './pages/ManageTeachers'
@@ -196,6 +197,16 @@ function App() {
               <ProtectedRoute>
                 <Layout userRole={userRole} onLogout={handleLogout}>
                   <Reports />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/school/students/tc-form"
+            element={
+              <ProtectedRoute>
+                <Layout userRole={userRole} onLogout={handleLogout}>
+                  <TCFrom />
                 </Layout>
               </ProtectedRoute>
             }
