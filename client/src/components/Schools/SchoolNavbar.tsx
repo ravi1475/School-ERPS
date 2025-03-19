@@ -266,6 +266,11 @@ const SchoolNavbar = {
               label="Manage Students" 
               onClick={() => setIsMobileSidebarOpen(false)}
             />
+            <NavLink 
+              to="/school/students/tc-form" 
+              label="T.C From" 
+              onClick={() => setIsMobileSidebarOpen(false)}
+            />
             {/* <NavLink 
               to="/school/students/enrollment" 
               label="Enrollment" 
