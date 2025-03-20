@@ -213,27 +213,27 @@ const FeeCollectionApp: React.FC = () => {
         [name]: ['feeAmount', 'totalFees', 'amountPaid'].includes(name) ? parseFloat(value) || 0 : value
       };
 
-      // When feeAmount changes, correctly update amountPaid
-      if (name === 'feeAmount') {
-        const currentPayment = parseFloat(value) || 0;
-        // Remove the previous fee amount and add the new one
-        updatedData.amountPaid = prev.amountPaid - previousFeeAmount + currentPayment;
-        // Update the previous fee amount for next change
-        setPreviousFeeAmount(currentPayment);
-      }
-
-      // Auto-calculate status based on totalFees and amountPaid
-      if (['totalFees', 'amountPaid', 'feeAmount'].includes(name) && updatedData.totalFees > 0) {
-        // For status calculation, we need the total amount that will be paid
-        const totalPaid = updatedData.amountPaid;
-        
-        if (totalPaid >= updatedData.totalFees) {
+      // When amountPaid changes, update the status automatically
+      if (name === 'amountPaid') {
+        const amountPaid = parseFloat(value) || 0;
+        if (amountPaid >= updatedData.totalFees) {
           updatedData.status = 'Paid';
-        } else if (totalPaid > 0) {
+        } else if (amountPaid > 0) {
           updatedData.status = 'Partial';
         } else {
           updatedData.status = 'Pending';
         }
+      }
+
+      // When feeAmount changes, correctly update amountPaid
+      if (name === 'feeAmount') {
+        const currentPayment = parseFloat(value) || 0;
+        // Only update amountPaid if it's not been manually changed
+        if (!prev.amountPaid) {
+          updatedData.amountPaid = currentPayment;
+        }
+        // Update the previous fee amount for next change
+        setPreviousFeeAmount(currentPayment);
       }
 
       return updatedData;
@@ -554,6 +554,9 @@ const FeeCollectionApp: React.FC = () => {
           class: className,
           section: student.section || ''
         }));
+
+        // Automatically fetch fee structure for the student's class
+        await fetchFeeStructureForClass(className);
         
         showNotification('Student information loaded successfully', 'success');
       } else {
@@ -852,8 +855,10 @@ const FeeCollectionApp: React.FC = () => {
                     value={formData.amountPaid || ''}
                     onChange={handleChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    readOnly
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter the amount being paid by the student
+                  </p>
                 </div>
 
                 <div>
