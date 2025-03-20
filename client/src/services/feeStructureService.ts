@@ -28,6 +28,24 @@ export const getFeeStructures = async (schoolId?: number): Promise<ClassFeeStruc
   }
 };
 
+// Get fee structure by class name - NEW FUNCTION
+export const getFeeStructureByClassName = async (className: string): Promise<ClassFeeStructure | null> => {
+  try {
+    // First get all fee structures
+    const allStructures = await getFeeStructures();
+    
+    // Find the one with the matching class name
+    const matchingStructure = allStructures.find(
+      structure => structure.className === className
+    );
+    
+    return matchingStructure || null;
+  } catch (error) {
+    console.error(`Error fetching fee structure for class ${className}:`, error);
+    throw error;
+  }
+};
+
 // Get fee structure by ID
 export const getFeeStructureById = async (id: string): Promise<ClassFeeStructure> => {
   try {

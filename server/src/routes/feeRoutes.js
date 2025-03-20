@@ -16,7 +16,18 @@ router.get('/', async (req, res) => {
       orderBy: { paymentDate: 'desc' }
     });
     
-    res.status(200).json({ success: true, data: fees });
+    // Process the feeCategories field for all records
+    const processedFees = fees.map(fee => {
+      // Convert feeCategory string to array for the response
+      const feeCategories = fee.feeCategory ? fee.feeCategory.split(', ').filter(item => item.trim() !== '') : [];
+      
+      return {
+        ...fee,
+        feeCategories
+      };
+    });
+    
+    res.status(200).json({ success: true, data: processedFees });
   } catch (error) {
     console.error('Error fetching fees:', error);
     res.status(500).json({ 
@@ -42,7 +53,15 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Fee record not found' });
     }
     
-    res.status(200).json({ success: true, data: fee });
+    // Process the feeCategories field
+    const feeCategories = fee.feeCategory ? fee.feeCategory.split(', ').filter(item => item.trim() !== '') : [];
+    
+    const processedFee = {
+      ...fee,
+      feeCategories
+    };
+    
+    res.status(200).json({ success: true, data: processedFee });
   } catch (error) {
     console.error('Error fetching fee record:', error);
     res.status(500).json({ 
@@ -70,13 +89,31 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Store categories in the feeCategory field as JSON string
+    let feeCategory = req.body.feeCategory || null;
+    if (req.body.feeCategories && Array.isArray(req.body.feeCategories)) {
+      // If we have feeCategories array and no feeCategory string, convert array to string
+      if (!feeCategory) {
+        feeCategory = req.body.feeCategories.join(', ');
+      }
+    }
+
     // Parse date string to Date object
     const feeData = {
-      ...req.body,
-      paymentDate: new Date(req.body.paymentDate),
+      admissionNumber: req.body.admissionNumber,
+      studentName: req.body.studentName,
+      fatherName: req.body.fatherName,
+      class: req.body.class,
+      section: req.body.section,
       totalFees: parseFloat(req.body.totalFees),
       amountPaid: parseFloat(req.body.amountPaid),
-      feeAmount: parseFloat(req.body.feeAmount)
+      feeAmount: parseFloat(req.body.feeAmount),
+      paymentDate: new Date(req.body.paymentDate),
+      paymentMode: req.body.paymentMode,
+      receiptNumber: req.body.receiptNumber,
+      status: req.body.status,
+      feeCategory: feeCategory, // Use the prepared feeCategory value
+      schoolId: req.body.schoolId || 1
     };
     
     // Create new fee record
@@ -84,7 +121,13 @@ router.post('/', async (req, res) => {
       data: feeData
     });
     
-    res.status(201).json({ success: true, data: newFee });
+    // For the response, add feeCategories if it was in the request
+    const responseData = {
+      ...newFee,
+      feeCategories: req.body.feeCategories || feeCategory?.split(', ') || []
+    };
+    
+    res.status(201).json({ success: true, data: responseData });
   } catch (error) {
     console.error('Error creating fee record:', error);
     res.status(500).json({ 
@@ -121,13 +164,29 @@ router.put('/:id', async (req, res) => {
       });
     }
     
+    // Store categories in the feeCategory field as a string
+    let feeCategory = req.body.feeCategory || existingFee.feeCategory;
+    if (req.body.feeCategories && Array.isArray(req.body.feeCategories)) {
+      // If feeCategories array exists, use it to create the feeCategory string
+      feeCategory = req.body.feeCategories.join(', ');
+    }
+    
     // Parse date string to Date object
     const feeData = {
-      ...req.body,
-      paymentDate: new Date(req.body.paymentDate),
+      admissionNumber: req.body.admissionNumber,
+      studentName: req.body.studentName,
+      fatherName: req.body.fatherName,
+      class: req.body.class,
+      section: req.body.section,
       totalFees: parseFloat(req.body.totalFees),
       amountPaid: parseFloat(req.body.amountPaid),
-      feeAmount: parseFloat(req.body.feeAmount)
+      feeAmount: parseFloat(req.body.feeAmount),
+      paymentDate: new Date(req.body.paymentDate),
+      paymentMode: req.body.paymentMode,
+      receiptNumber: req.body.receiptNumber,
+      status: req.body.status,
+      feeCategory: feeCategory,
+      schoolId: req.body.schoolId || existingFee.schoolId || 1
     };
     
     // Update fee record
@@ -136,7 +195,13 @@ router.put('/:id', async (req, res) => {
       data: feeData
     });
     
-    res.status(200).json({ success: true, data: updatedFee });
+    // For the response, add feeCategories if it was in the request
+    const responseData = {
+      ...updatedFee,
+      feeCategories: req.body.feeCategories || feeCategory?.split(', ') || []
+    };
+    
+    res.status(200).json({ success: true, data: responseData });
   } catch (error) {
     console.error('Error updating fee record:', error);
     res.status(500).json({ 
