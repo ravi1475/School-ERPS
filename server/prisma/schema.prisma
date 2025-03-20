@@ -294,6 +294,7 @@ model Fee {
   id              String   @id @default(uuid())
   admissionNumber String
   studentName     String
+  fatherName      String // Added father's name field
   class           String
   section         String
   totalFees       Float
@@ -302,10 +303,14 @@ model Fee {
   paymentDate     DateTime
   paymentMode     String
   receiptNumber   String
-  status          String // 'Paid', 'Pending', 'Partial'
+  status          String // 'Paid', 'Pending', 'Partial'   // 'Paid', 'Pending', 'Partial'
+  feeCategory     String? // Optional fee category field
+  feeCategories   String?  @db.Text // Store array as JSON string in Text field
 
   // School relationship
   schoolId Int?
+
+  // School relationship
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

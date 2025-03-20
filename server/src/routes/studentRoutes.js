@@ -115,6 +115,48 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Add route to get student by admission number
+router.get('/admission/:admissionNo', async (req, res) => {
+  try {
+    const { admissionNo } = req.params;
+    console.log(`Route: Searching for student with admission number: ${admissionNo}`);
+    
+    // Search for student by admission number
+    const student = await prisma.student.findFirst({
+      where: { 
+        admissionNo: admissionNo.toString() 
+      },
+      include: {
+        parentInfo: true,
+        sessionInfo: true,
+        transportInfo: true,
+        documents: true,
+        educationInfo: true,
+        otherInfo: true,
+      }
+    });
+    
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+    
+    res.json({ 
+      success: true, 
+      data: student
+    });
+  } catch (error) {
+    console.error('Error finding student by admission number:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error retrieving student',
+      error: error.message
+    });
+  }
+});
+
 // Create a new student with all related information
 router.post('/', upload.fields(documentFields), async (req, res) => {
   try {
