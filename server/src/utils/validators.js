@@ -5,6 +5,7 @@ export const validateFeeData = (data) => {
   const schema = Joi.object({
     admissionNumber: Joi.string().required(),
     studentName: Joi.string().required(),
+    fatherName: Joi.string().required(),
     class: Joi.string().required(),
     section: Joi.string().required(),
     totalFees: Joi.number().min(0).required(),
@@ -14,6 +15,8 @@ export const validateFeeData = (data) => {
     paymentMode: Joi.string().required(),
     receiptNumber: Joi.string().required(),
     status: Joi.string().valid('Paid', 'Pending', 'Partial').required(),
+    feeCategory: Joi.string().optional().allow(null, ''),
+    feeCategories: Joi.array().items(Joi.string()).optional(),
     schoolId: Joi.number().optional()
   });
 

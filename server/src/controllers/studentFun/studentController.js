@@ -703,3 +703,59 @@ export const deleteStudent = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get a student by admission number
+ * @route GET /api/students/admission/:admissionNo
+ * @access Public
+ */
+export const getStudentByAdmissionNo = async (req, res) => {
+  try {
+    const { admissionNo } = req.params;
+    console.log(`Searching for student with admission number: ${admissionNo}`);
+    
+    // Check if admissionNo is provided
+    if (!admissionNo) {
+      return res.status(400).json({
+        success: false,
+        message: 'Admission number is required'
+      });
+    }
+    
+    // Search for student by admission number
+    const student = await prisma.student.findFirst({
+      where: { 
+        admissionNo: admissionNo.toString() 
+      },
+      include: {
+        parentInfo: true,
+        sessionInfo: true,
+        transportInfo: true,
+        documents: true,
+        educationInfo: true,
+        otherInfo: true,
+      }
+    });
+    
+    if (!student) {
+      console.log(`Student with admission number ${admissionNo} not found`);
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      student
+    });
+    
+  } catch (error) {
+    console.error('Error finding student by admission number:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve student details',
+      error: error.message
+    });
+  }
+};

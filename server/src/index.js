@@ -36,32 +36,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS configuration - More permissive for development
+// Enable CORS for all routes
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow any origin in development
-    const allowedOrigins = [
-      'http://localhost:3000', 
-      'http://127.0.0.1:3000',
-      'http://localhost:5173',
-      'http://127.0.0.1:5173'
-    ];
-    
-    // For development, we can be more permissive
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('Blocked origin:', origin);
-      callback(null, false);
-    }
-  },
+  origin: 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Cache-Control']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
-
-// Add preflight OPTIONS handling for all routes
-app.options('*', cors());
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(uploadsDir));
