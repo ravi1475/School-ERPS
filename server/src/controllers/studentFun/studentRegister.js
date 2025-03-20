@@ -54,4 +54,33 @@ const registerStudent = async (req, res) => {
   }
 };
 
-export default registerStudent;
+const getAllRegisteredStudents = async (req, res) => {
+  try {
+    // Fetch all students excluding document fields
+    const students = await prisma.registration.findMany({
+      select: {
+        id: true,
+        formNo: true,
+        firstName: true,
+        lastName: true,
+        gender: true,
+        regnDate: true,
+        paymentStatus: true,
+        className: true,
+        section: true,
+        rollNo: true,
+        admissionNo: true,
+        // Exclude document fields
+      },
+    });
+
+    return res.status(200).json({ success: true, data: students });
+  } catch (error) {
+    console.error("Error fetching registered students!", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export { registerStudent, getAllRegisteredStudents };

@@ -1,7 +1,10 @@
 import express from "express";
 import registerStudentFiles from "./../middlewares/registerStudentFiles.js";
 // import { validateRegistration } from "./../middlewares/validateRegistration";
-import registerNewStudent from "./../controllers/studentFun/studentRegister.js";
+import {
+  registerStudent,
+  getAllRegisteredStudents,
+} from "./../controllers/studentFun/studentRegister.js";
 
 const router = express.Router();
 
@@ -17,7 +20,9 @@ router.post(
     { name: "transferCertificate", maxCount: 1 },
     { name: "studentDateOfBirthCertificate", maxCount: 1 },
   ]),
-  registerNewStudent
+  registerStudent
 );
+
+router.get("/allStudent", getAllRegisteredStudents);
 
 export default router;

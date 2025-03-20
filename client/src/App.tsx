@@ -52,6 +52,7 @@ import BusTracking from "./components/Schools/Bustracking";
 // import UserProfile from './pages/UserProfile';
 // import NotFound from './pages/NotFound';
 import  StudentRegister from "./pages/StudentRegister"; 
+import RegisterStudentsData from "./pages/RegisterStudentsData";
 
 // Loader for all pages
 
@@ -284,6 +285,16 @@ function App() {
               <ProtectedRoute allowedRoles={['school']}>
                 <Layout userRole={userRole} onLogout={handleLogout}>
                   <StudentRegister />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/school/students/register/allStudents"
+            element={
+              <ProtectedRoute allowedRoles={['school']}>
+                <Layout userRole={userRole} onLogout={handleLogout}>
+                  <RegisterStudentsData />
                 </Layout>
               </ProtectedRoute>
             }

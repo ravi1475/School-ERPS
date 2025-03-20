@@ -29,25 +29,26 @@ model Admin {
 }
 
 model School {
-  id          Int          @id @default(autoincrement())
-  fullName    String       @default("Unknown")
-  email       String       @unique
-  password    String
-  username    String       @unique @default(cuid()) // Added username field
-  code        String       @unique @default("SC000")
-  address     String       @default("Not Provided")
-  contact     BigInt       @default(0)
-  phone       String       @default("0123456789") @db.VarChar(15) // Added phone field
-  principal   String       @default("Unknown")
-  established Int          @default(2000)
-  role        Role         @default(SCHOOL)
-  status      String       @default("active") // Added status field
-  lastLogin   DateTime? // Added lastLogin field
-  teachers    Teacher[]
-  students    Student[]
-  departments Department[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id                Int            @id @default(autoincrement())
+  fullName          String         @default("Unknown")
+  email             String         @unique
+  password          String
+  username          String         @unique @default(cuid()) // Added username field
+  code              String         @unique @default("SC000")
+  address           String         @default("Not Provided")
+  contact           BigInt         @default(0)
+  phone             String         @default("0123456789") @db.VarChar(15) // Added phone field
+  principal         String         @default("Unknown")
+  established       Int            @default(2000)
+  role              Role           @default(SCHOOL)
+  status            String         @default("active") // Added status field
+  lastLogin         DateTime? // Added lastLogin field
+  teachers          Teacher[]
+  students          Student[]
+  departments       Department[]
+  registeredStudent Registration[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 }
 
 model Teacher {
@@ -343,6 +344,8 @@ model Registration {
   dob                 String
   category            String
   religion            String
+  schoolId            Int
+  school              School    @relation(fields: [schoolId], references: [id], onDelete: Cascade),
   registerForClass    String
   admissionCategory   String
   bloodGroup          String
