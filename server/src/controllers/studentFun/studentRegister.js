@@ -59,18 +59,12 @@ const getAllRegisteredStudents = async (req, res) => {
     // Fetch all students excluding document fields
     const students = await prisma.registration.findMany({
       select: {
-        id: true,
         formNo: true,
         firstName: true,
         lastName: true,
         gender: true,
         regnDate: true,
         paymentStatus: true,
-        className: true,
-        section: true,
-        rollNo: true,
-        admissionNo: true,
-        // Exclude document fields
       },
     });
 

@@ -2,13 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 type Student = {
-  id: string;
+  formNo: string;
   firstName: string;
   lastName: string;
-  admissionNo: string;
-  className: string;
-  section: string;
-  rollNo: string;
+  gender: string;
+  regnDate: string;
+  paymentStatus: string;
 };
 
 type StudentDataRowProps = {
@@ -22,20 +21,20 @@ const StudentDataRow: React.FC<StudentDataRowProps> = ({ student, onShowDetails 
   const handleShowDetails = () => {
     // You can either use the onShowDetails prop if you want to keep that functionality
     if (onShowDetails) {
-      onShowDetails(student.id);
+      onShowDetails(student.formNo);
     }
     
     // Or directly navigate to the student details page
-    navigate(`/student/${student.id}`);
+    navigate(`/school/student/register/allstudent/${student.formNo}`);
   };
 
   return (
     <tr className="border-b border-gray-300">
       <td className="px-4 py-2">{`${student.firstName} ${student.lastName}`}</td>
-      <td className="px-4 py-2">{student.admissionNo}</td>
-      <td className="px-4 py-2">{student.className}</td>
-      <td className="px-4 py-2">{student.section}</td>
-      <td className="px-4 py-2">{student.rollNo}</td>
+      <td className="px-4 py-2">{student.formNo}</td>
+      <td className="px-4 py-2">{student.gender}</td>
+      <td className="px-4 py-2">{student.regnDate}</td>
+      <td className="px-4 py-2">{student.paymentStatus}</td>
       <td className="px-4 py-2">
         <button
           onClick={handleShowDetails}

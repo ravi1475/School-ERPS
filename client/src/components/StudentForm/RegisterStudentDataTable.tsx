@@ -18,12 +18,13 @@ const StudentDataTable: React.FC = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await fetch("http://localhost:5000/school/students/allStudent");
+        const response = await fetch("http://localhost:5000/register/student/allStudent");
         if (!response.ok) {
           throw new Error("Failed to fetch students");
         }
-        const data: Student[] = await response.json();
-        setStudentData(data);
+        const data = await response.json();
+        const allStudent: Student[] = data.data;
+        setStudentData(allStudent);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
