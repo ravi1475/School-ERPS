@@ -349,6 +349,18 @@ const SchoolNavbar = {
                 onClick={() => setIsMobileSidebarOpen(false)}
                 isActive={isPathActive("/school/students/manage-students")}
               />
+               <NavLink 
+                to="/school/students/register/addNew" 
+                label="Register Student" 
+                onClick={() => setIsMobileSidebarOpen(false)}
+                isActive={isPathActive("/school/students/register/addNew")}
+              />
+               <NavLink 
+                to="/school/students/register/allStudents" 
+                label="All Register Student" 
+                onClick={() => setIsMobileSidebarOpen(false)}
+                isActive={isPathActive("/school/students/register/allRegisterStudent")}
+              />
             </NavDropdown>
 
          
