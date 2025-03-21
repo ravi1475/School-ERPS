@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Eye, Edit, Trash, Search } from 'lucide-react';
 import TCFormModal from './TCFormModal';
 import TCViewModal from './TCViewModal';
 import { IssuedCertificate } from './types';
-import { dummyIssuedCertificates } from './data';
+import { fetchIssuedCertificates, deleteCertificate } from './data';
 
 const TCList: React.FC = () => {
-  const [issuedCertificates, setIssuedCertificates] = useState<IssuedCertificate[]>(dummyIssuedCertificates);
+  const [issuedCertificates, setIssuedCertificates] = useState<IssuedCertificate[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -17,6 +17,18 @@ const TCList: React.FC = () => {
   const [certificateToDelete, setCertificateToDelete] = useState<string | null>(null);
   const [filterClass, setFilterClass] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const loadCertificates = async () => {
+      try {
+        const data = await fetchIssuedCertificates();
+        setIssuedCertificates(data);
+      } catch (error) {
+        console.error('Error loading certificates:', error);
+      }
+    };
+    loadCertificates();
+  }, []);
 
   const handleViewCertificate = (certificate: IssuedCertificate) => {
     setSelectedCertificate(certificate);
@@ -33,26 +45,32 @@ const TCList: React.FC = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDeleteCertificate = () => {
+  const confirmDeleteCertificate = async () => {
     if (certificateToDelete) {
-      setIssuedCertificates(prev =>
-        prev.filter(cert => cert.admissionNumber !== certificateToDelete)
-      );
-      setIsDeleteModalOpen(false);
-      setCertificateToDelete(null);
+      try {
+        await deleteCertificate(certificateToDelete);
+        setIssuedCertificates(prev => 
+          prev.filter(cert => cert.admissionNumber !== certificateToDelete)
+        );
+        setIsDeleteModalOpen(false);
+        setCertificateToDelete(null);
+      } catch (error) {
+        console.error('Delete failed:', error);
+      }
     }
   };
 
+  // Updated filtering logic
   const filteredCertificates = issuedCertificates.filter(certificate => {
-    const matchesClass = filterClass
-      ? certificate.studentClass.toLowerCase().trim() === filterClass.toLowerCase().trim()
-      : true;
-  
-    const matchesSearch = searchQuery
-      ? Object.values(certificate).some(value =>
-          String(value).toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      : true;
+    const searchTerm = searchQuery.toLowerCase();
+    const matchesClass = filterClass ? certificate.studentClass === filterClass : true;
+    const matchesSearch = (
+      certificate.tcNo.toLowerCase().includes(searchTerm) ||
+      certificate.studentName.toLowerCase().includes(searchTerm) ||
+      certificate.admissionNumber.toLowerCase().includes(searchTerm) ||
+      certificate.fatherName.toLowerCase().includes(searchTerm) ||
+      certificate.motherName.toLowerCase().includes(searchTerm)
+    );
     return matchesClass && matchesSearch;
   });
 
@@ -84,9 +102,21 @@ const TCList: React.FC = () => {
             onChange={(e) => setFilterClass(e.target.value)}
             className="p-2 border rounded-md"
           >
-            <option value="">Filter by Class</option>
-            <option value="9th Grade">9th Grade</option>
-            <option value="10th Grade">10th Grade</option>
+            <option value="">All Classes</option>
+            <option value="Nursery">Nursery</option>
+            <option value="KG">KG</option>
+            <option value="1st">1st</option>
+            <option value="2nd">2nd</option>
+            <option value="3rd">3rd</option>
+            <option value="4th">4th</option>
+            <option value="5th">5th</option>
+            <option value="6th">6th</option>
+            <option value="7th">7th</option>
+            <option value="8th">8th</option>
+            <option value="9th">9th</option>
+            <option value="10th">10th</option>
+            <option value="11th">11th</option>
+            <option value="12th">12th</option>
           </select>
           <div className="flex-1 relative">
             <input
@@ -94,7 +124,7 @@ const TCList: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full p-2 border rounded-md pl-10"
-              placeholder="Search by name, admission number, or TC no"
+              placeholder="Search by TC No, Name, Admission No, or Parent Names"
             />
             <Search className="h-5 w-5 absolute left-3 top-3 text-gray-400" />
           </div>

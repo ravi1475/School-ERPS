@@ -1,8 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { StudentDetails, IssuedCertificate } from './types';
-import { dummyStudentData } from './data';
+import { fetchStudentData, createCertificate, updateCertificate } from './data';
+import { MultiSelectInput } from './MultipleSelectInput';
+// Enums for select options
+const QualifiedStatus = {
+  Yes: 'Yes',
+  No: 'No',
+  NA: 'NA',
+  Pass: 'Pass',
+  Fail: 'Fail',
+  Compartment: 'Compartment',
+  AsperCBSEBoardResult: 'As per CBSE Board Result',
+  AppearedinclassXExam: 'Appeared in class X Exam',
+  AppearedinclassXIIExam: 'Appeared in class XII Exam',
+};
 
+const ReasonForLeaving = {
+  FamilyRelocation: 'Family Relocation',
+  AdmissionInOtherSchool: 'Admission in Other School',
+  Duetolongabsencewithoutinformation: 'Due to long absence without information',
+  FatherJobTransfer: 'Father Job Transfer',
+  GetAdmissioninHigherClass: 'Get Admission in Higher Class',
+  GoingtoNativePlace: 'Going to Native Place',
+  ParentWill: 'Parent Will',
+  Passedoutfromtheschool: 'Passed out from the school',
+  Shiftingtootherplace: 'Shifting to other place',
+  TransferCase: 'Transfer Case',
+  Other: 'Other',
+};
+
+const ConductStatus = {
+  Excellent: 'Excellent',
+  Good: 'Good',
+  Satisfactory: 'Satisfactory',
+  NeedsImprovement: 'Needs Improvement',
+  Poor: 'Poor',
+};
+
+const FeeConcessionStatus = {
+  None: 'None',
+  Partial: 'Partial',
+  Full: 'Full',
+};
+
+const ExamAppearedIn = {
+  School: 'School',
+  Board: 'Board',
+  NA: 'NA',
+  CBSEBoard: 'CBSE Board',
+  SchoolFailed: 'School Failed',
+  SchoolPassed: 'School Passed',
+  SchoolCompartment: 'School Compartment',
+  BoardPassed: 'Board Passed',
+  BoardFailed: 'Board Failed',
+  BoardCompartment: 'Board Compartment',
+};
+
+const WhetherFailed = {
+  Yes: 'Yes',
+  No: 'No',
+  NA: 'NA',
+  CBSEBoard: 'CBSE Board',
+};
+
+const GamesPlayed = [
+  'Football',
+  'Cricket',
+  'Basketball',
+  'Volleyball',
+  'Badminton',
+  'Athletics',
+  'Chess',
+  'Swimming',
+  'Kabaddi',
+];
+
+const ExtraActivities = [
+  'Participate In Stage Show',
+  'Participate In Sports',
+  'Participate In Debate',
+  'Participate In Quiz',
+  'Participate In Painting',
+  'Participate In Singing',
+  'Participate In Dancing',
+  'Participate In Other',
+];
 interface TCFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -10,6 +93,7 @@ interface TCFormModalProps {
   certificate: IssuedCertificate | null;
   setIssuedCertificates: React.Dispatch<React.SetStateAction<IssuedCertificate[]>>;
 }
+
 
 const TCFormModal: React.FC<TCFormModalProps> = ({
   isOpen,
@@ -24,40 +108,50 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<IssuedCertificate>({
-    studentName: "",
-    studentClass: "",
-    admissionNumber: "",
-    motherName: "",
-    fatherName: "",
-    nationality: "",
-    category: "",
-    dateOfBirth: "",
+    studentName: '',
+    studentClass: '',
+    admissionNumber: '',
+    motherName: '',
+    fatherName: '',
+    nationality: '',
+    category: '',
+    dateOfBirth: '',
     issueDate: new Date().toISOString().split('T')[0],
     leavingDate: new Date().toISOString().split('T')[0],
-    reason: "",
-    examIn: "",
-    qualified: "",
-    gamesPlayed: "",
-    extraActivity: "",
-    tcNo: "",
-    subject: "",
-    generalConduct: "",
+    reason: '',
+    examIn: '',
+    qualified: '',
+    gamesPlayed: [],
+    extraActivity: [],
+    tcNo: '',
+    subject: '',
+    generalConduct: '',
     dateOfLeaving: new Date().toISOString().split('T')[0],
-    remarks: "",
-    maxAttendance: "",
-    obtainedAttendance: "",
+    remarks: '',
+    maxAttendance: '',
+    obtainedAttendance: '',
     lastAttendanceDate: new Date().toISOString().split('T')[0],
-    whetherFailed: "",
-    tcCharge: "",
-    toClass: "",
-    classInWords: "",
-    behaviorRemarks: "",
-    rollNo: "",
+    whetherFailed: '',
+    tcCharge: '',
+    toClass: '',
+    classInWords: '',
+    behaviorRemarks: '',
+    rollNo: '',
     dateOfIssue: new Date().toISOString().split('T')[0],
-    admitClass: "",
-    feesPaidUpTo: "",
-    feesConcessionAvailed: "",
-    dateOfAdmission: new Date().toISOString().split('T')[0]
+    admitClass: '',
+    feesPaidUpTo: '',
+    feesConcessionAvailed: '',
+    dateOfAdmission: new Date().toISOString().split('T')[0],
+    schoolDetails: {
+      schoolName: '',
+      address: '',
+      recognitionId: '',
+      affiliationNo: '',
+      contact: '',
+      email: '',
+      website: '',
+      imageUrl: '',
+    },
   });
 
   useEffect(() => {
@@ -71,105 +165,121 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
 
   const resetForm = () => {
     setFormData({
-      studentName: "",
-      studentClass: "",
-      admissionNumber: "",
-      motherName: "",
-      fatherName: "",
-      nationality: "",
-      category: "",
-      dateOfBirth: "",
+      studentName: '',
+      studentClass: '',
+      admissionNumber: '',
+      motherName: '',
+      fatherName: '',
+      nationality: '',
+      category: '',
+      dateOfBirth: '',
       issueDate: new Date().toISOString().split('T')[0],
       leavingDate: new Date().toISOString().split('T')[0],
-      reason: "",
-      examIn: "",
-      qualified: "",
-      gamesPlayed: "",
-      extraActivity: "",
-      tcNo: "",
-      subject: "",
-      generalConduct: "",
+      reason: '',
+      examIn: '',
+      qualified: '',
+      gamesPlayed: [],
+      extraActivity: [],
+      tcNo: '',
+      subject: '',
+      generalConduct: '',
       dateOfLeaving: new Date().toISOString().split('T')[0],
-      remarks: "",
-      maxAttendance: "",
-      obtainedAttendance: "",
+      remarks: '',
+      maxAttendance: '',
+      obtainedAttendance: '',
       lastAttendanceDate: new Date().toISOString().split('T')[0],
-      feesPaidUpTo: "",
-      whetherFailed: "",
-      tcCharge: "",
-      toClass: "",
-      classInWords: "",
-      behaviorRemarks: "",
-      rollNo: "",
+      whetherFailed: '',
+      tcCharge: '',
+      toClass: '',
+      classInWords: '',
+      behaviorRemarks: '',
+      rollNo: '',
       dateOfIssue: new Date().toISOString().split('T')[0],
-      admitClass: "",
-      feesConcessionAvailed: "",
-      dateOfAdmission: new Date().toISOString().split('T')[0]
+      admitClass: '',
+      feesPaidUpTo: '',
+      feesConcessionAvailed: '',
+      dateOfAdmission: new Date().toISOString().split('T')[0],
+      schoolDetails: {
+        schoolName: '',
+        address: '',
+        recognitionId: '',
+        affiliationNo: '',
+        contact: '',
+        email: '',
+        website: '',
+        imageUrl: '',
+      },
     });
-    setAdmissionNumber("");
+    setAdmissionNumber('');
     setStudentDetails(null);
   };
 
-  const fetchStudentData = async (admissionNo: string) => {
+  const handleAdmissionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (admissionNumber.length < 5) {
+      setError('Please enter a valid admission number');
+      return;
+    }
+  
     setIsLoading(true);
     setError(null);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      if (dummyStudentData[admissionNo]) {
-        const student = dummyStudentData[admissionNo];
-        setStudentDetails(student);
-        setFormData(prev => ({
-          ...prev,
-          ...student,
-          admissionNumber: student.admissionNumber,
-          studentName: student.fullName,
-          studentClass: student.currentClass,
-          subject: student.subjectStudied,
-          generalConduct: student.conduct,
-          remarks: student.remarks,
-          dateOfLeaving: student.dateOfLeaving,
-          dateOfIssue: student.dateOfIssue,
-          admitClass: student.admitClass,
-          feesPaidUpTo: student.feesUpToDate
-        }));
-      } else {
-        setError("Student not found. Please check the admission number.");
-      }
+      const student = await fetchStudentData(admissionNumber);
+      setStudentDetails(student);
+      setFormData((prev) => ({
+        ...prev,
+        admissionNumber: student.admissionNumber,
+        studentName: student.fullName,
+        studentClass: student.currentClass,
+        motherName: student.motherName || prev.motherName,
+        fatherName: student.fatherName || prev.fatherName,
+        nationality: student.nationality || prev.nationality,
+        category: student.category || prev.category,
+        dateOfBirth: student.dateOfBirth || prev.dateOfBirth,
+        subject: student.subjectStudied || prev.subject,
+        generalConduct: student.conduct || prev.generalConduct,
+        remarks: student.remarks || prev.remarks,
+        dateOfLeaving: student.dateOfLeaving || prev.dateOfLeaving,
+        dateOfIssue: student.dateOfIssue || prev.dateOfIssue,
+        admitClass: student.admitClass || prev.admitClass,
+        feesPaidUpTo: student.feesUpToDate || prev.feesPaidUpTo,
+        gamesPlayed: student.gamesPlayed ? [...student.gamesPlayed] : [],
+        extraActivity: student.extraActivity ? [...student.extraActivity] : [],
+        schoolDetails: student.schoolDetails ? {
+          ...prev.schoolDetails, 
+          ...student.schoolDetails 
+        } : prev.schoolDetails
+      }));
     } catch (err) {
-      setError("Error fetching student data");
+      setError('Student not found. Please check the admission number.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleAdmissionSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (admissionNumber.length >= 5) {
-      fetchStudentData(admissionNumber);
-    } else {
-      setError("Please enter a valid admission number");
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newCertificate: IssuedCertificate = {
       ...formData,
-      admissionNumber: admissionNumber,
+      admissionNumber,
       studentName: studentDetails?.fullName || formData.studentName,
-      leavingDate: formData.leavingDate
     };
 
-    if (isEdit) {
-      setIssuedCertificates(prev =>
-        prev.map(cert => cert.admissionNumber === admissionNumber ? newCertificate : cert)
-      );
-      toast.success('Certificate updated successfully!');
-    } else {
-      setIssuedCertificates(prev => [newCertificate, ...prev]);
-      toast.success('Transfer Certificate generated successfully!');
+    try {
+      if (isEdit) {
+        const updated = await updateCertificate(newCertificate);
+        setIssuedCertificates((prev) =>
+          prev.map((cert) => (cert.admissionNumber === admissionNumber ? updated : cert))
+        );
+        toast.success('Certificate updated successfully!');
+      } else {
+        const created = await createCertificate(newCertificate);
+        setIssuedCertificates((prev) => [created, ...prev]);
+        toast.success('Certificate created successfully!');
+      }
+      onClose();
+    } catch (error) {
+      toast.error('Operation failed. Please try again.');
     }
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -256,7 +366,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Studying/Studied Class</label>
+              <label className="block text-sm font-medium text-gray-700">Current Class</label>
               <input
                 type="text"
                 value={formData.studentClass}
@@ -269,21 +379,12 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
               <input
                 type="text"
                 value={formData.rollNo}
-                className="w-full p-2 border rounded-md"
-                onChange={(e) => setFormData({ ...formData, rollNo: e.target.value })}
+                className="w-full p-2 border rounded-md bg-gray-50"
+                readOnly
               />
             </div>
 
             {/* Financial Information */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">TC Charge</label>
-              <input
-                type="number"
-                value={formData.tcCharge}
-                onChange={(e) => setFormData({ ...formData, tcCharge: e.target.value })}
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Fees Paid Up To</label>
               <input
@@ -321,35 +422,43 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 className="w-full p-2 border rounded-md"
               >
                 <option value="">Select</option>
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
-                <option value="Compartment">Compartment</option>
+                {Object.values(WhetherFailed).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
             </div>
+
+            {/* Continue with other form fields... */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Exam In</label>
+              <label className="block text-sm font-medium text-gray-700">Exam Appeared In</label>
               <select
                 value={formData.examIn}
                 onChange={(e) => setFormData({ ...formData, examIn: e.target.value })}
                 className="w-full p-2 border rounded-md"
               >
                 <option value="">Select</option>
-                <option value="School">School</option>
-                <option value="Board">Board</option>
-                <option value="Other">Other</option>
+                {Object.values(ExamAppearedIn).map((exam) => (
+                  <option key={exam} value={exam}>
+                    {exam}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Qualified</label>
+              <label className="block text-sm font-medium text-gray-700">Qualified for Promotion</label>
               <select
                 value={formData.qualified}
                 onChange={(e) => setFormData({ ...formData, qualified: e.target.value })}
                 className="w-full p-2 border rounded-md"
               >
                 <option value="">Select</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-                <option value="Promoted">Promoted</option>
+                {Object.values(QualifiedStatus).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -385,6 +494,15 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700">TC Charge</label>
+              <input
+                type="text"
+                value={formData.tcCharge}
+                onChange={(e) => setFormData({ ...formData, tcCharge: e.target.value })}
+                className="w-full p-2 border rounded-md"
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700">Date of Issue</label>
               <input
                 type="date"
@@ -402,7 +520,21 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, dateOfLeaving: e.target.value })}
               />
             </div>
-
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Fee Concession</label>
+              <select
+                value={formData.feesConcessionAvailed}
+                onChange={(e) => setFormData({ ...formData, feesConcessionAvailed: e.target.value })}
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="">Select</option>
+                {Object.values(FeeConcessionStatus).map((concession) => (
+                  <option key={concession} value={concession}>
+                    {concession}
+                  </option>
+                ))}
+              </select>
+            </div>
             {/* Behavior and Conduct */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Conduct Remark</label>
@@ -420,10 +552,12 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, generalConduct: e.target.value })}
                 className="w-full p-2 border rounded-md"
               >
-                <option value="">Select Remark</option>
-                <option value="Excellent">Excellent</option>
-                <option value="Good">Good</option>
-                <option value="Satisfactory">Satisfactory</option>
+                <option value="">Select</option>
+                {Object.values(ConductStatus).map((conduct) => (
+                  <option key={conduct} value={conduct}>
+                    {conduct}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -437,56 +571,42 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
               />
             </div>
 
-            {/* Games Played with Options */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Games Played</label>
-              <select
-                value={formData.gamesPlayed}
-                onChange={(e) => setFormData({ ...formData, gamesPlayed: e.target.value })}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="">Select Game</option>
-                <option value="Football">Football</option>
-                <option value="Cricket">Cricket</option>
-                <option value="Basketball">Basketball</option>
-                <option value="Volleyball">Volleyball</option>
-                <option value="Badminton">Badminton</option>
-                <option value="Athletics">Athletics</option>
-              </select>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Games Played */}
+            <MultiSelectInput
+              label="Games Played"
+              options={Object.values(GamesPlayed)}
+              selectedValues={formData.gamesPlayed}
+              onChange={(selectedValues) =>
+                setFormData({ ...formData, gamesPlayed: selectedValues })
+              }
+            />
 
-            {/* Extra Activities with Options */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Extra Activities</label>
-              <select
-                value={formData.extraActivity}
-                onChange={(e) => setFormData({ ...formData, extraActivity: e.target.value })}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="">Select Activity</option>
-                <option value="Music">Music</option>
-                <option value="Dance">Dance</option>
-                <option value="Drama">Drama</option>
-                <option value="Debate">Debate</option>
-                <option value="Art">Art</option>
-                <option value="Chess">Chess</option>
-                <option value="Scouting">Scouting</option>
-              </select>
-            </div>
+            {/* Extra Activities */}
+            <MultiSelectInput
+              label="Extra Activities"
+              options={Object.values(ExtraActivities)}
+              selectedValues={formData.extraActivity}
+              onChange={(selectedValues) =>
+                setFormData({ ...formData, extraActivity: selectedValues })
+              }
+            />
+          </div>
 
             {/* Transfer Details */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Reason for Transfer</label>
+              <label className="block text-sm font-medium text-gray-700">Reason for Leaving</label>
               <select
                 value={formData.reason}
                 onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                 className="w-full p-2 border rounded-md"
-                required
               >
-                <option value="">Select Reason</option>
-                <option value="Family Relocation">Family Relocation</option>
-                <option value="Admission in Other School">Admission in Other School</option>
-                <option value="Parent's Request">Parent's Request</option>
+                <option value="">Select</option>
+                {Object.values(ReasonForLeaving).map((reason) => (
+                  <option key={reason} value={reason}>
+                    {reason}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -505,7 +625,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
             >
               {isEdit ? 'Update Certificate' : 'Generate Certificate'}
             </button>
-          </div>
+            </div>
         </form>
       </div>
     </div>

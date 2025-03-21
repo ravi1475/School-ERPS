@@ -38,44 +38,65 @@ export interface StudentDetails {
   dateOfLeaving: string;
   dateOfIssue: string;
   remarks: string;
+  schoolDetails:{
+    schoolName: string;
+    address: string;
+    recognitionId: string;
+    affiliationNo: string;
+    contact: string;
+    email: string;
+    website: string;
+    imageUrl?: string;
+  }
+
 }
-  
-  export interface CertificateDetails {
-    studentName: string;
-    studentClass: string;
-    issueDate: string;
-    leavingDate: string;
-    motherName: string;
-    fatherName: string;
-    nationality: string;
-    category: string;
-    dateOfBirth: string;
-    toClass: string;
-    classInWords: string;
-    reason: string;
-    examIn: string;
-    qualified: string;
-    gamesPlayed: string;
-    extraActivity: string;
-    subject: string;
-    generalConduct: string;
-    dateOfLeaving: string;
-    remarks: string;
-    maxAttendance: string;
-    obtainedAttendance: string;
-    lastAttendanceDate: string;
-    feesPaidUpTo: string;
-    whetherFailed: string;
-    tcCharge: string;
-    behaviorRemarks: string;
-    rollNo: string;
-    dateOfIssue: string;
-    admitClass: string;
+
+export interface CertificateDetails {
+  studentName: string;
+  studentClass: string;
+  issueDate: string;
+  leavingDate: string;
+  motherName: string;
+  fatherName: string;
+  nationality: string;
+  category: string;
+  dateOfBirth: string;
+  toClass: string;
+  classInWords: string;
+  reason: string;
+  examIn: string;
+  qualified: string;
+  gamesPlayed: string[];
+  extraActivity: string[];
+  subject: string;
+  generalConduct: string;
+  dateOfLeaving: string;
+  remarks: string;
+  maxAttendance: string;
+  obtainedAttendance: string;
+  lastAttendanceDate: string;
+  feesPaidUpTo: string;
+  whetherFailed: string;
+  tcCharge: string;
+  behaviorRemarks: string;
+  rollNo?: string;
+  dateOfIssue: string;
+  admitClass: string;
+  schoolDetails:{
+    schoolName: string;
+    address: string;
+    recognitionId: string;
+    affiliationNo: string;
+    contact: string;
+    email: string;
+    website: string;
+    imageUrl?: string;
   }
-  
-  export interface IssuedCertificate extends CertificateDetails {
-    admissionNumber: string;
-    tcNo: string;
-    feesConcessionAvailed: string;
-    dateOfAdmission: string;
-  }
+}
+
+export interface IssuedCertificate extends CertificateDetails {
+  admissionNumber: string;
+  tcNo: string;
+  feesConcessionAvailed: string;
+  dateOfAdmission: string;
+}
