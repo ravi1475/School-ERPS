@@ -11,8 +11,10 @@ const allowedFileTypes = [
 ];
 const allowedExtensions = [".jpg", ".jpeg", ".png", ".pdf"];
 
-// Ensure the upload directory exists
-const uploadDir = path.join(__dirname, "registerFiles/");
+
+// Ensure the upload directory existsprocess
+
+const uploadDir = path.join(process.cwd(), "registerFiles/");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -22,7 +24,7 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    const formNo = req.query.formNo; // Ensure correct query parameter
+    const formNo = req.query.formNo || req.body.formNo; // Ensure formNo is captured
 
     if (!formNo) {
       return cb(
@@ -34,10 +36,10 @@ const storage = multer.diskStorage({
     }
 
     const fieldName = file.fieldname;
-    const fileExtension =
-      path.extname(file.originalname).toLowerCase() || ".dat"; // Default extension if missing
-    const uniqueFileName = `${formNo}_${fieldName}${fileExtension}`;
+    let fileExtension = path.extname(file.originalname).toLowerCase();
+    if (!fileExtension) fileExtension = ".dat"; // Default extension if missing
 
+    const uniqueFileName = `${formNo}_${fieldName}${fileExtension}`;
     cb(null, uniqueFileName);
   },
 });
@@ -51,7 +53,12 @@ const fileFilter = (req, file, cb) => {
   ) {
     cb(null, true);
   } else {
-    cb(new Error("Only JPG, PNG, and PDF files are allowed!"), false);
+    cb(
+      new Error(
+        `Invalid file type: ${file.mimetype}. Only JPG, PNG, and PDF files are allowed!`
+      ),
+      false
+    );
   }
 };
 
