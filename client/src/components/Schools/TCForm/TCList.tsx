@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Eye, Edit, Trash, Search } from 'lucide-react';
 import TCFormModal from './TCFormModal';
@@ -17,18 +17,61 @@ const TCList: React.FC = () => {
   const [certificateToDelete, setCertificateToDelete] = useState<string | null>(null);
   const [filterClass, setFilterClass] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadCertificates = async () => {
-      try {
-        const data = await fetchIssuedCertificates();
-        setIssuedCertificates(data);
-      } catch (error) {
-        console.error('Error loading certificates:', error);
-      }
-    };
     loadCertificates();
   }, []);
+
+  const loadCertificates = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      console.log('[DEBUG] Fetching transfer certificates...');
+      const data = await fetchIssuedCertificates();
+      console.log(`[DEBUG] Fetched ${data.length} certificates`);
+      
+      // Process the certificates for display
+      const processedCertificates = data.map(cert => {
+        // Standardize class display
+        let displayClass = cert.studentClass || '';
+        
+        // Normalize class formats
+        if (displayClass.toLowerCase().includes('nur')) {
+          console.log(`[DEBUG] Processing nursery class: "${displayClass}" for cert ID: ${cert.id}`);
+          displayClass = 'Nursery';
+        } 
+        // Add "Class" prefix for numeric classes
+        else if (/^[0-9]+$/.test(displayClass)) {
+          console.log(`[DEBUG] Processing numeric class: "${displayClass}" for cert ID: ${cert.id}`);
+          displayClass = `Class ${displayClass}`;
+        }
+        
+        return {
+          ...cert,
+          studentClass: displayClass
+        };
+      });
+      
+      console.log(`[DEBUG] Processed ${processedCertificates.length} certificates for display`);
+      setIssuedCertificates(processedCertificates);
+    } catch (error) {
+      console.error('[ERROR] Error loading certificates:', error);
+      
+      // Provide a more detailed error message
+      let errorMessage = 'Failed to load certificates. Please try again.';
+      if (error instanceof Error) {
+        errorMessage = `Failed to load certificates: ${error.message}`;
+        console.error('[ERROR] Stack trace:', error.stack);
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleViewCertificate = (certificate: IssuedCertificate) => {
     setSelectedCertificate(certificate);
@@ -54,8 +97,10 @@ const TCList: React.FC = () => {
         );
         setIsDeleteModalOpen(false);
         setCertificateToDelete(null);
+        toast.success('Certificate deleted successfully');
       } catch (error) {
         console.error('Delete failed:', error);
+        toast.error('Failed to delete certificate');
       }
     }
   };

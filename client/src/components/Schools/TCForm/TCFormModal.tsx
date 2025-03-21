@@ -216,15 +216,15 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
 
   const handleAdmissionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (admissionNumber.length < 5) {
-      setError('Please enter a valid admission number');
-      return;
-    }
-  
+    console.log(`[DEBUG] Processing admission number: "${admissionNumber}"`);
     setIsLoading(true);
     setError(null);
+    
     try {
+      console.log(`[DEBUG] Fetching student data for admission number: "${admissionNumber}"`);
       const student = await fetchStudentData(admissionNumber);
+      console.log('[DEBUG] Student data retrieved successfully:', student);
+      
       setStudentDetails(student);
       setFormData((prev) => ({
         ...prev,
@@ -243,42 +243,93 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
         dateOfIssue: student.dateOfIssue || prev.dateOfIssue,
         admitClass: student.admitClass || prev.admitClass,
         feesPaidUpTo: student.feesUpToDate || prev.feesPaidUpTo,
-        gamesPlayed: student.gamesPlayed ? [...student.gamesPlayed] : [],
-        extraActivity: student.extraActivity ? [...student.extraActivity] : [],
+        gamesPlayed: student.gamesPlayed ? 
+          (typeof student.gamesPlayed === 'string' ? 
+            student.gamesPlayed.split(',').map(g => g.trim()) : 
+            [...student.gamesPlayed]
+          ) : [],
+        extraActivity: student.extraActivity ? 
+          (typeof student.extraActivity === 'string' ?
+            student.extraActivity.split(',').map(a => a.trim()) :
+            [...student.extraActivity]
+          ) : [],
         schoolDetails: student.schoolDetails ? {
           ...prev.schoolDetails, 
           ...student.schoolDetails 
         } : prev.schoolDetails
       }));
     } catch (err) {
-      setError('Student not found. Please check the admission number.');
+      console.error('[ERROR] Failed to fetch student data:', err);
+      
+      // More detailed error message
+      if (err instanceof Error) {
+        setError(`Student not found: ${err.message}. Please check the admission number.`);
+      } else {
+        setError('Student not found. Please check the admission number.');
+      }
     } finally {
       setIsLoading(false);
     }
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newCertificate: IssuedCertificate = {
-      ...formData,
-      admissionNumber,
-      studentName: studentDetails?.fullName || formData.studentName,
-    };
-
+    
+    // Validate required fields
+    const requiredFields = [
+      'tcNo', 'studentName', 'admissionNumber', 'fatherName', 'motherName',
+      'dateOfBirth', 'studentClass', 'dateOfLeaving', 'reason', 'generalConduct'
+    ];
+    
+    const missingFields = requiredFields.filter(field => !formData[field as keyof IssuedCertificate]);
+    
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+    
     try {
+      // Get school ID from local storage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const schoolId = user.id;
+      
+      if (!schoolId) {
+        toast.error('School information not found. Please log in again.');
+        return;
+      }
+      
+      // Ensure dates are in the correct format
+      const formattedCertificate: IssuedCertificate = {
+        ...formData,
+        dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
+        dateOfAdmission: new Date(formData.dateOfAdmission).toISOString(),
+        dateOfLeaving: new Date(formData.dateOfLeaving).toISOString(),
+        feesPaidUpTo: new Date(formData.feesPaidUpTo).toISOString(),
+        lastAttendanceDate: new Date(formData.lastAttendanceDate).toISOString(),
+        dateOfIssue: new Date(formData.dateOfIssue).toISOString(),
+        // Convert to numbers where needed
+        maxAttendance: formData.maxAttendance.toString(),
+        obtainedAttendance: formData.obtainedAttendance.toString(),
+        tcCharge: formData.tcCharge.toString(),
+      };
+      
       if (isEdit) {
-        const updated = await updateCertificate(newCertificate);
+        const updated = await updateCertificate(formattedCertificate);
         setIssuedCertificates((prev) =>
           prev.map((cert) => (cert.admissionNumber === admissionNumber ? updated : cert))
         );
         toast.success('Certificate updated successfully!');
       } else {
-        const created = await createCertificate(newCertificate);
+        const created = await createCertificate(formattedCertificate);
         setIssuedCertificates((prev) => [created, ...prev]);
         toast.success('Certificate created successfully!');
       }
       onClose();
     } catch (error) {
-      toast.error('Operation failed. Please try again.');
+      if (error instanceof Error) {
+        toast.error(`Operation failed: ${error.message}`);
+      } else {
+        toast.error('Operation failed. Please try again.');
+      }
     }
   };
 

@@ -1,4 +1,6 @@
 export interface StudentDetails {
+  studentId?: number;
+  schoolId?: number;
   fullName: string;
   fatherName: string;
   motherName: string;
@@ -38,6 +40,9 @@ export interface StudentDetails {
   dateOfLeaving: string;
   dateOfIssue: string;
   remarks: string;
+  feesPaidUpTo?: string;
+  subject?: string;
+  generalConduct?: string;
   schoolDetails:{
     schoolName: string;
     address: string;
@@ -48,10 +53,12 @@ export interface StudentDetails {
     website: string;
     imageUrl?: string;
   }
-
 }
 
 export interface CertificateDetails {
+  studentId?: number;
+  schoolId?: number;
+  section?: string;
   studentName: string;
   studentClass: string;
   issueDate: string;
@@ -95,6 +102,7 @@ export interface CertificateDetails {
 }
 
 export interface IssuedCertificate extends CertificateDetails {
+  id?: number;
   admissionNumber: string;
   tcNo: string;
   feesConcessionAvailed: string;

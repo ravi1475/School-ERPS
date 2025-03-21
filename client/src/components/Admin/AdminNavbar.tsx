@@ -15,7 +15,8 @@ import {
   ChevronDown,
   Building, 
   UserPlus,
-  Shield
+  Shield,
+  LayoutDashboard
 } from "lucide-react";
 import { handleSignOut } from "../../utils/auth";
 
@@ -111,13 +112,19 @@ const AdminNavbar = {
         <nav className="flex-1 px-3 space-y-1.5">
           {/* Dashboard Link */}
           <NavLink 
-            to="/" 
-            icon={<Home className="h-5 w-5 text-indigo-600" />} 
+            to="/admin/dashboard" 
+            icon={<LayoutDashboard className="h-5 w-5 text-indigo-600" />} 
             label="Dashboard" 
             onClick={() => setIsMobileSidebarOpen(false)}
           />
 
-          
+          {/* Home Link */}
+          <NavLink 
+            to="/" 
+            icon={<Home className="h-5 w-5 text-indigo-600" />} 
+            label="Home" 
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
 
           {/* Administration Dropdown */}
             <NavDropdown 
