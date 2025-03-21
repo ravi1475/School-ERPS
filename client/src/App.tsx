@@ -13,8 +13,8 @@ import UserManagement from './pages/UserManagement';
 import UserEdit from './pages/UserEdit';
 import LoginForm from './pages/LoginForm';
 import CreateExam from './components/Teacher/Exam'
-import TCFrom from './components/Schools/TCFrom'
-
+// import TCFrom from './components/Schools/TCFrom' 
+import TCList from './components/Schools/TCForm/TCList' 
 
 // import { ClassSectionManagement } from './components/Admin/Class'
 // import { ManageTeachers } from './pages/ManageTeachers'
@@ -51,8 +51,6 @@ import BusTracking from "./components/Schools/Bustracking";
 // import PaymentGateway from './pages/PaymentGateway';
 // import UserProfile from './pages/UserProfile';
 // import NotFound from './pages/NotFound';
-import  StudentRegister from "./pages/StudentRegister"; 
-import RegisterStudentsData from "./pages/RegisterStudentsData";
 
 // Loader for all pages
 
@@ -141,7 +139,6 @@ function App() {
             }
           />
 
-
           <Route
             path="/auth"
             element={
@@ -210,7 +207,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <Layout userRole={userRole} onLogout={handleLogout}>
-                  <TCFrom />
+                  <TCList />
                 </Layout>
               </ProtectedRoute>
             }
@@ -275,26 +272,6 @@ function App() {
               <ProtectedRoute allowedRoles={['school']}>
                 <Layout userRole={userRole} onLogout={handleLogout}>
                   <BusTracking />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/school/students/register/AddNew"
-            element={
-              <ProtectedRoute allowedRoles={['school']}>
-                <Layout userRole={userRole} onLogout={handleLogout}>
-                  <StudentRegister />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-           <Route
-            path="/school/students/register/allStudents"
-            element={
-              <ProtectedRoute allowedRoles={['school']}>
-                <Layout userRole={userRole} onLogout={handleLogout}>
-                  <RegisterStudentsData />
                 </Layout>
               </ProtectedRoute>
             }
