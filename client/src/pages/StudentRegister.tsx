@@ -121,7 +121,7 @@ const StudentRegistration = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/students/register/?formNo=${formData.formNo}`,
+        `http://localhost:5000/register/student/addNew?formNo=${formData.formNo}`,
         {
           method: "POST",
           body: formDataToSend,
@@ -152,7 +152,7 @@ const StudentRegistration = () => {
 
   return (
     <div className="container mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h1 className="text-2xl font-bold text-blue-700 mb-6">
+      <h1 className="text-2xl font-bold text-blue-700 mb-6 text-center">
         STUDENT REGISTRATION
       </h1>
       <form onSubmit={handleSubmit}>
