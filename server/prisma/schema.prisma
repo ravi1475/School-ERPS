@@ -15,17 +15,17 @@ enum Role {
 }
 
 model Admin {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   fullName  String
-  email     String   @unique
+  email     String    @unique
   password  String
-  username  String   @default("unknown")
-  role      Role     @default(ADMIN)
-  phone     String   @default("0123456789") @db.VarChar(15) // Changed length to 15
-  status    String   @default("active")  // Added status field
+  username  String    @default("unknown")
+  role      Role      @default(ADMIN)
+  phone     String    @default("0123456789") @db.VarChar(15) // Changed length to 15
+  status    String    @default("active") // Added status field
   lastLogin DateTime? // Added lastLogin field
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model School {
@@ -47,6 +47,7 @@ model School {
   students    Student[]
   departments Department[]
   transferCertificates TransferCertificate[] 
+  Registration Registration[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -72,15 +73,17 @@ model Teacher {
 }
 
 model Student {
-  id               Int       @id @default(autoincrement())
+  id               Int      @id @default(autoincrement())
   // Student Information
   branchName       String?
   firstName        String
   middleName       String?
   lastName         String
-  admissionNo      String    @unique
+  admissionNo      String   @unique
+  penNo            String? // Added PEN Number field
   studentId        String?
   dateOfBirth      DateTime
+  age              Int? // Added calculated age field
   gender           String
   bloodGroup       String?
   nationality      String?
@@ -91,35 +94,43 @@ model Student {
   mobileNumber     String
   email            String?
   emergencyContact String?
-  
+
   // Academic fields
-  rollNumber       String?
-  className        String
-  section          String?
-  admissionDate    DateTime  @default(now())
-  previousSchool   String?   @db.Text
-  
-  // Address fields
-  houseNo          String?
-  street           String?   @db.Text
-  city             String
-  state            String
-  pinCode          String?
-  
+  rollNumber     String?
+  className      String
+  section        String?
+  stream         String? // Added stream field
+  semester       String? // Added semester field
+  admissionDate  DateTime @default(now())
+  previousSchool String?  @db.Text
+
+  // Address fields (modified to include permanent and present address)
+  presentHouseNo String?
+  presentStreet  String? @db.Text
+  presentCity    String
+  presentState   String
+  presentPinCode String?
+
+  permanentHouseNo String?
+  permanentStreet  String? @db.Text
+  permanentCity    String?
+  permanentState   String?
+  permanentPinCode String?
+
   // Parent information (reduced to essential fields)
-  fatherName       String
-  motherName       String
-  
+  fatherName String
+  motherName String
+
   // Relations
-  schoolId        Int
-  school          School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  parentInfo      ParentInfo?
-  sessionInfo     SessionInfo?
-  transportInfo   TransportInfo?
-  documents       Documents?
-  educationInfo   EducationInfo?
-  otherInfo       OtherInfo?
-  
+  schoolId      Int
+  school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  parentInfo    ParentInfo?
+  sessionInfo   SessionInfo?
+  transportInfo TransportInfo?
+  documents     Documents?
+  educationInfo EducationInfo?
+  otherInfo     OtherInfo?
+
   // Meta
   transferCertificates TransferCertificate[]
   role            Role      @default(STUDENT)
@@ -130,60 +141,60 @@ model Student {
 // Normalized tables to reduce row size
 
 model ParentInfo {
-  id                  Int      @id @default(autoincrement())
+  id                     Int     @id @default(autoincrement())
   // Father details
-  fatherQualification String?
-  fatherOccupation    String?
-  fatherContact       String?
-  fatherEmail         String?
-  fatherAadhaarNo     String?
-  fatherAnnualIncome  String?
+  fatherQualification    String?
+  fatherOccupation       String?
+  fatherContact          String?
+  fatherEmail            String?
+  fatherAadhaarNo        String?
+  fatherAnnualIncome     String?
   fatherIsCampusEmployee String? @default("no")
-  
+
   // Mother details
-  motherQualification String?
-  motherOccupation    String?
-  motherContact       String?
-  motherEmail         String?
-  motherAadhaarNo     String?
-  motherAnnualIncome  String?
+  motherQualification    String?
+  motherOccupation       String?
+  motherContact          String?
+  motherEmail            String?
+  motherAadhaarNo        String?
+  motherAnnualIncome     String?
   motherIsCampusEmployee String? @default("no")
-  
+
   // Guardian information
-  guardianName        String?
-  guardianAddress     String?  @db.Text
-  guardianContact     String?
-  
+  guardianName    String?
+  guardianAddress String? @db.Text
+  guardianContact String?
+
   // Relation
-  studentId           Int      @unique
-  student             Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId Int     @unique
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model SessionInfo {
-  id               Int     @id @default(autoincrement())
+  id            Int     @id @default(autoincrement())
   // Admit Session
-  admitGroup       String?
-  admitStream      String?
-  admitClass       String?
-  admitSection     String?
-  admitRollNo      String?
-  admitSemester    String?
-  admitFeeGroup    String?
-  admitHouse       String?
-  
+  admitGroup    String?
+  admitStream   String?
+  admitClass    String?
+  admitSection  String?
+  admitRollNo   String?
+  admitSemester String?
+  admitFeeGroup String?
+  admitHouse    String?
+
   // Current Session
-  currentGroup     String?
-  currentStream    String?
-  currentClass     String?
-  currentSection   String?
-  currentRollNo    String?
-  currentSemester  String?
-  currentFeeGroup  String?
-  currentHouse     String?
-  
+  currentGroup    String?
+  currentStream   String?
+  currentClass    String?
+  currentSection  String?
+  currentRollNo   String?
+  currentSemester String?
+  currentFeeGroup String?
+  currentHouse    String?
+
   // Relation
-  studentId        Int     @unique
-  student          Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId Int     @unique
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model TransportInfo {
@@ -193,31 +204,38 @@ model TransportInfo {
   transportStand  String?
   transportRoute  String?
   transportDriver String?
-  
+  pickupLocation  String? // Added pickup location
+  dropLocation    String? // Added drop location
+
   // Relation
-  studentId       Int     @unique
-  student         Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId Int     @unique
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model Documents {
-  id                     Int     @id @default(autoincrement())
-  studentImagePath       String? @db.Text
-  fatherImagePath        String? @db.Text
-  motherImagePath        String? @db.Text
-  guardianImagePath      String? @db.Text
-  signaturePath          String? @db.Text
-  fatherAadharPath       String? @db.Text
-  motherAadharPath       String? @db.Text
-  birthCertificatePath   String? @db.Text
+  id                       Int     @id @default(autoincrement())
+  studentImagePath         String? @db.Text
+  fatherImagePath          String? @db.Text
+  motherImagePath          String? @db.Text
+  guardianImagePath        String? @db.Text
+  signaturePath            String? @db.Text
+  parentSignaturePath      String? @db.Text // Added parent signature
+  fatherAadharPath         String? @db.Text
+  motherAadharPath         String? @db.Text
+  birthCertificatePath     String? @db.Text
   migrationCertificatePath String? @db.Text
-  aadhaarCardPath        String? @db.Text
-  
+  aadhaarCardPath          String? @db.Text
+  affidavitCertificatePath String? @db.Text // Added affidavit certificate
+  incomeCertificatePath    String? @db.Text // Added income certificate
+  addressProof1Path        String? @db.Text // Added address proof 1
+  addressProof2Path        String? @db.Text // Added address proof 2
+
   // Academic registration
   academicRegistrationNo String?
-  
+
   // Relation
-  studentId              Int     @unique
-  student                Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId Int     @unique
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model EducationInfo {
@@ -229,10 +247,10 @@ model EducationInfo {
   lastPercentage    String?
   lastAttendance    String?
   lastExtraActivity String?   @db.Text
-  
+
   // Relation
-  studentId         Int       @unique
-  student           Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId Int     @unique
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model OtherInfo {
@@ -255,10 +273,10 @@ model OtherInfo {
   motherTongue       String?
   admissionType      String? @default("new")
   udiseNo            String?
-  
+
   // Relation
-  studentId          Int     @unique
-  student            Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId Int     @unique
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model Department {
@@ -277,6 +295,7 @@ model Fee {
   id              String   @id @default(uuid())
   admissionNumber String
   studentName     String
+  fatherName      String // Added father's name field
   class           String
   section         String
   totalFees       Float
@@ -285,26 +304,29 @@ model Fee {
   paymentDate     DateTime
   paymentMode     String
   receiptNumber   String
-  status          String   // 'Paid', 'Pending', 'Partial'
-  
-  // School relationship
-  schoolId        Int?
+  status          String // 'Paid', 'Pending', 'Partial'   // 'Paid', 'Pending', 'Partial'
+  feeCategory     String? // Optional fee category field
+  feeCategories   String?  @db.Text // Store array as JSON string in Text field
 
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  // School relationship
+  schoolId Int?
+
+  // School relationship
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Fee Structure models for managing class fee structures
 model FeeStructure {
-  id           String        @id @default(uuid())
-  className    String
-  description  String?       @db.Text
-  schoolId     Int           // To associate with a particular school
-  categories   FeeCategory[]
-  totalAnnualFee Float       @default(0)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id             String        @id @default(uuid())
+  className      String
+  description    String?       @db.Text
+  schoolId       Int // To associate with a particular school
+  categories     FeeCategory[]
+  totalAnnualFee Float         @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 }
 
 model FeeCategory {
@@ -462,4 +484,57 @@ enum WhetherFailed {
   NA
   CBSEBoard
 }
+model Registration {
+  // student information
+  registrationId      String  @id @default(uuid())
+  firstName           String
+  lastName            String
+  gender              String
+  formNo              String  @unique
+  dob                 String
+  category            String
+  religion            String
+  // schoolId            Int
+  // school              School    @relation(fields: [schoolId], references: [id], onDelete: Cascade),
+  registerForClass    String
+  admissionCategory   String
+  bloodGroup          String
+  regnDate            String
+  testDate            String
+  transactionNo       String
+  singleParent        Boolean
+  contactNo           String
+  studentEmail        String
+  address             String
+  city                String
+  state               String
+  pincode             String
+  studentAadharCardNo String
+  regnCharge          String
+  examSubject         String
+  paymentStatus       String
 
+  // father Details
+  fatherName             String
+  fatherMobileNo         String
+  smsAlert               Boolean
+  fatherEmail            String
+  fatherAadharCardNo     String
+  isFatherCampusEmployee Boolean
+
+  // mother Details
+  motherName         String
+  motherMobileNo     String
+  motherAadharCardNo String
+
+  // documents 
+  casteCertificate              String?
+  studentAadharCard             String?
+  fatherAadharCard              String?
+  motherAadharCard              String?
+  previousClassMarksheet        String?
+  transferCertificate           String?
+  studentDateOfBirthCertificate String?
+  School                        School? @relation(fields: [schoolId], references: [id])
+  schoolId                      Int?
+}

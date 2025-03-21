@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 // Types
 interface FeeRecord {
   id: string;
   admissionNumber: string;
   studentName: string;
+  fatherName: string;
   class: string;
   section: string;
   totalFees: number;
@@ -16,6 +18,8 @@ interface FeeRecord {
   paymentMode: string;
   receiptNumber: string;
   status: 'Paid' | 'Pending' | 'Partial';
+  feeCategory?: string;
+  feeCategories?: string[];
 }
 
 interface UpdateFeeRecordProps {
@@ -25,6 +29,7 @@ interface UpdateFeeRecordProps {
   onUpdate: (updatedRecord: FeeRecord) => void;
   classOptions: string[];
   sectionOptions: string[];
+  feeCategories?: string[];
 }
 
 const API_URL = 'http://localhost:5000/api/fees';
@@ -35,12 +40,14 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
   record,
   onUpdate,
   classOptions,
-  sectionOptions
+  sectionOptions,
+  feeCategories = []
 }) => {
   const [formData, setFormData] = useState<FeeRecord>({
     id: '',
     admissionNumber: '',
     studentName: '',
+    fatherName: '',
     class: '',
     section: '',
     totalFees: 0,
@@ -49,7 +56,9 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
     paymentDate: new Date().toISOString().split('T')[0],
     paymentMode: 'Cash',
     receiptNumber: '',
-    status: 'Paid'
+    status: 'Paid',
+    feeCategory: '',
+    feeCategories: []
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,78 +121,45 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     try {
-      setIsLoading(true);
-      setError(null);
+      // Formatting the date for the API
+      const formattedDate = formData.paymentDate ? 
+        new Date(formData.paymentDate).toISOString().split('T')[0] : 
+        new Date().toISOString().split('T')[0];
       
-      // Create a clean payload with properly formatted date
+      // Convert feeCategories array to string for the API
+      let feeCat = '';
+      if (Array.isArray(formData.feeCategories) && formData.feeCategories.length > 0) {
+        feeCat = formData.feeCategories.join(', ');
+      } else if (formData.feeCategory) {
+        feeCat = formData.feeCategory;
+      }
+
+      // Prepare the payload with properly formatted values
       const payload = {
-        admissionNumber: formData.admissionNumber.trim(),
-        studentName: formData.studentName.trim(),
-        class: formData.class,
-        section: formData.section,
-        totalFees: Number(formData.totalFees),
-        amountPaid: Number(formData.amountPaid),
-        feeAmount: Number(formData.feeAmount),
-        // Format date properly to ensure it's valid
-        paymentDate: formData.paymentDate,
-        paymentMode: formData.paymentMode,
-        receiptNumber: formData.receiptNumber.trim(),
-        status: formData.status,
-        schoolId: 1
+        ...formData,
+        feeCategory: feeCat,
+        paymentDate: formattedDate,
+        totalFees: parseFloat(formData.totalFees.toString()),
+        amountPaid: parseFloat(formData.amountPaid.toString()),
+        feeAmount: parseFloat(formData.feeAmount.toString())
       };
-
-      // Validate the payload before sending
-      if (!payload.admissionNumber || !payload.studentName || !payload.class || !payload.section || 
-          !payload.paymentMode || !payload.receiptNumber || !payload.paymentDate) {
-        setError('Please fill all required fields');
-        return;
-      }
-
-      // Additional validation for numeric fields
-      if (isNaN(payload.totalFees) || isNaN(payload.amountPaid) || isNaN(payload.feeAmount)) {
-        setError('Fee amounts must be valid numbers');
-        return;
-      }
-
-      // Validate status is one of allowed values
-      if (!['Paid', 'Partial', 'Pending'].includes(payload.status)) {
-        setError('Status must be Paid, Partial, or Pending');
-        return;
-      }
-
-      // Log the exact payload being sent for debugging
-      console.log('Update payload:', JSON.stringify(payload, null, 2));
       
-      // Call API to update the record
-      const response = await axios.put(`${API_URL}/${formData.id}`, payload);
+      // Call onUpdate with the updated record
+      await onUpdate(payload as FeeRecord);
+      toast.success('Fee record updated successfully');
+      onClose(); // Close the modal after successful update
+    } catch (error) {
+      console.error('Error updating fee record:', error);
       
-      if (response.data.success) {
-        // Format the date for UI
-        const updatedRecord = {
-          ...response.data.data,
-          paymentDate: new Date(response.data.data.paymentDate).toISOString().split('T')[0]
-        };
-        onUpdate(updatedRecord);
-        onClose();
+      // Handle error with proper type checking
+      if (error && typeof error === 'object' && 'response' in error) {
+        const serverError = error.response as { data?: { message?: string } };
+        toast.error(serverError.data?.message || 'Failed to update fee record');
       } else {
-        setError(`Failed to update: ${response.data.message}`);
-      }
-    } catch (err: any) {
-      console.error('Error updating fee record:', err);
-      
-      // Enhanced error logging with complete error details
-      if (err.response) {
-        console.error('Full server response:', JSON.stringify(err.response.data, null, 2));
-        if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
-          // Show the specific validation errors from the server
-          setError(`Validation errors: ${err.response.data.errors.join(', ')}`);
-        } else {
-          setError(`Server error: ${err.response.data.message || 'Unknown error'}`);
-        }
-      } else {
-        setError(`Failed to update fee record: ${err.message || 'Unknown error'}`);
+        toast.error('Failed to update fee record');
       }
     } finally {
       setIsLoading(false);
@@ -251,6 +227,18 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
                     type="text"
                     name="studentName"
                     value={formData.studentName}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Father's Name</label>
+                  <input
+                    type="text"
+                    name="fatherName"
+                    value={formData.fatherName}
                     onChange={handleChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
@@ -400,6 +388,56 @@ const UpdateFeeRecord: React.FC<UpdateFeeRecordProps> = ({
                     <option value="Partial">Partial</option>
                     <option value="Pending">Pending</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fee Categories</label>
+                  <div className="border border-gray-300 rounded-md p-2 max-h-40 overflow-y-auto">
+                    {feeCategories.map(category => (
+                      <div key={category} className="flex items-center mb-1">
+                        <input
+                          type="checkbox"
+                          id={`cat-${category}`}
+                          checked={(formData.feeCategories || []).includes(category)}
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            setFormData(prev => {
+                              // Get current categories or empty array
+                              const currentCategories = prev.feeCategories || [];
+                              
+                              // Add or remove the category
+                              const newCategories = isChecked
+                                ? [...currentCategories, category]
+                                : currentCategories.filter(c => c !== category);
+                              
+                              // Update form data with the new categories array
+                              return {
+                                ...prev,
+                                feeCategories: newCategories,
+                                // For backwards compatibility
+                                feeCategory: newCategories.join(', ')
+                              };
+                            });
+                          }}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <label htmlFor={`cat-${category}`} className="ml-2 text-sm text-gray-900">
+                          {category}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Selected categories display */}
+                  {(formData.feeCategories || []).length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {(formData.feeCategories || []).map(cat => (
+                        <span key={cat} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="md:col-span-2 mt-4 flex justify-end space-x-3">

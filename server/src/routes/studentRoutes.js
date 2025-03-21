@@ -55,11 +55,16 @@ const documentFields = [
   { name: 'documents.motherImage', maxCount: 1 },
   { name: 'documents.guardianImage', maxCount: 1 },
   { name: 'documents.signature', maxCount: 1 },
+  { name: 'documents.parentSignature', maxCount: 1 },
   { name: 'documents.fatherAadhar', maxCount: 1 },
   { name: 'documents.motherAadhar', maxCount: 1 },
   { name: 'documents.birthCertificate', maxCount: 1 },
   { name: 'documents.migrationCertificate', maxCount: 1 },
-  { name: 'documents.aadhaarCard', maxCount: 1 }
+  { name: 'documents.aadhaarCard', maxCount: 1 },
+  { name: 'documents.affidavitCertificate', maxCount: 1 },
+  { name: 'documents.incomeCertificate', maxCount: 1 },
+  { name: 'documents.addressProof1', maxCount: 1 },
+  { name: 'documents.addressProof2', maxCount: 1 }
 ];
 
 // Get all students
@@ -110,6 +115,48 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Add route to get student by admission number
+router.get('/admission/:admissionNo', async (req, res) => {
+  try {
+    const { admissionNo } = req.params;
+    console.log(`Route: Searching for student with admission number: ${admissionNo}`);
+    
+    // Search for student by admission number
+    const student = await prisma.student.findFirst({
+      where: { 
+        admissionNo: admissionNo.toString() 
+      },
+      include: {
+        parentInfo: true,
+        sessionInfo: true,
+        transportInfo: true,
+        documents: true,
+        educationInfo: true,
+        otherInfo: true,
+      }
+    });
+    
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+    
+    res.json({ 
+      success: true, 
+      data: student
+    });
+  } catch (error) {
+    console.error('Error finding student by admission number:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error retrieving student',
+      error: error.message
+    });
+  }
+});
+
 // Create a new student with all related information
 router.post('/', upload.fields(documentFields), async (req, res) => {
   try {
@@ -119,14 +166,32 @@ router.post('/', upload.fields(documentFields), async (req, res) => {
     console.log('Student registration data received:', Object.keys(data));
     
     // Validate required fields
-    const requiredFields = ['firstName', 'lastName', 'admissionNo', 'gender', 'mobileNumber', 'className', 'city', 'state', 'fatherName', 'motherName'];
-    const missingFields = requiredFields.filter(field => !data[field]);
+    const requiredFields = ['firstName', 'lastName', 'admissionNo', 'gender', 'mobileNumber', 'className', 'address.city', 'address.state', 'father.name', 'mother.name'];
+    const missingFields = requiredFields.filter(field => {
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.');
+        return !data[`${parent}.${child}`];
+      }
+      return !data[field];
+    });
     
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields);
+      // Map nested field names to their readable format for error messages
+      const fieldDisplayNames = {
+        'address.city': 'City',
+        'address.state': 'State',
+        'father.name': 'Father\'s Name',
+        'mother.name': 'Mother\'s Name'
+      };
+      
+      const readableMissingFields = missingFields.map(field => 
+        fieldDisplayNames[field] || field.charAt(0).toUpperCase() + field.slice(1)
+      );
+      
       return res.status(400).json({
         success: false,
-        message: `Missing required fields: ${missingFields.join(', ')}`,
+        message: `Missing required fields: ${readableMissingFields.join(', ')}`,
       });
     }
     
@@ -205,8 +270,10 @@ router.post('/', upload.fields(documentFields), async (req, res) => {
             middleName: data.middleName || null,
             lastName: data.lastName,
             admissionNo: data.admissionNo,
+            penNo: data.penNo || null,
             studentId: data.studentId || null,
             dateOfBirth: dateOfBirth,
+            age: data.age ? parseInt(data.age) : null,
             gender: data.gender,
             bloodGroup: data.bloodGroup || null,
             nationality: data.nationality || null,
@@ -220,13 +287,20 @@ router.post('/', upload.fields(documentFields), async (req, res) => {
             rollNumber: data.rollNumber || null,
             className: data.className || data['admitSession.class'] || '',
             section: data.section || null,
+            stream: data.stream || null,
+            semester: data.semester || null,
             admissionDate: admissionDate,
             previousSchool: data.previousSchool || null,
-            houseNo: data['address.houseNo'] || null,
-            street: data['address.street'] || null,
-            city: data['address.city'] || '',
-            state: data['address.state'] || '',
-            pinCode: data['address.pinCode'] || null,
+            presentHouseNo: data['address.houseNo'] || null,
+            presentStreet: data['address.street'] || null,
+            presentCity: data['address.city'] || '',
+            presentState: data['address.state'] || '',
+            presentPinCode: data['address.pinCode'] || null,
+            permanentHouseNo: data['address.permanentHouseNo'] || null,
+            permanentStreet: data['address.permanentStreet'] || null,
+            permanentCity: data['address.permanentCity'] || null,
+            permanentState: data['address.permanentState'] || null,
+            permanentPinCode: data['address.permanentPinCode'] || null,
             fatherName: data['father.name'] || '',
             motherName: data.motherName || '',
             schoolId: schoolId,
@@ -294,6 +368,8 @@ router.post('/', upload.fields(documentFields), async (req, res) => {
             transportStand: data['transport.stand'] || null,
             transportRoute: data['transport.route'] || null,
             transportDriver: data['transport.driver'] || null,
+            pickupLocation: data['transport.pickupLocation'] || null,
+            dropLocation: data['transport.dropLocation'] || null,
             studentId: newStudent.id
           }
         });
@@ -471,6 +547,118 @@ router.delete('/:id', async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to delete student',
+      error: error.message
+    });
+  }
+});
+
+// Update a student by ID
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    
+    console.log(`Updating student with ID: ${id}`);
+    
+    // First check if the student exists
+    const existingStudent = await prisma.student.findUnique({
+      where: { id: parseInt(id) }
+    });
+    
+    if (!existingStudent) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+    
+    // Update main student record
+    const updatedStudent = await prisma.$transaction(async (tx) => {
+      // 1. Update main student record
+      const student = await tx.student.update({
+        where: { id: parseInt(id) },
+        data: {
+          firstName: data.firstName,
+          middleName: data.middleName || null,
+          lastName: data.lastName,
+          gender: data.gender,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+          bloodGroup: data.bloodGroup || null,
+          mobileNumber: data.mobileNumber,
+          email: data.email || null,
+          className: data.className,
+          section: data.section || null,
+          rollNumber: data.rollNumber || null
+        }
+      });
+      
+      // 2. If parent info is provided, update it
+      if (data.father || data.mother) {
+        await tx.parentInfo.update({
+          where: { studentId: parseInt(id) },
+          data: {
+            fatherName: data.father?.name || existingStudent.fatherName,
+            fatherContact: data.father?.contactNumber || null,
+            motherName: data.mother?.name || existingStudent.motherName,
+            motherContact: data.mother?.contactNumber || null
+          }
+        });
+      }
+      
+      // 3. If address info is provided, update it
+      if (data.address) {
+        await tx.student.update({
+          where: { id: parseInt(id) },
+          data: {
+            presentCity: data.address.city || existingStudent.presentCity,
+            presentState: data.address.state || existingStudent.presentState,
+            presentPinCode: data.address.pinCode || existingStudent.presentPinCode
+          }
+        });
+      }
+      
+      // Return complete updated student with all relations
+      return tx.student.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          parentInfo: true,
+          sessionInfo: true,
+          transportInfo: true,
+          documents: true,
+          educationInfo: true,
+          otherInfo: true
+        }
+      });
+    });
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Student updated successfully',
+      data: updatedStudent
+    });
+    
+  } catch (error) {
+    console.error('Error updating student:', error);
+    
+    let errorMessage = 'Failed to update student';
+    
+    if (error.code) {
+      // Handle Prisma database errors
+      switch (error.code) {
+        case 'P2002': // Unique constraint violation
+          errorMessage = `A student with this ${error.meta?.target?.[0] || 'field'} already exists`;
+          break;
+        case 'P2025': // Record not found
+          errorMessage = 'Student not found';
+          break;
+        default:
+          errorMessage = `Database error: ${error.code}`;
+      }
+    }
+    
+    return res.status(500).json({
+      success: false,
+      message: errorMessage,
       error: error.message
     });
   }

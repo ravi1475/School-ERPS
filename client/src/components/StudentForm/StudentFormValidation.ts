@@ -19,7 +19,7 @@ const REQUIRED_FIELDS = [
 // Required fields by step
 export const REQUIRED_FIELDS_BY_STEP: Record<number, string[]> = {
   1: ['admissionNo', 'firstName', 'lastName', 'admissionDate', 'dateOfBirth', 'gender'],
-  2: ['className', 'admitSession.class'],
+  2: ['className'],
   3: ['mobileNumber'],
   4: ['address.city', 'address.state'],
   5: ['father.name', 'mother.name'],
@@ -29,15 +29,18 @@ export const REQUIRED_FIELDS_BY_STEP: Record<number, string[]> = {
 
 // Define fields to validate by step
 export const FIELDS_TO_VALIDATE_BY_STEP: Record<number, string[]> = {
-  1: ['branchName', 'admissionNo', 'firstName', 'middleName', 'lastName', 
-      'admissionDate', 'studentId', 'dateOfBirth', 'religion', 'gender', 
+  1: ['branchName', 'admissionNo', 'penNo', 'firstName', 'middleName', 'lastName', 
+      'admissionDate', 'studentId', 'dateOfBirth', 'age', 'religion', 'gender', 
       'bloodGroup', 'caste'],
-  2: ['className', 'section', 'rollNumber', 'admitSession.class', 
+  2: ['className', 'section', 'stream', 'semester', 'rollNumber', 'admitSession.class', 
       'admitSession.section', 'admitSession.rollNo', 'currentSession.class',
       'academic.registrationNo', 'previousSchool'],
-  3: ['mobileNumber', 'email', 'emergencyContact', 'transport.mode', 
-      'transport.area', 'transport.stand', 'transport.route'],
-  4: ['address.street', 'address.houseNo', 'address.city', 'address.state', 'address.pinCode'],
+  3: ['mobileNumber', 'email', 'emergencyContact'],
+  4: ['address.street', 'address.houseNo', 'address.city', 'address.state', 'address.pinCode',
+      'address.permanentStreet', 'address.permanentHouseNo', 'address.permanentCity', 
+      'address.permanentState', 'address.permanentPinCode',
+      'transport.mode', 'transport.area', 'transport.stand', 'transport.route', 
+      'transport.driver', 'transport.pickupLocation', 'transport.dropLocation'],
   5: ['father.name', 'father.qualification', 'father.occupation', 'father.email', 
       'father.contactNumber', 'father.aadhaarNo', 'father.annualIncome',
       'mother.name', 'mother.qualification', 'mother.occupation', 'mother.email', 
@@ -66,6 +69,33 @@ export const isRequiredField = (name: string): boolean => {
 export const getNestedValue = (obj: any, path: string): any => {
   const keys = path.split('.');
   return keys.reduce((o, key) => (o ? o[key] : undefined), obj);
+};
+
+/**
+ * Set a nested value in an object using a dot notation path
+ * @param obj The object to set value in
+ * @param path The dot notation path
+ * @param value The value to set
+ * @returns The updated object
+ */
+export const setNestedValue = (obj: any, path: string, value: any): any => {
+  const keys = path.split('.');
+  const lastKey = keys.pop();
+  if (!lastKey) return obj; // If no key, return original object
+  
+  const objCopy = { ...obj };
+  let current = objCopy;
+  
+  // Navigate to the parent object
+  for (const key of keys) {
+    if (!current[key]) current[key] = {};
+    current[key] = { ...current[key] };
+    current = current[key];
+  }
+  
+  // Set the value
+  current[lastKey] = value;
+  return objCopy;
 };
 
 /**
@@ -138,7 +168,7 @@ export const validateField = (name: string, value: string): string | null => {
     if (value && !VALIDATION_PATTERNS.AADHAAR.test(value)) {
       return 'Please enter a valid 12-digit Aadhaar number';
     }
-  } else if (name === 'address.pinCode') {
+  } else if (name === 'address.pinCode' || name === 'address.permanentPinCode') {
     if (value && !VALIDATION_PATTERNS.PINCODE.test(value)) {
       return 'Please enter a valid 6-digit PIN code';
     }

@@ -6,15 +6,12 @@ import {
   Search, 
   ChevronLeft, 
   ChevronRight,
-  CheckCircle,
   XCircle,
   Filter,
   Download,
   Eye,
   EyeOff,
   UserPlus,
-  Mail,
-  Phone,
   UserX
 } from 'lucide-react';
 import { loadingState } from '@/recoil/atoms';
@@ -46,66 +43,7 @@ interface UserFormData {
 
 // Mock data for users
 const MOCK_USERS: UserData[] = [
-  { 
-    id: 1, 
-    name: 'John Doe', 
-    username: 'johndoe', 
-    email: 'john.doe@example.com', 
-    phone: '+91 9876543210', 
-    role: 'admin',
-    status: 'active',
-    lastLogin: '2023-03-01 14:30:45',
-    createdAt: '2023-01-15',
-    userType: 'type1'
-  },
-  { 
-    id: 2, 
-    name: 'Jane Smith', 
-    username: 'janesmith', 
-    email: 'jane.smith@example.com', 
-    phone: '+91 9876543211', 
-    role: 'school',
-    status: 'active',
-    lastLogin: '2023-03-02 09:15:22',
-    createdAt: '2023-01-20',
-    userType: 'type2'
-  },
-  { 
-    id: 3, 
-    name: 'Robert Johnson', 
-    username: 'robertj', 
-    email: 'robert.j@example.com', 
-    phone: '+91 9876543212', 
-    role: 'teacher',
-    status: 'inactive',
-    lastLogin: '2023-02-28 16:45:10',
-    createdAt: '2023-01-25',
-    userType: 'type3'
-  },
-  { 
-    id: 4, 
-    name: 'Emily Davis', 
-    username: 'emilyd', 
-    email: 'emily.d@example.com', 
-    phone: '+91 9876543213', 
-    role: 'school',
-    status: 'active',
-    lastLogin: '2023-03-01 11:20:33',
-    createdAt: '2023-01-30',
-    userType: 'type4'
-  },
-  { 
-    id: 5, 
-    name: 'Michael Wilson', 
-    username: 'michaelw', 
-    email: 'michael.w@example.com', 
-    phone: '+91 9876543214', 
-    role: 'teacher',
-    status: 'active',
-    lastLogin: '2023-03-02 13:10:05',
-    createdAt: '2023-02-05',
-    userType: 'type5'
-  },
+
 ];
 
 const ManageUsers: React.FC = () => {

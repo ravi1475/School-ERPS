@@ -16,6 +16,11 @@ interface StudentListResponse {
   pagination: Pagination;
 }
 
+interface StudentDetailResponse {
+  success: boolean;
+  data: StudentFormData;
+}
+
 interface UseStudentManagementReturn {
   students: StudentFormData[];
   loading: boolean;
@@ -24,6 +29,8 @@ interface UseStudentManagementReturn {
   deleteStudent: (id: string) => Promise<void>;
   fetchStudents: (page?: number, limit?: number) => Promise<void>;
   refreshStudents: () => Promise<void>;
+  fetchStudentById: (id: string) => Promise<StudentFormData | null>;
+  updateStudent: (id: string, data: Partial<StudentFormData>) => Promise<StudentFormData | null>;
 }
 
 export const useStudentManagement = (schoolId = '1'): UseStudentManagementReturn => {
@@ -64,6 +71,55 @@ export const useStudentManagement = (schoolId = '1'): UseStudentManagementReturn
     return fetchStudents(pagination.page, pagination.limit);
   }, [fetchStudents, pagination.page, pagination.limit]);
 
+  // Fetch a student by ID
+  const fetchStudentById = useCallback(async (id: string): Promise<StudentFormData | null> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get<StudentDetailResponse>(STUDENT_API.GET_BY_ID(id));
+      
+      if (response.data.success) {
+        return response.data.data;
+      } else {
+        throw new Error('Failed to fetch student details');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while fetching student details');
+      console.error('Error fetching student details:', err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Update a student
+  const updateStudent = useCallback(async (id: string, data: Partial<StudentFormData>): Promise<StudentFormData | null> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.put<StudentDetailResponse>(
+        STUDENT_API.UPDATE(id),
+        data
+      );
+      
+      if (response.data.success) {
+        // After successful update, refresh the student list
+        await refreshStudents();
+        return response.data.data;
+      } else {
+        throw new Error('Failed to update student');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while updating the student');
+      console.error('Error updating student:', err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshStudents]);
+
   const deleteStudent = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
@@ -99,6 +155,8 @@ export const useStudentManagement = (schoolId = '1'): UseStudentManagementReturn
     pagination,
     deleteStudent,
     fetchStudents,
-    refreshStudents
+    refreshStudents,
+    fetchStudentById,
+    updateStudent
   };
 }; 

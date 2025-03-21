@@ -3,6 +3,9 @@ import { useStudentManagement } from '../hooks/useStudentManagement';
 import { StudentTable } from '../components/ManageStudents/StudentTable';
 import { Pagination } from '../components/ManageStudents/Pagination';
 import { Link } from 'react-router-dom';
+import StudentView from '../components/ManageStudents/StudentView';
+import StudentEdit from '../components/ManageStudents/StudentEdit';
+import { StudentFormData } from '../components/StudentForm/StudentFormTypes';
 
 export const ManageStudent: React.FC = () => {
   const {
@@ -11,12 +14,19 @@ export const ManageStudent: React.FC = () => {
     error,
     pagination,
     deleteStudent,
-    fetchStudents
+    fetchStudents,
+    fetchStudentById,
+    updateStudent
   } = useStudentManagement();
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
+  
+  // State for view and edit modals
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<StudentFormData | null>(null);
 
   // Log data for debugging
   useEffect(() => {
@@ -50,6 +60,24 @@ export const ManageStudent: React.FC = () => {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  // Handle view student
+  const handleViewStudent = (student: StudentFormData) => {
+    setSelectedStudent(student);
+    setViewModalOpen(true);
+  };
+
+  // Handle edit student
+  const handleEditStudent = (student: StudentFormData) => {
+    setSelectedStudent(student);
+    setEditModalOpen(true);
+  };
+  
+  // Handle student update
+  const handleStudentUpdated = () => {
+    // Refresh the student list
+    fetchStudents(pagination.page, pagination.limit);
   };
 
   return (
@@ -275,6 +303,8 @@ export const ManageStudent: React.FC = () => {
             students={students}
             loading={loading || isDeleting}
             onDelete={handleDeleteStudent}
+            onView={handleViewStudent}
+            onEdit={handleEditStudent}
           />
         </div>
 
@@ -283,6 +313,21 @@ export const ManageStudent: React.FC = () => {
           currentPage={pagination.page}
           totalPages={pagination.totalPages}
           onPageChange={handlePageChange}
+        />
+        
+        {/* View Student Modal */}
+        <StudentView
+          student={selectedStudent}
+          isOpen={viewModalOpen}
+          onClose={() => setViewModalOpen(false)}
+        />
+        
+        {/* Edit Student Modal */}
+        <StudentEdit
+          student={selectedStudent}
+          isOpen={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          onStudentUpdated={handleStudentUpdated}
         />
       </div>
     </div>
