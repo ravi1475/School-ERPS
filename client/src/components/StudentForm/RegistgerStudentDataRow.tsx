@@ -25,7 +25,7 @@ const StudentDataRow: React.FC<StudentDataRowProps> = ({ student, onShowDetails 
     }
     
     // Or directly navigate to the student details page
-    navigate(`/school/student/register/allstudent/${student.formNo}`);
+    navigate(`/school/students/register/allstudent/${student.formNo}`);
   };
 
   return (
