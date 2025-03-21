@@ -344,7 +344,7 @@ model FeeCategory {
 model TransferCertificate {
   id                  Int       @id @default(autoincrement())
   // Student Information
-  admissionNumber     String    @unique
+  admissionNumber     String    
   fullName            String
   fatherName          String
   motherName          String
@@ -382,12 +382,16 @@ model TransferCertificate {
   tcCharge            Float     @default(0)
   feeConcession       FeeConcessionStatus? @default(None) // Enum for fee concession status
   
+  // Activities and Games
+  gamesPlayed         String?   @db.Text  // Stored as JSON string
+  extraActivities     String?   @db.Text  // Stored as JSON string
+  
   // School Details
   schoolId            Int
   school              School    @relation(fields: [schoolId], references: [id])
   issuedDate          DateTime  @default(now())
-  tcNumber            String    @unique @default(uuid())
-  tcstatus            Int  
+  tcNumber            String    @unique
+  tcstatus            Int       @default(1) // 1=Issued, 2=Cancelled, 0=Draft
   
   // Relations
   studentId           Int

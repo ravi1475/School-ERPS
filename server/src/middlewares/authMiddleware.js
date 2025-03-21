@@ -15,6 +15,7 @@ export const protect = async (req, res, next) => {
       });
     }
     
+    
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'school_management_secret_key');
     
@@ -33,6 +34,8 @@ export const protect = async (req, res, next) => {
       default:
         return res.status(400).json({ success: false, error: "Invalid user role" });
     }
+
+    
     
     if (!user) {
       return res.status(401).json({ 
@@ -77,3 +80,6 @@ export const authorize = (...roles) => {
     next();
   };
 };
+
+    
+
