@@ -355,6 +355,12 @@ const SchoolNavbar = {
                 onClick={() => setIsMobileSidebarOpen(false)}
                 isActive={isPathActive("/school/students/register/addNew")}
               />
+              <NavLink 
+                to="/school/students/tc-form" 
+                label="TC From" 
+                onClick={() => setIsMobileSidebarOpen(false)}
+                isActive={isPathActive("/school/students/tc-from")}
+              />
                <NavLink 
                 to="/school/students/register/allStudents" 
                 label="All Register Student" 
