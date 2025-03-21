@@ -11,7 +11,9 @@ const allowedFileTypes = [
 ];
 const allowedExtensions = [".jpg", ".jpeg", ".png", ".pdf"];
 
-// Ensure the upload directory exists
+
+// Ensure the upload directory existsprocess
+
 const uploadDir = path.join(process.cwd(), "registerFiles/");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });

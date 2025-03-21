@@ -29,27 +29,27 @@ model Admin {
 }
 
 model School {
-  id           Int            @id @default(autoincrement())
-  fullName     String         @default("Unknown")
-  email        String         @unique
-  password     String
-  username     String         @unique @default(cuid()) // Added username field
-  code         String         @unique @default("SC000")
-  address      String         @default("Not Provided")
-  contact      BigInt         @default(0)
-  phone        String         @default("0123456789") @db.VarChar(15) // Added phone field
-  principal    String         @default("Unknown")
-  established  Int            @default(2000)
-  role         Role           @default(SCHOOL)
-  status       String         @default("active") // Added status field
-  lastLogin    DateTime? // Added lastLogin field
-  teachers     Teacher[]
-  students     Student[]
-  departments  Department[]
-  // registeredStudent Registration[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id          Int          @id @default(autoincrement())
+  fullName    String       @default("Unknown")
+  email       String       @unique
+  password    String
+  username    String       @unique @default(cuid())
+  code        String       @unique @default("SC000")
+  address     String       @default("Not Provided")
+  contact     BigInt       @default(0)
+  phone       String       @default("0123456789") @db.VarChar(15)
+  principal   String       @default("Unknown")
+  established Int          @default(2000)
+  role        Role         @default(SCHOOL)
+  status      String       @default("active")
+  lastLogin   DateTime?
+  teachers    Teacher[]
+  students    Student[]
+  departments Department[]
+  transferCertificates TransferCertificate[] 
   Registration Registration[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Teacher {
@@ -132,9 +132,10 @@ model Student {
   otherInfo     OtherInfo?
 
   // Meta
-  role      Role     @default(STUDENT)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  transferCertificates TransferCertificate[]
+  role            Role      @default(STUDENT)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 // Normalized tables to reduce row size
@@ -329,17 +330,160 @@ model FeeStructure {
 }
 
 model FeeCategory {
-  id          String       @id @default(uuid())
-  name        String // Name of the fee category (e.g., "Tuition Fee", "Library Fee")
-  amount      Float // The fee amount
-  frequency   String // "Monthly", "Quarterly", "Half-Yearly", "Yearly", "One-Time", "Term-Wise", "Bi-Monthly"
-  description String?      @db.Text
-  structureId String // Foreign key to relate to a fee structure
-  structure   FeeStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           String       @id @default(uuid())
+  name         String       // Name of the fee category (e.g., "Tuition Fee", "Library Fee")
+  amount       Float        // The fee amount
+  frequency    String       // "Monthly", "Quarterly", "Yearly"
+  description  String?      @db.Text
+  structureId  String       // Foreign key to relate to a fee structure
+  structure    FeeStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
 
+model TransferCertificate {
+  id                  Int       @id @default(autoincrement())
+  // Student Information
+  admissionNumber     String    @unique
+  fullName            String
+  fatherName          String
+  motherName          String
+  dateOfBirth         DateTime
+  nationality         String
+  category            String
+  dateOfAdmission     DateTime
+  
+  // Academic Information
+  currentClass        String
+  whetherFailed       WhetherFailed @default(No) // Enum for whether failed or not
+  section             String
+  rollNumber          String?
+  examAppearedIn      ExamAppearedIn @default(School) // Enum for exam appeared in
+  qualifiedForPromotion QualifiedStatus @default(Yes) // Enum for qualified status
+  
+  // Transfer Details
+  reasonForLeaving    ReasonForLeaving // Enum for reason for leaving
+  dateOfLeaving       DateTime
+  lastAttendanceDate  DateTime
+  toClass             String?
+  classInWords        String?
+  
+  // Academic Performance
+  maxAttendance       Int
+  obtainedAttendance  Int
+  subjectsStudied     String    @db.Text
+  
+  // Conduct Information
+  generalConduct      ConductStatus // Enum for conduct status
+  behaviorRemarks     String?   @db.Text
+  
+  // Financial Information
+  feesPaidUpTo        DateTime
+  tcCharge            Float     @default(0)
+  feeConcession       FeeConcessionStatus? @default(None) // Enum for fee concession status
+  
+  // School Details
+  schoolId            Int
+  school              School    @relation(fields: [schoolId], references: [id])
+  issuedDate          DateTime  @default(now())
+  tcNumber            String    @unique @default(uuid())
+  tcstatus            Int  
+  
+  // Relations
+  studentId           Int
+  student             Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([admissionNumber])
+  @@index([tcNumber])
+  @@index([issuedDate])
+}
+
+// Enums for select fields
+enum QualifiedStatus {
+  Yes
+  No
+  NA
+  Pass
+  Fail
+  Compartment
+  AsperCBSEBoardResult
+  AppearedinclassXExam
+  AppearedinclassXIIExam
+}
+
+enum ReasonForLeaving {
+  FamilyRelocation
+  AdmissionInOtherSchool
+  Duetolongabsencewithoutinformation
+  FatherJobTransfer
+  GetAdmissioninHigherClass
+  GoingtoNativePlace
+  ParentWill
+  Passedoutfromtheschool
+  Shiftingtootherplace
+  TransferCase
+  Other
+}
+
+enum ConductStatus {
+  Excellent
+  Good
+  Satisfactory
+  NeedsImprovement
+  Poor
+}
+
+enum FeeConcessionStatus {
+  None
+  Partial
+  Full
+}
+
+enum GamesPlayed {
+  Football
+  Cricket
+  Swimming
+  Basketball
+  Kabaddi
+  Volleyball
+  Athlete
+  Chess
+  Badminton
+}
+
+enum ExtraCurricularActivities {
+  ParticipateInStageShow
+  ParticipateInSports
+  ParticipateInDebate
+  ParticipateInQuiz
+  ParticipateInPainting
+  ParticipateInSinging
+  ParticipateInDancing
+  ParticipateInOther
+}
+
+enum ExamAppearedIn {
+  School
+  Board
+  NA
+  CBSEBoard
+  SchoolFailed
+  SchoolPassed
+  SchoolCompartment
+  BoardPassed
+  BoardFailed
+  BoardCompartment
+}
+
+enum WhetherFailed {
+  Yes
+  No
+  NA
+  CBSEBoard
+}
 model Registration {
   // student information
   registrationId      String  @id @default(uuid())

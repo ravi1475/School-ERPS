@@ -1,0 +1,35 @@
+import { z } from 'zod';
+
+export const TCCreateSchema = z.object({
+    studentId: z.number(),
+    schoolId: z.number(),
+    admissionNumber: z.string().min(5),
+    fullName: z.string().min(3),
+    fatherName: z.string().min(3),
+    motherName: z.string().min(3),
+    dateOfBirth: z.string().datetime(),
+    nationality: z.string().min(2),
+    category: z.string().min(2),
+    dateOfAdmission: z.string().datetime(),
+    currentClass: z.string().min(2),
+    whetherFailed: z.enum(['Yes', 'No', 'NA', 'CBSEBoard']),
+    section: z.string().min(1),
+    rollNumber: z.string().optional(),
+    examAppearedIn: z.enum(['School', 'Board', 'NA', 'CBSEBoard', 'SchoolFailed', 'SchoolPassed', 'SchoolCompartment', 'BoardPassed', 'BoardFailed', 'BoardCompartment']),
+    qualifiedForPromotion: z.enum(['Yes', 'No', 'NA', 'Pass', 'Fail', 'Compartment', 'AsperCBSEBoardResult', 'AppearedinclassXExam', 'AppearedinclassXIIExam']),
+    reasonForLeaving: z.enum(['FamilyRelocation', 'AdmissionInOtherSchool', 'Duetolongabsencewithoutinformation', 'FatherJobTransfer', 'GetAdmissioninHigherClass', 'GoingtoNativePlace', 'ParentWill', 'Passedoutfromtheschool', 'Shiftingtootherplace', 'TransferCase', 'Other']),
+    dateOfLeaving: z.string().datetime(),
+    lastAttendanceDate: z.string().datetime(),
+    toClass: z.string().optional(),
+    classInWords: z.string().optional(),
+    maxAttendance: z.number().min(0),
+    obtainedAttendance: z.number().min(0),
+    subjectsStudied: z.string(),
+    generalConduct: z.enum(['Excellent', 'Good', 'Satisfactory', 'NeedsImprovement', 'Poor']),
+    behaviorRemarks: z.string().optional(),
+    feesPaidUpTo: z.string().datetime(),
+    tcCharge: z.number().min(0),
+    feeConcession: z.enum(['None', 'Partial', 'Full']).optional(),
+});
+
+export const TCUpdateSchema = TCCreateSchema.partial();
