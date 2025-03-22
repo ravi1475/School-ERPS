@@ -14,6 +14,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import feeStructureRoutes from "./routes/feeStructureRoutes.js";
 import studentRegister from "./routes/studentRegisterRoutes.js";
+import tcformRoutes from "./routes/tcformRoutes.js";
 
 // Initialize environment variables
 dotenv.config();
@@ -169,6 +170,9 @@ app.use("/fees", feeRoutes);
 
 // Fee Structure routes
 app.use("/api", feeStructureRoutes);
+
+// Add TC form routes to the API
+app.use("/api", tcformRoutes);
 
 // Add this before your admin routes registration:
 
