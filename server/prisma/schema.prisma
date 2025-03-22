@@ -343,6 +343,7 @@ model FeeCategory {
 
 model TransferCertificate {
   id                  Int       @id @default(autoincrement())
+  
   // Student Information
   admissionNumber     String    @unique
   fullName            String
@@ -357,7 +358,7 @@ model TransferCertificate {
   currentClass        String
   whetherFailed       WhetherFailed @default(No) // Enum for whether failed or not
   section             String
-  rollNumber          String?
+  rollNumber          String? // Optional
   examAppearedIn      ExamAppearedIn @default(School) // Enum for exam appeared in
   qualifiedForPromotion QualifiedStatus @default(Yes) // Enum for qualified status
   
@@ -365,8 +366,8 @@ model TransferCertificate {
   reasonForLeaving    ReasonForLeaving // Enum for reason for leaving
   dateOfLeaving       DateTime
   lastAttendanceDate  DateTime
-  toClass             String?
-  classInWords        String?
+  toClass             String? // Optional
+  classInWords        String? // Optional
   
   // Academic Performance
   maxAttendance       Int
@@ -375,12 +376,12 @@ model TransferCertificate {
   
   // Conduct Information
   generalConduct      ConductStatus // Enum for conduct status
-  behaviorRemarks     String?   @db.Text
+  behaviorRemarks     String?   @db.Text // Optional
   
   // Financial Information
   feesPaidUpTo        DateTime
   tcCharge            Float     @default(0)
-  feeConcession       FeeConcessionStatus? @default(None) // Enum for fee concession status
+  feeConcession       FeeConcessionStatus? @default(None) // Enum for fee concession status (Optional)
   
   // School Details
   schoolId            Int

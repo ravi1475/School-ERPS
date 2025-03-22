@@ -3,7 +3,8 @@ import { toast } from 'react-toastify';
 import { StudentDetails, IssuedCertificate } from './types';
 import { fetchStudentData, createCertificate, updateCertificate } from './data';
 import { MultiSelectInput } from './MultipleSelectInput';
-// Enums for select options
+
+// Enums for select options (unchanged)
 const QualifiedStatus = {
   Yes: 'Yes',
   No: 'No',
@@ -86,6 +87,7 @@ const ExtraActivities = [
   'Participate In Dancing',
   'Participate In Other',
 ];
+
 interface TCFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -93,7 +95,6 @@ interface TCFormModalProps {
   certificate: IssuedCertificate | null;
   setIssuedCertificates: React.Dispatch<React.SetStateAction<IssuedCertificate[]>>;
 }
-
 
 const TCFormModal: React.FC<TCFormModalProps> = ({
   isOpen,
@@ -256,8 +257,27 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
       setIsLoading(false);
     }
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check if all required fields are filled
+    const requiredFields = [
+      'studentName', 'studentClass', 'admissionNumber', 'motherName', 'fatherName', 'nationality', 'category', 'dateOfBirth',
+      'issueDate', 'leavingDate', 'reason', 'examIn', 'qualified', 'tcNo', 'subject', 'generalConduct', 'dateOfLeaving',
+      'remarks', 'maxAttendance', 'obtainedAttendance', 'lastAttendanceDate', 'whetherFailed', 'tcCharge', 'toClass',
+      'classInWords', 'behaviorRemarks', 'rollNo', 'dateOfIssue', 'admitClass', 'feesPaidUpTo', 'feesConcessionAvailed',
+      'dateOfAdmission', 'schoolDetails.schoolName', 'schoolDetails.address', 'schoolDetails.recognitionId',
+      'schoolDetails.affiliationNo', 'schoolDetails.contact', 'schoolDetails.email', 'schoolDetails.website'
+    ];
+
+    for (const field of requiredFields) {
+      if (!formData[field as keyof IssuedCertificate]) {
+        toast.error(`Please fill in the ${field} field.`);
+        return;
+      }
+    }
+
     const newCertificate: IssuedCertificate = {
       ...formData,
       admissionNumber,
@@ -334,6 +354,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.studentName}
                 className="w-full p-2 border rounded-md bg-gray-50"
                 readOnly
+                required
               />
             </div>
             <div>
@@ -343,6 +364,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.fatherName}
                 className="w-full p-2 border rounded-md bg-gray-50"
                 readOnly
+                required
               />
             </div>
             <div>
@@ -352,6 +374,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.motherName}
                 className="w-full p-2 border rounded-md bg-gray-50"
                 readOnly
+                required
               />
             </div>
 
@@ -363,6 +386,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.admitClass}
                 className="w-full p-2 border rounded-md bg-gray-50"
                 readOnly
+                required
               />
             </div>
             <div>
@@ -372,6 +396,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.studentClass}
                 className="w-full p-2 border rounded-md bg-gray-50"
                 readOnly
+                required
               />
             </div>
             <div>
@@ -381,6 +406,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.rollNo}
                 className="w-full p-2 border rounded-md bg-gray-50"
                 readOnly
+                required
               />
             </div>
 
@@ -392,6 +418,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.feesPaidUpTo}
                 onChange={(e) => setFormData({ ...formData, feesPaidUpTo: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               />
             </div>
 
@@ -403,6 +430,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.maxAttendance}
                 onChange={(e) => setFormData({ ...formData, maxAttendance: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               />
             </div>
             <div>
@@ -412,6 +440,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.obtainedAttendance}
                 onChange={(e) => setFormData({ ...formData, obtainedAttendance: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               />
             </div>
             <div>
@@ -420,6 +449,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.whetherFailed}
                 onChange={(e) => setFormData({ ...formData, whetherFailed: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               >
                 <option value="">Select</option>
                 {Object.values(WhetherFailed).map((status) => (
@@ -437,6 +467,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.examIn}
                 onChange={(e) => setFormData({ ...formData, examIn: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               >
                 <option value="">Select</option>
                 {Object.values(ExamAppearedIn).map((exam) => (
@@ -452,6 +483,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.qualified}
                 onChange={(e) => setFormData({ ...formData, qualified: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               >
                 <option value="">Select</option>
                 {Object.values(QualifiedStatus).map((status) => (
@@ -470,6 +502,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.toClass}
                 onChange={(e) => setFormData({ ...formData, toClass: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               />
             </div>
             <div>
@@ -479,6 +512,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.classInWords}
                 onChange={(e) => setFormData({ ...formData, classInWords: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               />
             </div>
 
@@ -500,6 +534,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.tcCharge}
                 onChange={(e) => setFormData({ ...formData, tcCharge: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               />
             </div>
             <div>
@@ -509,6 +544,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.dateOfIssue}
                 className="w-full p-2 border rounded-md"
                 onChange={(e) => setFormData({ ...formData, dateOfIssue: e.target.value })}
+                required
               />
             </div>
             <div>
@@ -518,6 +554,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.dateOfLeaving}
                 className="w-full p-2 border rounded-md"
                 onChange={(e) => setFormData({ ...formData, dateOfLeaving: e.target.value })}
+                required
               />
             </div>
             <div>
@@ -526,6 +563,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.feesConcessionAvailed}
                 onChange={(e) => setFormData({ ...formData, feesConcessionAvailed: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               >
                 <option value="">Select</option>
                 {Object.values(FeeConcessionStatus).map((concession) => (
@@ -543,6 +581,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, behaviorRemarks: e.target.value })}
                 className="w-full p-2 border rounded-md"
                 placeholder="Enter conduct remarks"
+                required
               />
             </div>
             <div>
@@ -551,6 +590,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.generalConduct}
                 onChange={(e) => setFormData({ ...formData, generalConduct: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               >
                 <option value="">Select</option>
                 {Object.values(ConductStatus).map((conduct) => (
@@ -568,6 +608,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                 className="w-full p-2 border rounded-md"
                 placeholder="Enter subjects (comma separated)"
+                required
               />
             </div>
 
@@ -580,6 +621,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
               onChange={(selectedValues) =>
                 setFormData({ ...formData, gamesPlayed: selectedValues })
               }
+              required
             />
 
             {/* Extra Activities */}
@@ -590,6 +632,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
               onChange={(selectedValues) =>
                 setFormData({ ...formData, extraActivity: selectedValues })
               }
+              required
             />
           </div>
 
@@ -600,6 +643,7 @@ const TCFormModal: React.FC<TCFormModalProps> = ({
                 value={formData.reason}
                 onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                 className="w-full p-2 border rounded-md"
+                required
               >
                 <option value="">Select</option>
                 {Object.values(ReasonForLeaving).map((reason) => (
