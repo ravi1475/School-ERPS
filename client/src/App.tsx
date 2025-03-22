@@ -39,7 +39,7 @@ import TeacherEvaluationPage from "./components/Schools/TeacherEvaluation";
 import ClassManagement from "./components/Teacher/classManagement";
 import TeachingMaterials from "./components/Teacher/TeachingMaterials";
 import AssignmentManager from './components/Teacher/Assignment';
-import TeacherDirectory from './components/Schools/TeacherDirectory/TeacherDirectory';
+import TeacherDirectory from './components/Schools/TeacherDirectory';
 import ExamSchedule from './components/Teacher/ExamSchedule';
 import FeeCollectionApp from "./components/Schools/FeesCollection";
 import  AttendanceManagement from "./components/Teacher/AttendanceManagement";
