@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-.qodo
-node_modules/
-=======
 # Dependencies
 node_modules
 package-lock.json
@@ -44,4 +40,3 @@ coverage
 
 # TypeScript
 *.tsbuildinfo
->>>>>>> 8138d7dd037d483017c7641abca5c9aa18141bc7
