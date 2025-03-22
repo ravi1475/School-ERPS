@@ -14,6 +14,19 @@ export const StudentView: React.FC<StudentViewProps> = ({
 }) => {
   if (!isOpen || !student) return null;
 
+  function convertDateFormat(isoDate) {
+    // Create a Date object from the ISO string
+    const date = new Date(isoDate);
+
+    // Extract day, month, and year
+    const day = String(date.getUTCDate()).padStart(2, '0'); // Ensure 2 digits
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = date.getUTCFullYear();
+
+    // Return the date in dd-mm-yyyy format
+    return `${day}-${month}-${year}`;
+}
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center overflow-y-auto">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -45,7 +58,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Student ID</p>
-                <p className="text-base font-semibold">{student.studentId || 'N/A'}</p>
+                <p className="text-base font-semibold">{student.id || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Class & Section</p>
@@ -67,7 +80,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Date of Birth</p>
-                    <p>{student.dateOfBirth || 'N/A'}</p>
+                    <p>{convertDateFormat(student.dateOfBirth) || 'N/A'}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -109,19 +122,19 @@ export const StudentView: React.FC<StudentViewProps> = ({
               <div className="space-y-3">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Father's Name</p>
-                  <p>{student.father?.name || 'N/A'}</p>
+                  <p>{student.fatherName || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Father's Contact</p>
-                  <p>{student.father?.contactNumber || 'N/A'}</p>
+                  <p>{student.fatherContact || 'N/A'}</p>
                 </div>
-                <div>
+                {/* <div>
                   <p className="text-sm font-medium text-gray-500">Mother's Name</p>
-                  <p>{student.mother?.name || 'N/A'}</p>
-                </div>
+                  <p>{student.motherName || 'N/A'}</p>
+                </div> */}
                 <div>
                   <p className="text-sm font-medium text-gray-500">Mother's Contact</p>
-                  <p>{student.mother?.contactNumber || 'N/A'}</p>
+                  <p>{student.motherContact || 'N/A'}</p>
                 </div>
               </div>
             </div>
@@ -134,11 +147,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   <p className="text-sm font-medium text-gray-500">Present Address</p>
                   <p>
                     {[
-                      student.address?.houseNo,
-                      student.address?.street,
-                      student.address?.city,
-                      student.address?.state,
-                      student.address?.pinCode
+                      student.presentHouseNo,
+                      student.presentStreet,
+                      student.presentCity,
+                      student.presentState,
+                      student.presentPinCode
                     ].filter(Boolean).join(', ') || 'N/A'}
                   </p>
                 </div>
@@ -146,11 +159,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   <p className="text-sm font-medium text-gray-500">Permanent Address</p>
                   <p>
                     {[
-                      student.address?.permanentHouseNo,
-                      student.address?.permanentStreet,
-                      student.address?.permanentCity,
-                      student.address?.permanentState,
-                      student.address?.permanentPinCode
+                      student.permanentHouseNo,
+                      student.permanentStreet,
+                      student.permanentCity,
+                      student.permanentState,
+                      student.permanentPinCode
                     ].filter(Boolean).join(', ') || 'Same as Present Address'}
                   </p>
                 </div>
@@ -164,7 +177,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Admission Date</p>
-                    <p>{student.admissionDate || 'N/A'}</p>
+                    <p>{convertDateFormat(student.admissionDate) || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Class</p>
@@ -188,7 +201,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Registration Number</p>
-                    <p>{student.academic?.registrationNo || 'N/A'}</p>
+                    <p>{student.academicRegistrationNo || 'N/A'}</p>
                   </div>
                 </div>
               </div>

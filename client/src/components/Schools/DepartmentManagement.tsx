@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 
 // Types
 interface Department {
-  id: string;
-  name: string;
-  headOfDepartment: string;
-  facultyCount: number;
+  id: number;
+  departmentName: string;
+  hOD: string;
+  faculty_count: number;
   description: string;
-  createdAt: Date;
+  createdAt: string;
 }
 
 const DepartmentManagement: React.FC = () => {
@@ -17,62 +17,38 @@ const DepartmentManagement: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    headOfDepartment: '',
-    facultyCount: 0,
+    departmentName: '',
+    hOD: '',
+    faculty_count: 0,
     description: '',
   });
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-  // Fetch departments (mock data for now)
+  // Fetch departments
   useEffect(() => {
-    // In a real app, you would fetch from an API
-    const mockDepartments: Department[] = [
-      {
-        id: '1',
-        name: 'Mathematics',
-        headOfDepartment: 'Dr. John Smith',
-        facultyCount: 12,
-        description: 'Department focused on mathematical sciences and research.',
-        createdAt: new Date('2022-01-15'),
-      },
-      {
-        id: '2',
-        name: 'Computer Science',
-        headOfDepartment: 'Prof. Sarah Johnson',
-        facultyCount: 18,
-        description: 'Specializes in software development, AI, and computer systems.',
-        createdAt: new Date('2021-09-05'),
-      },
-      {
-        id: '3',
-        name: 'Biology',
-        headOfDepartment: 'Dr. Michael Chen',
-        facultyCount: 15,
-        description: 'Studies of living organisms and life sciences.',
-        createdAt: new Date('2022-03-20'),
-      },
-    ];
-    setDepartments(mockDepartments);
+    const fetchDepartments = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/school/administration/departments');
+        if (!response.ok) throw new Error('Failed to fetch departments');
+        const data = await response.json();
+        setDepartments(data.data);
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+        alert('No Department Found, May be due to server issue');
+      }
+    };
+    fetchDepartments();
   }, []);
 
   // Handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: name === 'facultyCount' ? parseInt(value) || 0 : value,
-    });
+    setFormData({ ...formData, [name]: name === 'faculty_count' ? parseInt(value) || 0 : value });
   };
 
   const handleAddDepartment = () => {
     setIsEditMode(false);
-    setFormData({
-      name: '',
-      headOfDepartment: '',
-      facultyCount: 0,
-      description: '',
-    });
+    setFormData({ departmentName: '', hOD: '', faculty_count: 0, description: '' });
     setIsModalOpen(true);
   };
 
@@ -80,50 +56,63 @@ const DepartmentManagement: React.FC = () => {
     setIsEditMode(true);
     setCurrentDepartment(department);
     setFormData({
-      name: department.name,
-      headOfDepartment: department.headOfDepartment,
-      facultyCount: department.facultyCount,
+      departmentName: department.departmentName,
+      hOD: department.hOD,
+      faculty_count: department.faculty_count,
       description: department.description,
     });
     setIsModalOpen(true);
   };
 
-  const handleDeleteDepartment = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this department?')) {
-      setDepartments(departments.filter(dept => dept.id !== id));
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (isEditMode && currentDepartment) {
+        // Update department
+        const response = await fetch(`http://localhost:5000/school/administration/departments/${currentDepartment.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        if (!response.ok) throw new Error('Failed to update department');
+        const updatedDepartment = await response.json();
+        setDepartments(departments.map((dept) => (dept.id === currentDepartment.id ? updatedDepartment.data : dept)));
+      } else {
+        // Add department
+        const response = await fetch('http://localhost:5000/school/administration/departments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        if (!response.ok) throw new Error('Failed to add department');
+        const newDepartment = await response.json();
+        setDepartments([...departments, newDepartment.data]);
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error submitting department:', error);
+      alert('Error submitting department');
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (isEditMode && currentDepartment) {
-      // Update existing department
-      setDepartments(
-        departments.map(dept =>
-          dept.id === currentDepartment.id
-            ? { ...dept, ...formData }
-            : dept
-        )
-      );
-    } else {
-      // Add new department
-      const newDepartment: Department = {
-        id: Date.now().toString(),
-        ...formData,
-        createdAt: new Date(),
-      };
-      setDepartments([...departments, newDepartment]);
+  const handleDeleteDepartment = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:5000/school/administration/departments/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete department');
+      setDepartments(departments.filter((dept) => dept.id !== id));
+    } catch (error) {
+      console.error('Error deleting department:', error);
+      alert('Error deleting department');
     }
-    
-    setIsModalOpen(false);
   };
 
   // Filter departments based on search term
   const filteredDepartments = departments.filter(
-    dept => 
-      dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dept.headOfDepartment.toLowerCase().includes(searchTerm.toLowerCase())
+    (dept) =>
+      dept.departmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      dept.hOD.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -206,18 +195,18 @@ const DepartmentManagement: React.FC = () => {
                 {filteredDepartments.map((department) => (
                   <tr key={department.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{department.name}</div>
+                      <div className="font-medium text-gray-900">{department.departmentName}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                      {department.headOfDepartment}
+                      {department.hOD}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {department.facultyCount} Faculty
+                        {department.faculty_count} Faculty
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                      {department.createdAt.toLocaleDateString()}
+                      {department.createdAt}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
@@ -227,7 +216,7 @@ const DepartmentManagement: React.FC = () => {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDeleteDepartment(department.id)}
+                        onClick={()=>handleDeleteDepartment(department.id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         Delete
@@ -263,8 +252,8 @@ const DepartmentManagement: React.FC = () => {
                 <input
                   type="text"
                   id="name"
-                  name="name"
-                  value={formData.name}
+                  name="departmentName"
+                  value={formData.departmentName}
                   onChange={handleInputChange}
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   required
@@ -278,8 +267,8 @@ const DepartmentManagement: React.FC = () => {
                 <input
                   type="text"
                   id="headOfDepartment"
-                  name="headOfDepartment"
-                  value={formData.headOfDepartment}
+                  name="hOD"
+                  value={formData.hOD}
                   onChange={handleInputChange}
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   required
@@ -293,8 +282,8 @@ const DepartmentManagement: React.FC = () => {
                 <input
                   type="number"
                   id="facultyCount"
-                  name="facultyCount"
-                  value={formData.facultyCount}
+                  name="faculty_count"
+                  value={formData.faculty_count}
                   onChange={handleInputChange}
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   min="0"
@@ -348,7 +337,7 @@ const DepartmentManagement: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-800 mb-2">Total Faculty</h3>
           <p className="text-3xl font-bold text-green-600">
-            {departments.reduce((sum, dept) => sum + dept.facultyCount, 0)}
+            {departments.reduce((sum, dept) => sum + dept.faculty_count, 0)}
           </p>
           <p className="text-sm text-gray-500 mt-1">Teaching staff members</p>
         </div>
@@ -357,7 +346,7 @@ const DepartmentManagement: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-800 mb-2">Latest Department</h3>
           <p className="text-xl font-medium text-purple-600">
             {departments.length > 0 
-              ? departments.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).name
+              ? departments.sort((a, b) => b.createdAt - a.createdAt).departmentName
               : 'None'}
           </p>
           <p className="text-sm text-gray-500 mt-1">Most recently added</p>

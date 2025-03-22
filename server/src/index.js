@@ -14,6 +14,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import feeStructureRoutes from "./routes/feeStructureRoutes.js";
 import studentRegister from "./routes/studentRegisterRoutes.js";
+import departmentRoute from './routes/departmentRoutes.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -198,6 +199,12 @@ app.use("/admin", adminRoutes);
 // Auth routes - Keep these lines for other auth routes
 app.use("/api/auth", authRoutes);
 app.use("/auth", authRoutes);
+
+
+// Department Routes
+app.use('/',departmentRoute);
+
+
 
 // Ensure this section is correct:
 
