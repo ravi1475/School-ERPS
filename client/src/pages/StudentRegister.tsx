@@ -808,7 +808,7 @@ const StudentRegistration = () => {
             </label>
             <input
               type="file"
-              name="motherAdharCard"
+              name="motherAadharCard"
               onChange={handleFileChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />

@@ -50,7 +50,7 @@ import StudentRegistration from "./pages/StudentRegister";
 import RegisterStudentsData from "./pages/RegisterStudentsData";
 import AdminNavbar from "./components/Admin/AdminNavbar";
 import AdminDashboard from "./components/Admin/AdminDashboard";
-// Uncomment these when the components are available
+// Uncomment these when the components are availableF
 // import StudentFeeDetails from './pages/StudentFeeDetails';
 // import PaymentGateway from './pages/PaymentGateway';
 // import UserProfile from './pages/UserProfile';
