@@ -1,4 +1,6 @@
 import { useState, ChangeEvent, FormEvent } from "react";
+import RegisterStudentForm from "../components/StudentForm/RegisterStudentForm";
+import ReactDOMServer from "react-dom/server";
 
 interface FormData {
   firstName: string;
@@ -107,6 +109,100 @@ const StudentRegistration = () => {
       }));
     }
   };
+
+
+ const handlePrintInfo = () => {
+    try {
+      // Ensure formNo is available
+      if (!formData.formNo) {
+        alert("Please enter a valid Form Number.");
+        return;
+      }
+  
+      // Use formData directly as student data is already available
+      const student = formData;
+  
+      const printContent = `
+        <h2>Student Information</h2>
+        <p><strong>First Name:</strong> ${student.firstName}</p>
+        <p><strong>Last Name:</strong> ${student.lastName}</p>
+        <p><strong>Gender:</strong> ${student.gender}</p>
+        <p><strong>Form No:</strong> ${student.formNo}</p>
+        <p><strong>Date of Birth:</strong> ${student.dob}</p>
+        <p><strong>Category:</strong> ${student.category}</p>
+        <p><strong>Religion:</strong> ${student.religion}</p>
+        <p><strong>Registering for Class:</strong> ${student.registerForClass}</p>
+        <p><strong>Admission Category:</strong> ${student.admissionCategory}</p>
+        <p><strong>Blood Group:</strong> ${student.bloodGroup}</p>
+        <p><strong>Registration Date:</strong> ${student.regnDate}</p>
+        <p><strong>Test Date:</strong> ${student.testDate}</p>
+        <p><strong>Transaction No:</strong> ${student.transactionNo}</p>
+        <p><strong>Single Parent:</strong> ${student.singleParent ? "Yes" : "No"}</p>
+        <p><strong>Contact No:</strong> ${student.contactNo}</p>
+        <p><strong>Email:</strong> ${student.studentEmail}</p>
+        <p><strong>Address:</strong> ${student.address}, ${student.city}, ${student.state} - ${student.pincode}</p>
+        <p><strong>Student Aadhar Card No:</strong> ${student.studentAadharCardNo}</p>
+        <p><strong>Registration Charge:</strong> ${student.regnCharge}</p>
+        <p><strong>Exam Subject:</strong> ${student.examSubject}</p>
+        <p><strong>Payment Status:</strong> ${student.paymentStatus}</p>
+        <p><strong>Father's Name:</strong> ${student.fatherName}</p>
+        <p><strong>Father's Mobile No:</strong> ${student.fatherMobileNo}</p>
+        <p><strong>SMS Alert:</strong> ${student.smsAlert ? "Enabled" : "Disabled"}</p>
+        <p><strong>Father's Email:</strong> ${student.fatherEmail}</p>
+        <p><strong>Father's Aadhar Card No:</strong> ${student.fatherAadharCardNo}</p>
+        <p><strong>Is Father Campus Employee:</strong> ${student.isFatherCampusEmployee ? "Yes" : "No"}</p>
+        <p><strong>Mother's Name:</strong> ${student.motherName}</p>
+        <p><strong>Mother's Mobile No:</strong> ${student.motherMobileNo}</p>
+        <p><strong>Mother's Aadhar Card No:</strong> ${student.motherAadharCardNo}</p>
+      `;
+  
+      // Open a new window and print the student details
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(`<html><head><title>Student Info</title></head><body>${printContent}</body></html>`);
+      printWindow.document.close();
+      printWindow.print();
+    } catch (error) {
+      console.error("Error printing student info:", error);
+      alert("Failed to print student information.");
+    }
+  };
+
+  const handlePrintForm = (formData: FormData) => {
+    try {
+      // Convert the component to an HTML string
+      const printContent = ReactDOMServer.renderToString(
+        <RegisterStudentForm formData={formData} />
+      );
+  
+      // Open a new window and print the student details
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) throw new Error("Failed to open print window");
+  
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Student Info</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { border: 1px solid black; padding: 8px; text-align: left; }
+            </style>
+          </head>
+          <body>
+            ${printContent}
+          </body>
+        </html>
+      `);
+  
+      printWindow.document.close();
+      printWindow.print();
+    } catch (error) {
+      console.error("Error printing student info:", error);
+      alert("Failed to print student information.");
+    }
+  };
+
+  
   
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -127,17 +223,15 @@ const StudentRegistration = () => {
           body: formDataToSend,
         }
       );
-      const data = await response.json();
-      if (data.ok) {
-        setLoading(false);
+      // const data = await response.json();
+      if (response.ok) {
         alert("Registration submitted successfully!");
       }
     } catch (err) {
-      setLoading(false);
       setError((err as Error).message);
       alert("Failed to submit registration. Please check your backend server.");
     } finally {
-      setLoading(false);
+      // alert
     }
   };
 
@@ -676,84 +770,84 @@ const StudentRegistration = () => {
         </div>
       </div>
 
-      {/* Buttons */}
-      <div className="flex justify-end space-x-4 mb-4">
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          onClick={() => alert("Print Info")}
-        >
-          Print Info
-        </button>
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          onClick={() => alert("Print Form")}
-        >
-          Print Form
-        </button>
-        {loading ? (
-          <button
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            Saving...
-          </button>
-        ) : (
-          <button
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            type="submit"
-          >
-            Save
-          </button>
-        )}
-        <button
-          className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
-          onClick={() =>
-            setFormData({
-              firstName: "",
-              lastName: "",
-              gender: "",
-              formNo: "",
-              dob: "",
-              category: "",
-              religion: "",
-              registerForClass: "",
-              admissionCategory: "",
-              bloodGroup: "",
-              regnDate: "",
-              testDate: "",
-              transactionNo: "",
-              singleParent: false,
-              contactNo: "",
-              studentEmail: "",
-              address: "",
-              city: "",
-              state: "",
-              pincode: "",
-              studentAadharCardNo: "",
-              regnCharge: "",
-              examSubject: "",
-              paymentStatus: "",
-              fatherName: "",
-              fatherMobileNo: "",
-              smsAlert: false,
-              fatherEmail: "",
-              fatherAadharCardNo: "",
-              isFatherCampusEmployee: false,
-              motherName: "",
-              motherMobileNo: "",
-              motherAadharCardNo: "",
-              casteCertificate: null,
-              studentAadharCard: null,
-              fatherAadharCard: null,
-              motherAadharCard: null,
-              previousClassMarksheet: null,
-              transferCertificate: null,
-              studentDateOfBirthCertificate: null,
-            })
-          }
-        >
-          Reset
-        </button>
-      </div>
+     {/* Buttons */}
+ <div className="flex justify-end space-x-4 mb-4">
+  {/* Print Info Button */}
+  <button
+    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+    onClick={handlePrintInfo}
+  >
+    Print Info
+  </button>
+
+  {/* Print Form Button */}
+  <button
+    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+    onClick={handlePrintForm}
+  >
+    Print Form
+  </button>
+
+  {/* Submit Button (Triggers API Request) */}
+  
+    <button
+      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+      type="submit"
+    >
+      Save
+    </button>
+
+  {/* Reset Button (Does Not Trigger API Request) */}
+  <button
+    className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
+    onClick={() =>
+      setFormData({
+        firstName: "",
+        lastName: "",
+        gender: "",
+        formNo: "",
+        dob: "",
+        category: "",
+        religion: "",
+        registerForClass: "",
+        admissionCategory: "",
+        bloodGroup: "",
+        regnDate: "",
+        testDate: "",
+        transactionNo: "",
+        singleParent: false,
+        contactNo: "",
+        studentEmail: "",
+        address: "",
+        city: "",
+        state: "",
+        pincode: "",
+        studentAadharCardNo: "",
+        regnCharge: "",
+        examSubject: "",
+        paymentStatus: "",
+        fatherName: "",
+        fatherMobileNo: "",
+        smsAlert: false,
+        fatherEmail: "",
+        fatherAadharCardNo: "",
+        isFatherCampusEmployee: false,
+        motherName: "",
+        motherMobileNo: "",
+        motherAadharCardNo: "",
+        casteCertificate: null,
+        studentAadharCard: null,
+        fatherAadharCard: null,
+        motherAadharCard: null,
+        previousClassMarksheet: null,
+        transferCertificate: null,
+        studentDateOfBirthCertificate: null,
+      })
+    }
+  >
+    Reset
+  </button>
+    </div>
       </form>
     </div>
   );

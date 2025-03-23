@@ -4,6 +4,7 @@ import registerStudentFiles from "./../middlewares/registerStudentFiles.js";
 import {
   registerStudent,
   getAllRegisteredStudents,
+  getRegisteredStudentByFormNo,
 } from "./../controllers/studentFun/studentRegister.js";
 
 const router = express.Router();
@@ -24,5 +25,6 @@ router.post(
 );
 
 router.get("/allStudent", getAllRegisteredStudents);
+router.get("/", getRegisteredStudentByFormNo);
 
 export default router;

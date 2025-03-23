@@ -5,8 +5,10 @@ import {
   getAllTCs,
   getTC,
   updateTC,
-  deleteTC
-} from '../controllers/tcController.js';
+  deleteTC,
+  getStudentByAdmissionNumber,
+  fetchStudentDetails
+} from '../controllers/tcfromController.js';
 import {
     validateTCCreate,
     validateTCUpdate
@@ -19,5 +21,9 @@ router.get('/tcs', getAllTCs);
 router.get('/tcs/:id', getTC);
 router.put('/tcs/:id', validateTCUpdate, updateTC);
 router.delete('/tcs/:id', deleteTC);
+
+// Student lookup endpoints for TC generation
+router.get('/students/lookup/:admissionNumber', getStudentByAdmissionNumber);
+router.get('/students/details/:admissionNumber', fetchStudentDetails);
 
 export default router;

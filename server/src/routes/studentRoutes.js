@@ -4,6 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { getStudentByAdmissionNumber, fetchStudentDetails } from '../controllers/tcfromController.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -663,5 +664,9 @@ router.put('/:id', async (req, res) => {
     });
   }
 });
+
+// Student lookup endpoints for TC generation
+router.get('/lookup/:admissionNumber', getStudentByAdmissionNumber);
+router.get('/details/:admissionNumber', fetchStudentDetails);
 
 export default router;

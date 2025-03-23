@@ -1,50 +1,50 @@
-import React, { useEffect } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import React from "react";
+import {  useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 
 // import StudentDataTable from "../components/StudentDataTable";
 // import FilterComponent from "../components/FilterComponent";\
 import RegisterStudentDataTable from "./../components/StudentForm/RegisterStudentDataTable";
 
-type StudentResponse = {
-  students: any[]; // Replace 'any[]' with a proper Student type when available
-};
+// type StudentResponse = {
+//   students: any[]; // Replace 'any[]' with a proper Student type when available
+// };
 
 const StudentDataPage: React.FC = () => {
-  const { className } = useParams<{ className?: string }>(); // Class filter from route
-  const location = useLocation(); // Search query from route
+  // const { className } = useParams<{ className?: string }>(); // Class filter from route
+  // const location = useLocation(); // Search query from route
   const navigate = useNavigate();
 
 
-  useEffect(() => {
-    const handleGetStudents = async () => {
-      let url = "http://localhost:5000/students";
+  // useEffect(() => {
+  //   const handleGetStudents = async () => {
+  //     let url = "http://localhost:5000/students";
 
-      // Handle class filtering
-      if (className) {
-        url += `/class/${className}`;
-      } 
-      // Handle admission number search
-      else if (location.search.includes("admissionNo")) {
-        const params = new URLSearchParams(location.search);
-        const admissionNo = params.get("admissionNo");
-        if (admissionNo) {
-          url += `?admissionNo=${admissionNo}`;
-        }
-      }
+  //     // Handle class filtering
+  //     if (className) {
+  //       url += `/class/${className}`;
+  //     } 
+  //     // Handle admission number search
+  //     else if (location.search.includes("admissionNo")) {
+  //       const params = new URLSearchParams(location.search);
+  //       const admissionNo = params.get("admissionNo");
+  //       if (admissionNo) {
+  //         url += `?admissionNo=${admissionNo}`;
+  //       }
+  //     }
 
-      try {
-        const response = await fetch(url);
-        if (response.ok) {
-          const data: StudentResponse = await response.json();
-          console.log(data);
-        }
-      } catch (error) {
-        console.error("Error fetching student data:", error);
-      }
-    };
-    handleGetStudents();
-  }, []);
+  //     try {
+  //       const response = await fetch(url);
+  //       if (response.ok) {
+  //         const data: StudentResponse = await response.json();
+  //         console.log(data);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching student data:", error);
+  //     }
+  //   };
+  //   handleGetStudents();
+  // }, []);
 
   return (
     <div className="w-full p-4 grid grid-cols-1">
