@@ -1,6 +1,6 @@
 import { useState, ChangeEvent, FormEvent } from "react";
-import RegisterStudentForm from "../components/StudentForm/RegisterStudentForm";
-import ReactDOMServer from "react-dom/server";
+// import RegisterStudentForm from "../components/StudentForm/RegisterStudentForm";
+// import ReactDOMServer from "react-dom/server";
 
 interface FormData {
   firstName: string;
@@ -167,12 +167,88 @@ const StudentRegistration = () => {
     }
   };
 
-  const handlePrintForm = (formData: FormData) => {
+  const handlePrintForm = () => {
     try {
-      // Convert the component to an HTML string
-      const printContent = ReactDOMServer.renderToString(
-        <RegisterStudentForm formData={formData} />
-      );
+      const printContent = `<div className="flex justify-center p-4">
+      <div className="w-full max-w-4xl border border-gray-800">
+        <div className="flex justify-between border-b border-gray-800">
+          <div className="flex-grow"></div>
+          <div className="text-center py-2">
+            <div className="text-blue-700 font-medium">Registration Form</div>
+            <div>Registration No.: ${formData.formNo}</div>
+          </div>
+          <div className="border-l border-gray-800 w-32"></div>
+        </div>
+
+        <div className="border-b border-gray-800">
+          <div className="text-center py-1 font-medium border-b border-gray-800">Program and Application Details</div>
+          <table className="w-full border-collapse">
+            <tbody>
+              <tr>
+                <td className="border border-gray-800 p-2 w-1/3">Register for Class</td>
+                <td className="border border-gray-800 p-2">${formData.registerForClass}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="border-b border-gray-800">
+          <div className="text-center py-1 font-medium border-b border-gray-800">Personal Details</div>
+          <table className="w-full border-collapse">
+            <tbody>
+              <tr>
+                <td className="border border-gray-800 p-2 w-1/3">Student Name</td>
+                <td className="border border-gray-800 p-2">${formData.firstName} ${formData.lastName}</td>
+                <td className="border border-gray-800 p-2 w-1/4">Date of Birth</td>
+                <td className="border border-gray-800 p-2">${formData.dob}</td>
+              </tr>
+              <tr>
+                <td className="border border-gray-800 p-2">Aadhaar Card Number</td>
+                <td className="border border-gray-800 p-2">${formData.studentAadharCardNo}</td>
+                <td className="border border-gray-800 p-2">Gender</td>
+                <td className="border border-gray-800 p-2">${formData.gender}</td>
+              </tr>
+              <tr>
+                <td className="border border-gray-800 p-2">Email Address</td>
+                <td className="border border-gray-800 p-2">${formData.studentEmail}</td>
+                <td className="border border-gray-800 p-2">Religion</td>
+                <td className="border border-gray-800 p-2">${formData.religion}</td>
+              </tr>
+              <tr>
+                <td className="border border-gray-800 p-2">Paid Amount</td>
+                <td className="border border-gray-800 p-2">${formData.regnCharge}</td>
+                <td className="border border-gray-800 p-2">Transaction ID</td>
+                <td className="border border-gray-800 p-2">${formData.transactionNo}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="border-b border-gray-800">
+          <div className="text-center py-1 font-medium border-b border-gray-800">Parent's Details</div>
+          <table className="w-full border-collapse">
+            <tbody>
+              <tr>
+                <td className="border border-gray-800 p-2 w-1/4">Father's Name :</td>
+                <td className="border border-gray-800 p-2">${formData.fatherName}</td>
+                <td className="border border-gray-800 p-2 w-1/4">Aadhaar Card No. :</td>
+                <td className="border border-gray-800 p-2">${formData.fatherAadharCardNo}</td>
+              </tr>
+              <tr>
+                <td className="border border-gray-800 p-2">Mobile Number :</td>
+                <td className="border border-gray-800 p-2">${formData.fatherMobileNo}</td>
+              </tr>
+              <tr>
+                <td className="border border-gray-800 p-2">Mother's Name :</td>
+                <td className="border border-gray-800 p-2">${formData.motherName}</td>
+                <td className="border border-gray-800 p-2">Aadhaar Card No. :</td>
+                <td className="border border-gray-800 p-2">${formData.motherAadharCardNo}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`
   
       // Open a new window and print the student details
       const printWindow = window.open("", "_blank");
@@ -267,6 +343,7 @@ const StudentRegistration = () => {
               value={formData.firstName}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
           <div>
@@ -290,6 +367,7 @@ const StudentRegistration = () => {
               value={formData.gender}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             >
               <option value="">Select Gender</option>
               <option value="Male">Male</option>
@@ -307,6 +385,7 @@ const StudentRegistration = () => {
               value={formData.formNo}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
           <div>
