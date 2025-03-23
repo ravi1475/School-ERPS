@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 type Student = {
@@ -17,15 +17,23 @@ type StudentDataRowProps = {
 
 const StudentDataRow: React.FC<StudentDataRowProps> = ({ student, onShowDetails }) => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleShowDetails = () => {
-    // You can either use the onShowDetails prop if you want to keep that functionality
-    if (onShowDetails) {
-      onShowDetails(student.formNo);
+  const handleShowDetails = async () => {
+    try {
+      setError(null);
+      setIsLoading(true);
+      if (onShowDetails) {
+        await onShowDetails(student.formNo);
+      } else {
+        await navigate(`/school/students/register/allstudent/${student.formNo}`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to show details');
+    } finally {
+      setIsLoading(false);
     }
-     alert("Student Shown")
-    // // Or directly navigate to the student details page
-    // navigate(`/school/students/register/allstudent/${student.formNo}`);
   };
 
   return (
@@ -38,7 +46,7 @@ const StudentDataRow: React.FC<StudentDataRowProps> = ({ student, onShowDetails 
       <td className="px-4 py-2">
         <button
           onClick={handleShowDetails}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
+          className="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50"
         >
           Show Details
         </button>
