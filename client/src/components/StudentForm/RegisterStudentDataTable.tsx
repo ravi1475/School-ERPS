@@ -39,8 +39,8 @@ const StudentDataTable: React.FC = () => {
     fetchStudents();
   }, []);
 
-  const handleShowDetails = (id: string) => {
-    navigate(`/students/${id}`);
+  const handleShowDetails = (formNo: string) => {
+    navigate(`/school/students/register/allStudents/${formNo}`);
   };
 
   const totalPages = Math.ceil(studentData.length / itemsPerPage);
