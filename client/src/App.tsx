@@ -12,17 +12,11 @@ import AccountsPage from './pages/AccountsPage';
 import UserManagement from './pages/UserManagement';
 import UserEdit from './pages/UserEdit';
 import LoginForm from './pages/LoginForm';
-import CreateExam from './components/Teacher/Exam'
-// import TCFrom from './components/Schools/TCFrom' 
-import TCList from './components/Schools/TCForm/TCList' 
-
-// import { ClassSectionManagement } from './components/Admin/Class'
-// import { ManageTeachers } from './pages/ManageTeachers'
-import { ManageStudent } from './pages/ManageStudents'
-// import  StudentFeeDetails  from './components/StudentFeeDetails'
-import TeacherProfile from './components/Teacher/TeacherProfile'
-import SchoolProfile from './components/Schools/SchoolProfile'
-
+import CreateExam from './components/Teacher/Exam';
+import TCList from './components/Schools/TCForm/TCList';
+import { ManageStudent } from './pages/ManageStudents';
+import TeacherProfile from './components/Teacher/TeacherProfile';
+import SchoolProfile from './components/Schools/SchoolProfile';
 import ManageSchools from './components/Admin/ManageSchools';
 import ManageUsers from './components/Admin/ManageUser';
 import StaffDirectory from './components/Admin/StaffDirectory';
@@ -42,22 +36,15 @@ import AssignmentManager from './components/Teacher/Assignment';
 import TeacherDirectory from './components/Schools/TeacherDirectory/TeacherDirectory';
 import ExamSchedule from './components/Teacher/ExamSchedule';
 import FeeCollectionApp from "./components/Schools/FeesCollection";
-import  AttendanceManagement from "./components/Teacher/AttendanceManagement";
+import AttendanceManagement from "./components/Teacher/AttendanceManagement";
 import CheckBounceSystem from "./components/Schools/ChequeBounce";
 import GradeManagementSchool from "./components/Schools/ExamGrade";
 import BusTracking from "./components/Schools/Bustracking";
 import StudentRegistration from "./pages/StudentRegister";
 import RegisterStudentsData from "./pages/RegisterStudentsData";
-import AdminNavbar from "./components/Admin/AdminNavbar";
 import AdminDashboard from "./components/Admin/AdminDashboard";
-// Uncomment these when the components are availableF
-// import StudentFeeDetails from './pages/StudentFeeDetails';
-// import PaymentGateway from './pages/PaymentGateway';
-// import UserProfile from './pages/UserProfile';
-// import NotFound from './pages/NotFound';
-
-// Loader for all pages
-
+import SupportForm from './components/Schools/SupportForm';
+import SupportDashboard from './components/Schools/SupportDashboard';
 import { Toaster } from 'react-hot-toast';
 
 // PathTracker component to save current path in sessionStorage
@@ -65,7 +52,6 @@ const PathTracker = () => {
   const location = useLocation();
   
   useEffect(() => {
-    // Don't track auth and login pages
     if (location.pathname !== '/auth' && location.pathname !== '/login' && location.pathname !== '/') {
       sessionStorage.setItem('lastPath', location.pathname);
     }
@@ -74,14 +60,12 @@ const PathTracker = () => {
   return null;
 };
 
-// The main App component that provides authentication state
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if user is authenticated on component mount
     const storedToken = localStorage.getItem('authToken');
     const storedRole = localStorage.getItem('userRole');
 
@@ -93,38 +77,26 @@ function App() {
   }, []);
 
   const handleAuthSuccess = (token: string, role: string = 'user') => {
-    // Store auth info in localStorage
     localStorage.setItem('authToken', token);
     localStorage.setItem('userRole', role);
-
-    // Update state
     setToken(token);
     setUserRole(role);
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
-    // Clear auth info from local storage
     localStorage.removeItem("authToken");
     localStorage.removeItem("userRole");
     localStorage.removeItem("userData");
     localStorage.removeItem("loginTimestamp");
-    
-    // Clear any session storage
     sessionStorage.clear();
-    
-    // Clear any auth cookies if present
     document.cookie = 'authCookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    
-    // Reset state
     setToken(null);
     setUserRole(null);
     setIsAuthenticated(false);
-    
     console.log("Logout successful");
   };
 
-  // The main App component that provides authentication state
   return (
     <>
       <Toaster position="top-right" />
@@ -140,7 +112,6 @@ function App() {
   );
 }
 
-// Component to handle routing with path tracking
 function AppContent({
   isAuthenticated,
   userRole,
@@ -152,7 +123,6 @@ function AppContent({
   handleAuthSuccess: (token: string, role: string) => void;
   handleLogout: () => void;
 }) {
-  // Protected route component
   const ProtectedRoute = ({
     children,
     allowedRoles = ['admin', 'school', 'teacher', 'user']
@@ -184,7 +154,10 @@ function AppContent({
               <LoginForm onLoginSuccess={handleAuthSuccess} />
           }
         />
-
+        
+        <Route path="/support-form" element={<SupportForm />} />
+        <Route path="/support" element={<SupportDashboard />} />
+        
         <Route
           path="/auth"
           element={
@@ -194,7 +167,6 @@ function AppContent({
           }
         />
 
-        {/* Default route - redirect to login if not authenticated, dashboard if authenticated */}
         <Route
           path="/"
           element={
@@ -239,7 +211,7 @@ function AppContent({
         />
 
         <Route
-          path="/Attendence"
+          path="/attendance"
           element={
             <ProtectedRoute>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -248,6 +220,7 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/school/students/tc-form"
           element={
@@ -291,6 +264,7 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/school/faculty-management/teacher-directory"
           element={
@@ -312,10 +286,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
-      
 
         <Route
-          path="/school/BusTracking"
+          path="/school/bus-tracking"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -326,7 +299,7 @@ function AppContent({
         />
 
         <Route
-          path="/students/StudentRegistrationForm"
+          path="/students/registration-form"
           element={
             <ProtectedRoute allowedRoles={['admin', 'school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -335,6 +308,7 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/teachers/myclasses/assignment"
           element={
@@ -345,6 +319,7 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/teachers/examination/create-exam"
           element={
@@ -366,9 +341,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
-        
+
         <Route
-          path="/students/Attendance"
+          path="/students/attendance"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -377,6 +352,7 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/teachers/examination/exam-schedule"
           element={
@@ -389,49 +365,51 @@ function AppContent({
         />
 
         <Route
-          path="/School/BudgetPlanning"
+          path="/school/budget-planning"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
-                < BudgetPlanning />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/School/FeeCollection"
-          element={
-            <ProtectedRoute allowedRoles={['school']}>
-              <Layout userRole={userRole} onLogout={handleLogout}>
-                < FeeCollectionApp/>
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/School/ExpenseTracker"
-          element={
-            <ProtectedRoute allowedRoles={['school']}>
-              <Layout userRole={userRole} onLogout={handleLogout}>
-                < ExpenseTracker />
+                <BudgetPlanning />
               </Layout>
             </ProtectedRoute>
           }
         />
 
-
         <Route
-          path="/School/Accreditation"
+          path="/school/fee-collection"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
-                < AccreditationComponent />
+                <FeeCollectionApp/>
               </Layout>
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/School/CheckBounceSystem"
+          path="/school/expense-tracker"
+          element={
+            <ProtectedRoute allowedRoles={['school']}>
+              <Layout userRole={userRole} onLogout={handleLogout}>
+                <ExpenseTracker />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/school/accreditation"
+          element={
+            <ProtectedRoute allowedRoles={['school']}>
+              <Layout userRole={userRole} onLogout={handleLogout}>
+                <AccreditationComponent />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/school/check-bounce-system"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -440,8 +418,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/school/students/register/addNew"
+          path="/school/students/register/add-new"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -450,8 +429,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/school/students/register/allStudents"
+          path="/school/students/register/all-students"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -460,6 +440,7 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/school/administration/departments"
           element={
@@ -470,8 +451,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/school/GradeManagementSchool"
+          path="/school/grade-management"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -480,6 +462,7 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/classes/manage"
           element={
@@ -490,8 +473,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/classes/TeachingMaterials"
+          path="/classes/teaching-materials"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -501,10 +485,8 @@ function AppContent({
           }
         />
 
-
-
-        < Route
-          path='/master/class-section'
+        <Route
+          path="/master/class-section"
           element={
             <ProtectedRoute>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -515,7 +497,7 @@ function AppContent({
         />
 
         <Route
-          path='/school/students/manage-students'
+          path="/school/students/manage-students"
           element={
             <ProtectedRoute>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -524,19 +506,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
-        {/* <Route
-            path='/school/administration/manage-teachers'
-            element={
-              <ProtectedRoute>
-                <Layout userRole={userRole} onLogout={handleLogout}>
-                  <ManageTeachers />
-                </Layout>
-              </ProtectedRoute>
-            } > </Route> */}
-
 
         <Route
-          path="/Calender"
+          path="/calendar"
           element={
             <ProtectedRoute allowedRoles={['admin', 'school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
@@ -544,34 +516,7 @@ function AppContent({
               </Layout>
             </ProtectedRoute>
           }
-
         />
-
-        {/* Uncomment these routes when the components are available */}
-        {/* 
-        <Route 
-          path="/student-fee/:id" 
-          element={
-            <ProtectedRoute>
-              <Layout userRole={userRole} onLogout={handleLogout}>
-                <StudentFeeDetails />
-              </Layout>
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/payment/:studentId" 
-          element={
-            <ProtectedRoute>
-              <Layout userRole={userRole} onLogout={handleLogout}>
-                <PaymentGateway />
-              </Layout>
-            </ProtectedRoute>
-          } 
-        />
-        */}
-
 
         {/* Admin Routes */}
         <Route
@@ -584,7 +529,7 @@ function AppContent({
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/admin/schools"
           element={
@@ -628,8 +573,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/Report-admin"
+          path="/report-admin"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <Layout onLogout={handleLogout} userRole={userRole}>
@@ -638,8 +584,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/School/report"
+          path="/school/report"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <Layout onLogout={handleLogout} userRole={userRole}>
@@ -648,8 +595,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/School/ClassAssignment"
+          path="/school/class-assignment"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <Layout onLogout={handleLogout} userRole={userRole}>
@@ -658,8 +606,9 @@ function AppContent({
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/School/TeacherEvaluationPage"
+          path="/school/teacher-evaluation"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <Layout onLogout={handleLogout} userRole={userRole}>
@@ -681,24 +630,6 @@ function AppContent({
           }
         />
 
-        
-
-
-
-        {/* Uncomment these routes when the components are available */}
-        {/*
-        <Route 
-          path="/users/:id" 
-          element={
-            <ProtectedRoute allowedRoles={['admin', 'school']}>
-              <Layout userRole={userRole} onLogout={handleLogout}>
-                <UserProfile />
-              </Layout>
-            </ProtectedRoute>
-          } 
-        />
-        */}
-
         <Route
           path="/users/:id/edit"
           element={
@@ -709,20 +640,6 @@ function AppContent({
             </ProtectedRoute>
           }
         />
-
-        {/* Profile route - accessible by all authenticated users */}
-        {/*
-        <Route 
-          path="/profile" 
-          element={
-            <ProtectedRoute>
-              <Layout userRole={userRole} onLogout={handleLogout}>
-                <UserProfile />
-              </Layout>
-            </ProtectedRoute>
-          } 
-        />
-        */}
 
         {/* Unauthorized access page */}
         <Route
