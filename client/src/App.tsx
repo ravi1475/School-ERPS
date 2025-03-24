@@ -47,9 +47,10 @@ import CheckBounceSystem from "./components/Schools/ChequeBounce";
 import GradeManagementSchool from "./components/Schools/ExamGrade";
 import BusTracking from "./components/Schools/Bustracking";
 import StudentRegistration from "./pages/StudentRegister";
+import RegisterStudentsData from "./pages/RegisterStudentsData";
 import AdminNavbar from "./components/Admin/AdminNavbar";
 import AdminDashboard from "./components/Admin/AdminDashboard";
-// Uncomment these when the components are available
+// Uncomment these when the components are availableF
 // import StudentFeeDetails from './pages/StudentFeeDetails';
 // import PaymentGateway from './pages/PaymentGateway';
 // import UserProfile from './pages/UserProfile';
@@ -445,6 +446,16 @@ function AppContent({
             <ProtectedRoute allowedRoles={['school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
                 <StudentRegistration />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/school/students/register/allStudents"
+          element={
+            <ProtectedRoute allowedRoles={['school']}>
+              <Layout userRole={userRole} onLogout={handleLogout}>
+                <RegisterStudentsData />
               </Layout>
             </ProtectedRoute>
           }

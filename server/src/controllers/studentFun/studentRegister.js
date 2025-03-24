@@ -57,16 +57,7 @@ const registerStudent = async (req, res) => {
 const getAllRegisteredStudents = async (req, res) => {
   try {
     // Fetch all students excluding document fields
-    const students = await prisma.registration.findMany({
-      select: {
-        formNo: true,
-        firstName: true,
-        lastName: true,
-        gender: true,
-        regnDate: true,
-        paymentStatus: true,
-      },
-    });
+    const students = await prisma.registration.findMany({});
 
     return res.status(200).json({ success: true, data: students });
   } catch (error) {
@@ -77,4 +68,38 @@ const getAllRegisteredStudents = async (req, res) => {
   }
 };
 
-export { registerStudent, getAllRegisteredStudents };
+const getRegisteredStudentByFormNo = async (req, res) => {
+  try {
+    // Extract formNo correctly
+    const { formNo } = req.query;
+
+    if (!formNo) {
+      return res
+        .status(400)
+        .json({ success: false, data: "Form number is required" });
+    }
+
+    const student = await prisma.registration.findUnique({
+      where: { formNo: formNo },
+    });
+
+    if (!student) {
+      return res
+        .status(404)
+        .json({ success: false, data: "Student not found" });
+    }
+
+    return res.status(200).json({ success: true, data: student });
+  } catch (error) {
+    console.error("Error fetching registered student!", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export {
+  registerStudent,
+  getAllRegisteredStudents,
+  getRegisteredStudentByFormNo,
+};
