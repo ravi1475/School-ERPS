@@ -1,50 +1,12 @@
-import React from "react";
-import {  useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
-
-// import StudentDataTable from "../components/StudentDataTable";
-// import FilterComponent from "../components/FilterComponent";\
 import RegisterStudentDataTable from "./../components/StudentForm/RegisterStudentDataTable";
 
-// type StudentResponse = {
-//   students: any[]; // Replace 'any[]' with a proper Student type when available
-// };
-
 const StudentDataPage: React.FC = () => {
-  // const { className } = useParams<{ className?: string }>(); // Class filter from route
-  // const location = useLocation(); // Search query from route
   const navigate = useNavigate();
-
-
-  // useEffect(() => {
-  //   const handleGetStudents = async () => {
-  //     let url = "http://localhost:5000/students";
-
-  //     // Handle class filtering
-  //     if (className) {
-  //       url += `/class/${className}`;
-  //     } 
-  //     // Handle admission number search
-  //     else if (location.search.includes("admissionNo")) {
-  //       const params = new URLSearchParams(location.search);
-  //       const admissionNo = params.get("admissionNo");
-  //       if (admissionNo) {
-  //         url += `?admissionNo=${admissionNo}`;
-  //       }
-  //     }
-
-  //     try {
-  //       const response = await fetch(url);
-  //       if (response.ok) {
-  //         const data: StudentResponse = await response.json();
-  //         console.log(data);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching student data:", error);
-  //     }
-  //   };
-  //   handleGetStudents();
-  // }, []);
+  const [filterClass, setFilterClass] = useState("");
+  const [formNo, setFormNo] = useState(""); // State to store the input value
 
   return (
     <div className="w-full p-4 grid grid-cols-1">
@@ -53,30 +15,53 @@ const StudentDataPage: React.FC = () => {
 
         {/* Search and Filter Section */}
         <div className="space-y-6">
-          {/* Search Input */}
-          <div className="flex items-center space-x-2 border border-gray-300 p-2 rounded-md">
-            <FaSearch className="text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search by Form Number..."
-              className="outline-none w-full bg-transparent"
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === "Enter" && e.currentTarget.value) {
-                  navigate(`/students/search?admissionNo=${e.currentTarget.value}`);
-                }
-              }}
-            />
-          </div>
+          {/* Search and Filter Input in One Row */}
+          <div className="flex items-center border border-gray-300 p-2 rounded-md">
+            {/* Class Selection Dropdown */}
+            <select
+              value={filterClass}
+              onChange={(e) => setFilterClass(e.target.value)}
+              className="p-2 border rounded-md w-fit bg-white"
+            >
+              <option value="">All Classes</option>
+              <option value="Nursery">Nursery</option>
+              <option value="KG">KG</option>
+              <option value="1st">1st</option>
+              <option value="2nd">2nd</option>
+              <option value="3rd">3rd</option>
+              <option value="4th">4th</option>
+              <option value="5th">5th</option>
+              <option value="6th">6th</option>
+              <option value="7th">7th</option>
+              <option value="8th">8th</option>
+              <option value="9th">9th</option>
+              <option value="10th">10th</option>
+              <option value="11th">11th</option>
+              <option value="12th">12th</option>
+            </select>
 
-          {/* Filter Component */}
-          <div className="flex flex-col gap-4 lg:flex-row">
-            {/* <FilterComponent className="flex-1" /> */}
+            {/* Search Input Field */}
+            <div className="flex items-center space-x-2 flex-grow border-l pl-2">
+              <FaSearch className="text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search student by Form No.."
+                className="outline-none w-full bg-transparent"
+                value={formNo}
+                onChange={(e) => setFormNo(e.target.value)} // Update state when typing
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (e.key === "Enter" && formNo) {
+                    navigate(`/school/students/register/allStudents/${formNo}`);
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
 
         {/* Student Data Table */}
         <div className="mt-6 border border-gray-300 rounded-md p-4">
-          < RegisterStudentDataTable />
+          <RegisterStudentDataTable />
         </div>
       </div>
     </div>

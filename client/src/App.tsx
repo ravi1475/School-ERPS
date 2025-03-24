@@ -50,6 +50,7 @@ import StudentRegistration from "./pages/StudentRegister";
 import RegisterStudentsData from "./pages/RegisterStudentsData";
 import AdminNavbar from "./components/Admin/AdminNavbar";
 import AdminDashboard from "./components/Admin/AdminDashboard";
+import RegistrationDisplay from './pages/RegistrationDisplay';
 // Uncomment these when the components are availableF
 // import StudentFeeDetails from './pages/StudentFeeDetails';
 // import PaymentGateway from './pages/PaymentGateway';
@@ -456,6 +457,16 @@ function AppContent({
             <ProtectedRoute allowedRoles={['school']}>
               <Layout userRole={userRole} onLogout={handleLogout}>
                 <RegisterStudentsData />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/school/students/register/allStudents/:formNo"
+          element={
+            <ProtectedRoute allowedRoles={['school']}>
+              <Layout userRole={userRole} onLogout={handleLogout}>
+                <RegistrationDisplay/>
               </Layout>
             </ProtectedRoute>
           }

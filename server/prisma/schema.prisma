@@ -47,7 +47,7 @@ model School {
   students             Student[]
   departments          Department[]
   transferCertificates TransferCertificate[]
-  Registration         Registration[]
+  registrations        Registration[]        @relation("SchoolRegistration")
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 }
@@ -490,7 +490,6 @@ enum WhetherFailed {
 }
 
 model Registration {
-  // student information
   registrationId      String  @id @default(uuid())
   firstName           String
   lastName            String
@@ -499,8 +498,6 @@ model Registration {
   dob                 String
   category            String
   religion            String
-  // schoolId            Int
-  // school              School    @relation(fields: [schoolId], references: [id], onDelete: Cascade),
   registerForClass    String
   admissionCategory   String
   bloodGroup          String
@@ -519,7 +516,7 @@ model Registration {
   examSubject         String
   paymentStatus       String
 
-  // father Details
+  // Father Details
   fatherName             String
   fatherMobileNo         String
   smsAlert               Boolean
@@ -527,12 +524,12 @@ model Registration {
   fatherAadharCardNo     String
   isFatherCampusEmployee Boolean
 
-  // mother Details
+  // Mother Details
   motherName         String
   motherMobileNo     String
   motherAadharCardNo String
 
-  // documents 
+  // Documents
   casteCertificate              String?
   studentAadharCard             String?
   fatherAadharCard              String?
@@ -540,6 +537,8 @@ model Registration {
   previousClassMarksheet        String?
   transferCertificate           String?
   studentDateOfBirthCertificate String?
-  School                        School? @relation(fields: [schoolId], references: [id])
-  schoolId                      Int?
+
+  // Relationship with School
+  schoolId Int?
+  school   School? @relation(fields: [schoolId], references: [id], onDelete: Cascade, name: "SchoolRegistration")
 }
