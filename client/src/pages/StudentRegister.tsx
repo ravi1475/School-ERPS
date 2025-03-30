@@ -3,6 +3,7 @@ import { AlertCircle, Loader } from 'lucide-react';
 // import RegisterStudentForm from "../components/StudentForm/RegisterStudentForm";
 // import ReactDOMServer from "react-dom/server";
 import { handlePrintForm } from "@/utils/printForm";
+import { handlePrintInfo } from "@/utils/printInfo";
 
 interface FormData {
   firstName: string;
@@ -113,61 +114,61 @@ const StudentRegistration = () => {
   };
 
 
-  const handlePrintInfo = () => {
-    try {
-      // Ensure formNo is available
-      if (!formData.formNo) {
-        alert("Please enter a valid Form Number.");
-        return;
-      }
+  // const handlePrintInfo = () => {
+  //   try {
+  //     // Ensure formNo is available
+  //     if (!formData.formNo) {
+  //       alert("Please enter a valid Form Number.");
+  //       return;
+  //     }
 
-      // Use formData directly as student data is already available
-      const student = formData;
+  //     // Use formData directly as student data is already available
+  //     const student = formData;
 
-      const printContent = `
-        <h2>Student Information</h2>
-        <p><strong>First Name:</strong> ${student.firstName}</p>
-        <p><strong>Last Name:</strong> ${student.lastName}</p>
-        <p><strong>Gender:</strong> ${student.gender}</p>
-        <p><strong>Form No:</strong> ${student.formNo}</p>
-        <p><strong>Date of Birth:</strong> ${student.dob}</p>
-        <p><strong>Category:</strong> ${student.category}</p>
-        <p><strong>Religion:</strong> ${student.religion}</p>
-        <p><strong>Registering for Class:</strong> ${student.registerForClass}</p>
-        <p><strong>Admission Category:</strong> ${student.admissionCategory}</p>
-        <p><strong>Blood Group:</strong> ${student.bloodGroup}</p>
-        <p><strong>Registration Date:</strong> ${student.regnDate}</p>
-        <p><strong>Test Date:</strong> ${student.testDate}</p>
-        <p><strong>Transaction No:</strong> ${student.transactionNo}</p>
-        <p><strong>Single Parent:</strong> ${student.singleParent ? "Yes" : "No"}</p>
-        <p><strong>Contact No:</strong> ${student.contactNo}</p>
-        <p><strong>Email:</strong> ${student.studentEmail}</p>
-        <p><strong>Address:</strong> ${student.address}, ${student.city}, ${student.state} - ${student.pincode}</p>
-        <p><strong>Student Aadhar Card No:</strong> ${student.studentAadharCardNo}</p>
-        <p><strong>Registration Charge:</strong> ${student.regnCharge}</p>
-        <p><strong>Exam Subject:</strong> ${student.examSubject}</p>
-        <p><strong>Payment Status:</strong> ${student.paymentStatus}</p>
-        <p><strong>Father's Name:</strong> ${student.fatherName}</p>
-        <p><strong>Father's Mobile No:</strong> ${student.fatherMobileNo}</p>
-        <p><strong>SMS Alert:</strong> ${student.smsAlert ? "Enabled" : "Disabled"}</p>
-        <p><strong>Father's Email:</strong> ${student.fatherEmail}</p>
-        <p><strong>Father's Aadhar Card No:</strong> ${student.fatherAadharCardNo}</p>
-        <p><strong>Is Father Campus Employee:</strong> ${student.isFatherCampusEmployee ? "Yes" : "No"}</p>
-        <p><strong>Mother's Name:</strong> ${student.motherName}</p>
-        <p><strong>Mother's Mobile No:</strong> ${student.motherMobileNo}</p>
-        <p><strong>Mother's Aadhar Card No:</strong> ${student.motherAadharCardNo}</p>
-      `;
+  //     const printContent = `
+  //       <h2>Student Information</h2>
+  //       <p><strong>First Name:</strong> ${student.firstName}</p>
+  //       <p><strong>Last Name:</strong> ${student.lastName}</p>
+  //       <p><strong>Gender:</strong> ${student.gender}</p>
+  //       <p><strong>Form No:</strong> ${student.formNo}</p>
+  //       <p><strong>Date of Birth:</strong> ${student.dob}</p>
+  //       <p><strong>Category:</strong> ${student.category}</p>
+  //       <p><strong>Religion:</strong> ${student.religion}</p>
+  //       <p><strong>Registering for Class:</strong> ${student.registerForClass}</p>
+  //       <p><strong>Admission Category:</strong> ${student.admissionCategory}</p>
+  //       <p><strong>Blood Group:</strong> ${student.bloodGroup}</p>
+  //       <p><strong>Registration Date:</strong> ${student.regnDate}</p>
+  //       <p><strong>Test Date:</strong> ${student.testDate}</p>
+  //       <p><strong>Transaction No:</strong> ${student.transactionNo}</p>
+  //       <p><strong>Single Parent:</strong> ${student.singleParent ? "Yes" : "No"}</p>
+  //       <p><strong>Contact No:</strong> ${student.contactNo}</p>
+  //       <p><strong>Email:</strong> ${student.studentEmail}</p>
+  //       <p><strong>Address:</strong> ${student.address}, ${student.city}, ${student.state} - ${student.pincode}</p>
+  //       <p><strong>Student Aadhar Card No:</strong> ${student.studentAadharCardNo}</p>
+  //       <p><strong>Registration Charge:</strong> ${student.regnCharge}</p>
+  //       <p><strong>Exam Subject:</strong> ${student.examSubject}</p>
+  //       <p><strong>Payment Status:</strong> ${student.paymentStatus}</p>
+  //       <p><strong>Father's Name:</strong> ${student.fatherName}</p>
+  //       <p><strong>Father's Mobile No:</strong> ${student.fatherMobileNo}</p>
+  //       <p><strong>SMS Alert:</strong> ${student.smsAlert ? "Enabled" : "Disabled"}</p>
+  //       <p><strong>Father's Email:</strong> ${student.fatherEmail}</p>
+  //       <p><strong>Father's Aadhar Card No:</strong> ${student.fatherAadharCardNo}</p>
+  //       <p><strong>Is Father Campus Employee:</strong> ${student.isFatherCampusEmployee ? "Yes" : "No"}</p>
+  //       <p><strong>Mother's Name:</strong> ${student.motherName}</p>
+  //       <p><strong>Mother's Mobile No:</strong> ${student.motherMobileNo}</p>
+  //       <p><strong>Mother's Aadhar Card No:</strong> ${student.motherAadharCardNo}</p>
+  //     `;
 
-      // Open a new window and print the student details
-      const printWindow = window.open("", "_blank");
-      printWindow.document.write(`<html><head><title>Student Info</title></head><body>${printContent}</body></html>`);
-      printWindow.document.close();
-      printWindow.print();
-    } catch (error) {
-      console.error("Error printing student info:", error);
-      alert("Failed to print student information.");
-    }
-  };
+  //     // Open a new window and print the student details
+  //     const printWindow = window.open("", "_blank");
+  //     printWindow.document.write(`<html><head><title>Student Info</title></head><body>${printContent}</body></html>`);
+  //     printWindow.document.close();
+  //     printWindow.print();
+  //   } catch (error) {
+  //     console.error("Error printing student info:", error);
+  //     alert("Failed to print student information.");
+  //   }
+  // };
 
   // const handlePrintForm = () => {
   //   try {
@@ -951,7 +952,7 @@ const StudentRegistration = () => {
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           type="button"
-          onClick={handlePrintInfo}
+          onClick={() => handlePrintInfo(formData)}
         >
           Print Info
         </button>
@@ -960,7 +961,7 @@ const StudentRegistration = () => {
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           type="button"
-          onClick={handlePrintForm}
+          onClick={() => handlePrintForm(formData)}
         >
           Print Form
         </button>
