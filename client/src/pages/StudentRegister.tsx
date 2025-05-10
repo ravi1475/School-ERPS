@@ -1,6 +1,9 @@
 import { useState, ChangeEvent, FormEvent } from "react";
+import { AlertCircle, Loader } from 'lucide-react';
 // import RegisterStudentForm from "../components/StudentForm/RegisterStudentForm";
 // import ReactDOMServer from "react-dom/server";
+import { handlePrintForm } from "@/utils/printForm";
+import { handlePrintInfo } from "@/utils/printInfo";
 
 interface FormData {
   firstName: string;
@@ -111,172 +114,172 @@ const StudentRegistration = () => {
   };
 
 
-  const handlePrintInfo = () => {
-    try {
-      // Ensure formNo is available
-      if (!formData.formNo) {
-        alert("Please enter a valid Form Number.");
-        return;
-      }
+  // const handlePrintInfo = () => {
+  //   try {
+  //     // Ensure formNo is available
+  //     if (!formData.formNo) {
+  //       alert("Please enter a valid Form Number.");
+  //       return;
+  //     }
 
-      // Use formData directly as student data is already available
-      const student = formData;
+  //     // Use formData directly as student data is already available
+  //     const student = formData;
 
-      const printContent = `
-        <h2>Student Information</h2>
-        <p><strong>First Name:</strong> ${student.firstName}</p>
-        <p><strong>Last Name:</strong> ${student.lastName}</p>
-        <p><strong>Gender:</strong> ${student.gender}</p>
-        <p><strong>Form No:</strong> ${student.formNo}</p>
-        <p><strong>Date of Birth:</strong> ${student.dob}</p>
-        <p><strong>Category:</strong> ${student.category}</p>
-        <p><strong>Religion:</strong> ${student.religion}</p>
-        <p><strong>Registering for Class:</strong> ${student.registerForClass}</p>
-        <p><strong>Admission Category:</strong> ${student.admissionCategory}</p>
-        <p><strong>Blood Group:</strong> ${student.bloodGroup}</p>
-        <p><strong>Registration Date:</strong> ${student.regnDate}</p>
-        <p><strong>Test Date:</strong> ${student.testDate}</p>
-        <p><strong>Transaction No:</strong> ${student.transactionNo}</p>
-        <p><strong>Single Parent:</strong> ${student.singleParent ? "Yes" : "No"}</p>
-        <p><strong>Contact No:</strong> ${student.contactNo}</p>
-        <p><strong>Email:</strong> ${student.studentEmail}</p>
-        <p><strong>Address:</strong> ${student.address}, ${student.city}, ${student.state} - ${student.pincode}</p>
-        <p><strong>Student Aadhar Card No:</strong> ${student.studentAadharCardNo}</p>
-        <p><strong>Registration Charge:</strong> ${student.regnCharge}</p>
-        <p><strong>Exam Subject:</strong> ${student.examSubject}</p>
-        <p><strong>Payment Status:</strong> ${student.paymentStatus}</p>
-        <p><strong>Father's Name:</strong> ${student.fatherName}</p>
-        <p><strong>Father's Mobile No:</strong> ${student.fatherMobileNo}</p>
-        <p><strong>SMS Alert:</strong> ${student.smsAlert ? "Enabled" : "Disabled"}</p>
-        <p><strong>Father's Email:</strong> ${student.fatherEmail}</p>
-        <p><strong>Father's Aadhar Card No:</strong> ${student.fatherAadharCardNo}</p>
-        <p><strong>Is Father Campus Employee:</strong> ${student.isFatherCampusEmployee ? "Yes" : "No"}</p>
-        <p><strong>Mother's Name:</strong> ${student.motherName}</p>
-        <p><strong>Mother's Mobile No:</strong> ${student.motherMobileNo}</p>
-        <p><strong>Mother's Aadhar Card No:</strong> ${student.motherAadharCardNo}</p>
-      `;
+  //     const printContent = `
+  //       <h2>Student Information</h2>
+  //       <p><strong>First Name:</strong> ${student.firstName}</p>
+  //       <p><strong>Last Name:</strong> ${student.lastName}</p>
+  //       <p><strong>Gender:</strong> ${student.gender}</p>
+  //       <p><strong>Form No:</strong> ${student.formNo}</p>
+  //       <p><strong>Date of Birth:</strong> ${student.dob}</p>
+  //       <p><strong>Category:</strong> ${student.category}</p>
+  //       <p><strong>Religion:</strong> ${student.religion}</p>
+  //       <p><strong>Registering for Class:</strong> ${student.registerForClass}</p>
+  //       <p><strong>Admission Category:</strong> ${student.admissionCategory}</p>
+  //       <p><strong>Blood Group:</strong> ${student.bloodGroup}</p>
+  //       <p><strong>Registration Date:</strong> ${student.regnDate}</p>
+  //       <p><strong>Test Date:</strong> ${student.testDate}</p>
+  //       <p><strong>Transaction No:</strong> ${student.transactionNo}</p>
+  //       <p><strong>Single Parent:</strong> ${student.singleParent ? "Yes" : "No"}</p>
+  //       <p><strong>Contact No:</strong> ${student.contactNo}</p>
+  //       <p><strong>Email:</strong> ${student.studentEmail}</p>
+  //       <p><strong>Address:</strong> ${student.address}, ${student.city}, ${student.state} - ${student.pincode}</p>
+  //       <p><strong>Student Aadhar Card No:</strong> ${student.studentAadharCardNo}</p>
+  //       <p><strong>Registration Charge:</strong> ${student.regnCharge}</p>
+  //       <p><strong>Exam Subject:</strong> ${student.examSubject}</p>
+  //       <p><strong>Payment Status:</strong> ${student.paymentStatus}</p>
+  //       <p><strong>Father's Name:</strong> ${student.fatherName}</p>
+  //       <p><strong>Father's Mobile No:</strong> ${student.fatherMobileNo}</p>
+  //       <p><strong>SMS Alert:</strong> ${student.smsAlert ? "Enabled" : "Disabled"}</p>
+  //       <p><strong>Father's Email:</strong> ${student.fatherEmail}</p>
+  //       <p><strong>Father's Aadhar Card No:</strong> ${student.fatherAadharCardNo}</p>
+  //       <p><strong>Is Father Campus Employee:</strong> ${student.isFatherCampusEmployee ? "Yes" : "No"}</p>
+  //       <p><strong>Mother's Name:</strong> ${student.motherName}</p>
+  //       <p><strong>Mother's Mobile No:</strong> ${student.motherMobileNo}</p>
+  //       <p><strong>Mother's Aadhar Card No:</strong> ${student.motherAadharCardNo}</p>
+  //     `;
 
-      // Open a new window and print the student details
-      const printWindow = window.open("", "_blank");
-      printWindow.document.write(`<html><head><title>Student Info</title></head><body>${printContent}</body></html>`);
-      printWindow.document.close();
-      printWindow.print();
-    } catch (error) {
-      console.error("Error printing student info:", error);
-      alert("Failed to print student information.");
-    }
-  };
+  //     // Open a new window and print the student details
+  //     const printWindow = window.open("", "_blank");
+  //     printWindow.document.write(`<html><head><title>Student Info</title></head><body>${printContent}</body></html>`);
+  //     printWindow.document.close();
+  //     printWindow.print();
+  //   } catch (error) {
+  //     console.error("Error printing student info:", error);
+  //     alert("Failed to print student information.");
+  //   }
+  // };
 
-  const handlePrintForm = () => {
-    try {
-      const printContent = `<div className="flex justify-center p-4">
-      <div className="w-full max-w-4xl border border-gray-800">
-        <div className="flex justify-between border-b border-gray-800">
-          <div className="flex-grow"></div>
-          <div className="text-center py-2">
-            <div className="text-blue-700 font-medium">Registration Form</div>
-            <div>Registration No.: ${formData.formNo}</div>
-          </div>
-          <div className="border-l border-gray-800 w-32"></div>
-        </div>
+  // const handlePrintForm = () => {
+  //   try {
+  //     const printContent = `<div className="flex justify-center p-4">
+  //     <div className="w-full max-w-4xl border border-gray-800">
+  //       <div className="flex justify-between border-b border-gray-800">
+  //         <div className="flex-grow"></div>
+  //         <div className="text-center py-2">
+  //           <div className="text-blue-700 font-medium">Registration Form</div>
+  //           <div>Registration No.: ${formData.formNo}</div>
+  //         </div>
+  //         <div className="border-l border-gray-800 w-32"></div>
+  //       </div>
 
-        <div className="border-b border-gray-800">
-          <div className="text-center py-1 font-medium border-b border-gray-800">Program and Application Details</div>
-          <table className="w-full border-collapse">
-            <tbody>
-              <tr>
-                <td className="border border-gray-800 p-2 w-1/3">Register for Class</td>
-                <td className="border border-gray-800 p-2">${formData.registerForClass}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  //       <div className="border-b border-gray-800">
+  //         <div className="text-center py-1 font-medium border-b border-gray-800">Program and Application Details</div>
+  //         <table className="w-full border-collapse">
+  //           <tbody>
+  //             <tr>
+  //               <td className="border border-gray-800 p-2 w-1/3">Register for Class</td>
+  //               <td className="border border-gray-800 p-2">${formData.registerForClass}</td>
+  //             </tr>
+  //           </tbody>
+  //         </table>
+  //       </div>
         
-        <div className="border-b border-gray-800">
-          <div className="text-center py-1 font-medium border-b border-gray-800">Personal Details</div>
-          <table className="w-full border-collapse">
-            <tbody>
-              <tr>
-                <td className="border border-gray-800 p-2 w-1/3">Student Name</td>
-                <td className="border border-gray-800 p-2">${formData.firstName} ${formData.lastName}</td>
-                <td className="border border-gray-800 p-2 w-1/4">Date of Birth</td>
-                <td className="border border-gray-800 p-2">${formData.dob}</td>
-              </tr>
-              <tr>
-                <td className="border border-gray-800 p-2">Aadhaar Card Number</td>
-                <td className="border border-gray-800 p-2">${formData.studentAadharCardNo}</td>
-                <td className="border border-gray-800 p-2">Gender</td>
-                <td className="border border-gray-800 p-2">${formData.gender}</td>
-              </tr>
-              <tr>
-                <td className="border border-gray-800 p-2">Email Address</td>
-                <td className="border border-gray-800 p-2">${formData.studentEmail}</td>
-                <td className="border border-gray-800 p-2">Religion</td>
-                <td className="border border-gray-800 p-2">${formData.religion}</td>
-              </tr>
-              <tr>
-                <td className="border border-gray-800 p-2">Paid Amount</td>
-                <td className="border border-gray-800 p-2">${formData.regnCharge}</td>
-                <td className="border border-gray-800 p-2">Transaction ID</td>
-                <td className="border border-gray-800 p-2">${formData.transactionNo}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  //       <div className="border-b border-gray-800">
+  //         <div className="text-center py-1 font-medium border-b border-gray-800">Personal Details</div>
+  //         <table className="w-full border-collapse">
+  //           <tbody>
+  //             <tr>
+  //               <td className="border border-gray-800 p-2 w-1/3">Student Name</td>
+  //               <td className="border border-gray-800 p-2">${formData.firstName} ${formData.lastName}</td>
+  //               <td className="border border-gray-800 p-2 w-1/4">Date of Birth</td>
+  //               <td className="border border-gray-800 p-2">${formData.dob}</td>
+  //             </tr>
+  //             <tr>
+  //               <td className="border border-gray-800 p-2">Aadhaar Card Number</td>
+  //               <td className="border border-gray-800 p-2">${formData.studentAadharCardNo}</td>
+  //               <td className="border border-gray-800 p-2">Gender</td>
+  //               <td className="border border-gray-800 p-2">${formData.gender}</td>
+  //             </tr>
+  //             <tr>
+  //               <td className="border border-gray-800 p-2">Email Address</td>
+  //               <td className="border border-gray-800 p-2">${formData.studentEmail}</td>
+  //               <td className="border border-gray-800 p-2">Religion</td>
+  //               <td className="border border-gray-800 p-2">${formData.religion}</td>
+  //             </tr>
+  //             <tr>
+  //               <td className="border border-gray-800 p-2">Paid Amount</td>
+  //               <td className="border border-gray-800 p-2">${formData.regnCharge}</td>
+  //               <td className="border border-gray-800 p-2">Transaction ID</td>
+  //               <td className="border border-gray-800 p-2">${formData.transactionNo}</td>
+  //             </tr>
+  //           </tbody>
+  //         </table>
+  //       </div>
 
-        <div className="border-b border-gray-800">
-          <div className="text-center py-1 font-medium border-b border-gray-800">Parent's Details</div>
-          <table className="w-full border-collapse">
-            <tbody>
-              <tr>
-                <td className="border border-gray-800 p-2 w-1/4">Father's Name :</td>
-                <td className="border border-gray-800 p-2">${formData.fatherName}</td>
-                <td className="border border-gray-800 p-2 w-1/4">Aadhaar Card No. :</td>
-                <td className="border border-gray-800 p-2">${formData.fatherAadharCardNo}</td>
-              </tr>
-              <tr>
-                <td className="border border-gray-800 p-2">Mobile Number :</td>
-                <td className="border border-gray-800 p-2">${formData.fatherMobileNo}</td>
-              </tr>
-              <tr>
-                <td className="border border-gray-800 p-2">Mother's Name :</td>
-                <td className="border border-gray-800 p-2">${formData.motherName}</td>
-                <td className="border border-gray-800 p-2">Aadhaar Card No. :</td>
-                <td className="border border-gray-800 p-2">${formData.motherAadharCardNo}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>`
+  //       <div className="border-b border-gray-800">
+  //         <div className="text-center py-1 font-medium border-b border-gray-800">Parent's Details</div>
+  //         <table className="w-full border-collapse">
+  //           <tbody>
+  //             <tr>
+  //               <td className="border border-gray-800 p-2 w-1/4">Father's Name :</td>
+  //               <td className="border border-gray-800 p-2">${formData.fatherName}</td>
+  //               <td className="border border-gray-800 p-2 w-1/4">Aadhaar Card No. :</td>
+  //               <td className="border border-gray-800 p-2">${formData.fatherAadharCardNo}</td>
+  //             </tr>
+  //             <tr>
+  //               <td className="border border-gray-800 p-2">Mobile Number :</td>
+  //               <td className="border border-gray-800 p-2">${formData.fatherMobileNo}</td>
+  //             </tr>
+  //             <tr>
+  //               <td className="border border-gray-800 p-2">Mother's Name :</td>
+  //               <td className="border border-gray-800 p-2">${formData.motherName}</td>
+  //               <td className="border border-gray-800 p-2">Aadhaar Card No. :</td>
+  //               <td className="border border-gray-800 p-2">${formData.motherAadharCardNo}</td>
+  //             </tr>
+  //           </tbody>
+  //         </table>
+  //       </div>
+  //     </div>
+  //   </div>`
 
-      // Open a new window and print the student details
-      const printWindow = window.open("", "_blank");
-      if (!printWindow) throw new Error("Failed to open print window");
+  //     // Open a new window and print the student details
+  //     const printWindow = window.open("", "_blank");
+  //     if (!printWindow) throw new Error("Failed to open print window");
 
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Student Registration Form</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { border: 1px solid black; padding: 8px; text-align: left; }
-            </style>
-          </head>
-          <body>
-            ${printContent}
-          </body>
-        </html>
-      `);
+  //     printWindow.document.write(`
+  //       <html>
+  //         <head>
+  //           <title>Student Registration Form</title>
+  //           <style>
+  //             body { font-family: Arial, sans-serif; padding: 20px; }
+  //             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  //             th, td { border: 1px solid black; padding: 8px; text-align: left; }
+  //           </style>
+  //         </head>
+  //         <body>
+  //           ${printContent}
+  //         </body>
+  //       </html>
+  //     `);
 
-      printWindow.document.close();
-      printWindow.print();
-    } catch (error) {
-      console.error("Error printing student info:", error);
-      alert("Failed to print student information.");
-    }
-  };
+  //     printWindow.document.close();
+  //     printWindow.print();
+  //   } catch (error) {
+  //     console.error("Error printing student info:", error);
+  //     alert("Failed to print student information.");
+  //   }
+  // };
 
 
 
@@ -301,13 +304,15 @@ const StudentRegistration = () => {
       );
       // const data = await response.json();
       if (response.ok) {
-        alert("Registration submitted successfully!");
+        setLoading(false);
       }
     } catch (err) {
       setError((err as Error).message);
+      setLoading(false);
       alert("Failed to submit registration. Please check your backend server.");
     } finally {
       // alert
+        setLoading(false);
     }
   };
 
@@ -320,8 +325,36 @@ const StudentRegistration = () => {
   //     </div>
   //   );
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="p-6 text-center bg-white rounded-lg shadow-md">
+          <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
+          <h2 className="mb-2 text-xl font-bold text-gray-800">Error</h2>
+          <p className="text-gray-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 bg-white shadow-lg rounded-lg">
+      {loading && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+                <div className="flex flex-col items-center">
+                  <div className="p-6 bg-white rounded-xl shadow-lg">
+                    <Loader className="animate-spin text-blue-600" size={48} />
+                    <p className="mt-4 text-lg font-medium text-gray-800">Student registration is in progress...</p>
+                  </div>
+                </div>
+              </div>
+            )}
       <h1 className="text-2xl font-bold text-blue-700 mb-6 text-center">
         STUDENT REGISTRATION
       </h1>
@@ -919,7 +952,7 @@ const StudentRegistration = () => {
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           type="button"
-          onClick={handlePrintInfo}
+          onClick={() => handlePrintInfo(formData)}
         >
           Print Info
         </button>
@@ -928,7 +961,7 @@ const StudentRegistration = () => {
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           type="button"
-          onClick={handlePrintForm}
+          onClick={() => handlePrintForm(formData)}
         >
           Print Form
         </button>

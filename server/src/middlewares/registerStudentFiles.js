@@ -11,10 +11,9 @@ const allowedFileTypes = [
 ];
 const allowedExtensions = [".jpg", ".jpeg", ".png", ".pdf"];
 
-
 // Ensure the upload directory existsprocess
 
-const uploadDir = path.join(process.cwd(), "registerFiles/");
+const uploadDir = path.join(process.cwd(), "uploads/registerFiles/");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -65,7 +64,7 @@ const fileFilter = (req, file, cb) => {
 const registerStudentFiles = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 5MB limit
 });
 
 export default registerStudentFiles;
